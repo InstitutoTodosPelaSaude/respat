@@ -24,30 +24,31 @@ pd.options.mode.chained_assignment = None
 today = time.strftime('%Y-%m-%d', time.gmtime())
 
 if __name__ == '__main__':
-    # parser = argparse.ArgumentParser(
-    #     description="Combine and reformat data tables from multiple sources and output a single TSV file",
-    #     formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    # )
-    # parser.add_argument("--datadir", required=True, help="Name of the folder containing independent folders for each lab")
-    # parser.add_argument("--rename", required=False, help="TSV, CSV, or excel file containing new standards for column names")
-    # parser.add_argument("--correction", required=False, help="TSV, CSV, or excel file containing data points requiring corrections")
-    # parser.add_argument("--cache", required=False, help="Previously processed data files")
-    # parser.add_argument("--output", required=True, help="TSV file aggregating all columns listed in the 'rename file'")
-    # args = parser.parse_args()
-    #
-    # path = os.path.abspath(os.getcwd())
-    # input_folder = path + '/' + args.datadir + '/'
-    # rename_file = args.rename
-    # correction_file = args.correction
-    # cache_file = args.cache
-    # output = args.output
+    parser = argparse.ArgumentParser(
+        description="Combine and reformat data tables from multiple sources and output a single TSV file",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument("--datadir", required=True, help="Name of the folder containing independent folders for each lab")
+    parser.add_argument("--rename", required=False, help="TSV, CSV, or excel file containing new standards for column names")
+    parser.add_argument("--correction", required=False, help="TSV, CSV, or excel file containing data points requiring corrections")
+    parser.add_argument("--cache", required=False, help="Previously processed data files")
+    parser.add_argument("--output", required=True, help="TSV file aggregating all columns listed in the 'rename file'")
+    args = parser.parse_args()
 
-    path = '/Users/Anderson/Library/CloudStorage/GoogleDrive-anderson.brito@itps.org.br/Outros computadores/My Mac mini/google_drive/ITpS/projetos_itps/resp_pathogens/analyses/itps_respat_cache1/'
-    input_folder = path + 'data/'
-    rename_file = input_folder + 'rename_columns.xlsx'
-    correction_file = input_folder + 'fix_values.xlsx'
-    cache_file = ''#input_folder + '2022-07-26_combined_data.tsv'
-    output = input_folder + today + '_combined_data_dasa.tsv'
+    path = os.path.abspath(os.getcwd())
+    input_folder = path + '/' + args.datadir + '/'
+    rename_file = args.rename
+    correction_file = args.correction
+    cache_file = args.cache
+    output = args.output
+
+    # # path = '/Users/Anderson/Library/CloudStorage/GoogleDrive-anderson.brito@itps.org.br/Outros computadores/My Mac mini/google_drive/ITpS/projetos_itps/resp_pathogens/analyses/itps_respat_cache1/'
+    # path = "/Users/anderson/google_drive/ITpS/projetos_itps/resp_pathogens/analyses/itps_respat_cache1/"
+    # input_folder = path + 'data/'
+    # rename_file = input_folder + 'rename_columns.xlsx'
+    # correction_file = input_folder + 'fix_values.xlsx'
+    # cache_file = ''#input_folder + '2022-08-02_combined_data_dasa.tsv'
+    # output = input_folder + today + '_combined_data_dasa.tsv'
 
     def load_table(file):
         df = ''
@@ -119,7 +120,7 @@ if __name__ == '__main__':
         return id
 
 
-    def deduplicate(dfL, dfN, id_columns):
+    def deduplicate(dfL, dfN, id_columns, test_name):
         # generate sample id
         dfL['unique_id'] = dfL[id_columns].astype(str).sum(axis=1)  # combine values in rows as a long string
         dfL['sample_id'] = dfL['unique_id'].apply(lambda x: generate_id(x))  # generate alphanumeric sample id
@@ -127,8 +128,8 @@ if __name__ == '__main__':
         # prevent reprocessing of previously processed samples
         if cache_file not in [np.nan, '', None]:
             duplicates = dfL[dfL['sample_id'].isin(dfT['sample_id'].tolist())]['sample_id'].tolist()
-            if len(duplicates) == len(dfL['sample_id'].tolist()):
-                print('\n\t\t * ALL samples were already previously processed. All set!')
+            if len(duplicates) == len(set(dfL['sample_id'].tolist())):
+                print('\n\t\t * ALL samples (%s) were already previously processed. All set!' % test_name)
                 dfN = pd.DataFrame()  # create empty dataframe, and populate it with reformatted data from original lab dataframe
                 dfL = pd.DataFrame()
 
@@ -137,18 +138,17 @@ if __name__ == '__main__':
 
                 return dfN, dfL
             else:
-                print('\n\t\t * A total of %s out of %s samples were already previously processed.' % (str(len(duplicates)), str(len(dfL['sample_id'].tolist()))))
-                new_samples = len(dfL['sample_id'].tolist()) - len(duplicates)
+                print('\n\t\t * A total of %s out of %s samples (%s) were already previously processed.' % (str(len(duplicates)), str(len(set(dfL['sample_id'].tolist()))), test_name))
+                new_samples = len(set(dfL['sample_id'].tolist())) - len(duplicates)
                 print('\t\t\t - Processing %s new samples...' % (str(new_samples)))
                 dfL = dfL[~dfL['sample_id'].isin(dfT['sample_id'].tolist())]  # remove duplicates
         else:
             new_samples = len(dfL['sample_id'].tolist())
-            print('\n\t\t\t - Processing %s new samples...' % (str(new_samples)))
+            print('\n\t\t\t - Processing %s new samples (%s)...' % (str(new_samples), test_name))
+
         # print('2')
         # print(dfL.head())
         return dfL, dfN
-
-
 
     # Fix datatables
     print('\nFixing datatables...')
@@ -156,6 +156,8 @@ if __name__ == '__main__':
         dfN = dfL
         if 'codigo' in dfL.columns.tolist(): #column with unique row data
             # print('\t\tDados resp_vir >> Correct format. Proceeding...')
+            test_name = "Painel viral"
+
             dfN = pd.DataFrame() # create empty dataframe, and populate it with reformatted data from original lab dataframe
             id_columns = ['codigorequisicao', 'idade', 'sexo', 'data_exame', 'cidade', 'uf']
 
@@ -164,6 +166,9 @@ if __name__ == '__main__':
                     dfL[column] = ''
                     print('\t\t\t - No \'%s\' column found. Please check for inconsistencies. Meanwhile, an empty \'%s\' column was added.' % (column, column))
 
+            # missing columns
+            dfL['Ct_geneE'] = ''
+            dfL['Ct_ORF1ab'] = ''
 
             # generate sample id
             dfL.insert(1, 'sample_id', '')
@@ -171,7 +176,7 @@ if __name__ == '__main__':
             dfL.fillna('', inplace=True)
 
             # assign id and deduplicate
-            dfL, dfN = deduplicate(dfL, dfN, id_columns)
+            dfL, dfN = deduplicate(dfL, dfN, id_columns, test_name)
             # print('3')
             # print(dfL.head())
 
@@ -245,6 +250,7 @@ if __name__ == '__main__':
 
         elif 'Gene S' in dfL.columns.tolist():
             # print('\t\tDados covid >> Correct format. Proceeding...')
+            test_name = "Thermo Fisher"
 
             if 'resultado' not in dfL.columns.tolist():
                 if 'resultado_norm' in dfL.columns.tolist():
@@ -285,16 +291,16 @@ if __name__ == '__main__':
             dfL['Ct_FluB'] = ''
             dfL['Ct_VSR'] = ''
             dfL['Ct_RDRP'] = ''
-
+            dfL['Ct_geneE'] = ''
 
             # assign id and deduplicate
-            dfL, dfN = deduplicate(dfL, dfN, id_columns)
+            dfL, dfN = deduplicate(dfL, dfN, id_columns, test_name)
             # print('3')
             # print(dfL.head())
 
             # print(dfL)
             if dfL.empty:
-                print('# Returning an empty dataframe')
+                # print('# Returning an empty dataframe')
                 return dfN
 
             # starting lab specific reformatting
@@ -313,6 +319,14 @@ if __name__ == '__main__':
 
             dfL['cidade_norm'] = dfL['cidade_norm'].apply(lambda x: not_assigned(x))
             dfL['uf_norm'] = dfL['uf_norm'].apply(lambda x: not_assigned(x))
+
+            for idx, row in dfL.iterrows():
+                result = dfL.loc[idx, 'resultado']
+                if result == 'NAO DETECTADO':
+                    # print(idx)
+                    dfL.loc[idx, 'Gene N'] = ''
+                    dfL.loc[idx, 'Gene ORF'] = ''
+                    dfL.loc[idx, 'Gene S'] = ''
 
             dfN = dfL
             # print('# Returning some dataframe')
@@ -401,8 +415,6 @@ if __name__ == '__main__':
             epiweek = str(Week.fromdate(date, system="cdc")) # get epiweeks
             year, week = epiweek[:4], epiweek[-2:]
             epiweek = str(Week(int(year), int(week)).enddate())
-#             epiweek = str(Week.fromdate(date, system="cdc"))  # get epiweeks
-#             epiweek = epiweek[:4] + '_' + 'EW' + epiweek[-2:]
         except:
             epiweek = ''
         return epiweek
@@ -454,7 +466,7 @@ if __name__ == '__main__':
     # reset index
     dfT = dfT.reset_index(drop=True)
     key_cols = ['lab_id', 'test_id', 'test_kit', 'sample_id', 'state_code', 'location', 'sex', 'date_testing', 'epiweek',
-                'age','FLUA_test_result', 'Ct_FluA', 'FLUB_test_result', 'Ct_FluB', 'VSR_test_result', 'Ct_VSR','SC2_test_result',
+                'age','FLUA_test_result', 'Ct_FluA', 'FLUB_test_result', 'Ct_FluB', 'VSR_test_result', 'Ct_VSR','SC2_test_result', 'Ct_geneE',
                 'Ct_geneN', 'Ct_geneS', 'Ct_ORF1ab', 'Ct_RDRP', 'geneS_detection', 'META_test_result', 'RINO_test_result',
                 'PARA_test_result', 'ADENO_test_result', 'BOCA_test_result', 'COVS_test_result', 'ENTERO_test_result', 'BAC_test_result']
 

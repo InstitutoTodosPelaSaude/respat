@@ -24,30 +24,33 @@ pd.options.mode.chained_assignment = None
 today = time.strftime('%Y-%m-%d', time.gmtime())
 
 if __name__ == '__main__':
-    # parser = argparse.ArgumentParser(
-    #     description="Combine and reformat data tables from multiple sources and output a single TSV file",
-    #     formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    # )
-    # parser.add_argument("--datadir", required=True, help="Name of the folder containing independent folders for each lab")
-    # parser.add_argument("--rename", required=False, help="TSV, CSV, or excel file containing new standards for column names")
-    # parser.add_argument("--correction", required=False, help="TSV, CSV, or excel file containing data points requiring corrections")
-    # parser.add_argument("--cache", required=False, help="Previously processed data files")
-    # parser.add_argument("--output", required=True, help="TSV file aggregating all columns listed in the 'rename file'")
-    # args = parser.parse_args()
-    #
-    # path = os.path.abspath(os.getcwd())
-    # input_folder = path + '/' + args.datadir + '/'
-    # rename_file = args.rename
-    # correction_file = args.correction
-    # cache_file = args.cache
-    # output = args.output
+    parser = argparse.ArgumentParser(
+        description="Combine and reformat data tables from multiple sources and output a single TSV file",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument("--datadir", required=True, help="Name of the folder containing independent folders for each lab")
+    parser.add_argument("--rename", required=False, help="TSV, CSV, or excel file containing new standards for column names")
+    parser.add_argument("--correction", required=False, help="TSV, CSV, or excel file containing data points requiring corrections")
+    parser.add_argument("--cache", required=False, help="Previously processed data files")
+    parser.add_argument("--output", required=True, help="TSV file aggregating all columns listed in the 'rename file'")
+    args = parser.parse_args()
 
-    path = '/Users/Anderson/Library/CloudStorage/GoogleDrive-anderson.brito@itps.org.br/Outros computadores/My Mac mini/google_drive/ITpS/projetos_itps/resp_pathogens/analyses/itps_respat_cache1/'
-    input_folder = path + 'data/'
-    rename_file = input_folder + 'rename_columns.xlsx'
-    correction_file = input_folder + 'fix_values.xlsx'
-    cache_file = input_folder + '2022-07-26_combined_data_hlagyn.tsv'
-    output = input_folder + today + '_combined_data_hlagyn2.tsv'
+    path = os.path.abspath(os.getcwd())
+    input_folder = path + '/' + args.datadir + '/'
+    rename_file = args.rename
+    correction_file = args.correction
+    cache_file = args.cache
+    output = args.output
+
+    # # path = '/Users/Anderson/Library/CloudStorage/GoogleDrive-anderson.brito@itps.org.br/Outros computadores/My Mac mini/google_drive/ITpS/projetos_itps/resp_pathogens/analyses/itps_respat_cache1/'
+    # path = "/Users/anderson/google_drive/ITpS/projetos_itps/resp_pathogens/analyses/itps_respat_cache1/"
+    # input_folder = path + 'data/'
+    # rename_file = input_folder + 'rename_columns.xlsx'
+    # correction_file = input_folder + 'fix_values.xlsx'
+    # cache_file = ''#input_folder + '2022-08-02_combined_data_hlagyn.tsv'
+    # output = input_folder + today + '_combined_data_hlagyn.tsv'
+
+
 
     def load_table(file):
         df = ''
@@ -120,7 +123,7 @@ if __name__ == '__main__':
 
 
 
-    def deduplicate(dfL, dfN, id_columns):
+    def deduplicate(dfL, dfN, id_columns, test_name):
         # generate sample id
         dfL['unique_id'] = dfL[id_columns].astype(str).sum(axis=1)  # combine values in rows as a long string
         dfL['sample_id'] = dfL['unique_id'].apply(lambda x: generate_id(x))  # generate alphanumeric sample id
@@ -128,15 +131,8 @@ if __name__ == '__main__':
         # prevent reprocessing of previously processed samples
         if cache_file not in [np.nan, '', None]:
             duplicates = dfL[dfL['sample_id'].isin(dfT['sample_id'].tolist())]['sample_id'].tolist()
-            # print(duplicates)
-            # for d in duplicates:
-            #     for idx, row in dfT.iterrows():
-            #         value = dfT.loc[idx, 'sample_id']
-            #         if d == value:
-            #             print(row)
-
-            if len(duplicates) == len(dfL['sample_id'].tolist()):
-                print('\n\t\t * ALL samples were already previously processed. All set!')
+            if len(duplicates) == len(set(dfL['sample_id'].tolist())):
+                print('\n\t\t * ALL samples (%s) were already previously processed. All set!' % test_name)
                 dfN = pd.DataFrame()  # create empty dataframe, and populate it with reformatted data from original lab dataframe
                 dfL = pd.DataFrame()
 
@@ -145,13 +141,14 @@ if __name__ == '__main__':
 
                 return dfN, dfL
             else:
-                print('\n\t\t * A total of %s out of %s samples were already previously processed.' % (str(len(duplicates)), str(len(dfL['sample_id'].tolist()))))
-                new_samples = len(dfL['sample_id'].tolist()) - len(duplicates)
+                print('\n\t\t * A total of %s out of %s samples (%s) were already previously processed.' % (str(len(duplicates)), str(len(set(dfL['sample_id'].tolist()))), test_name))
+                new_samples = len(set(dfL['sample_id'].tolist())) - len(duplicates)
                 print('\t\t\t - Processing %s new samples...' % (str(new_samples)))
                 dfL = dfL[~dfL['sample_id'].isin(dfT['sample_id'].tolist())]  # remove duplicates
         else:
             new_samples = len(dfL['sample_id'].tolist())
-            print('\n\t\t\t - Processing %s new samples...' % (str(new_samples)))
+            print('\n\t\t\t - Processing %s new samples (%s)...' % (str(new_samples), test_name))
+
         # print('2')
         # print(dfL.head())
         return dfL, dfN
@@ -166,7 +163,8 @@ if __name__ == '__main__':
         # print(''.join(dfL.columns.tolist()))
         # if lab == 'HLAGyn':
         if 'H1N1' in ''.join(dfL.columns.tolist()) or 'Influenza' in ''.join(dfL.columns.tolist()):#column with unique row data
-            # print('\t\tDados resp_vir >> Correct format. Proceeding...')
+            test_name = "Painel viral"
+            # print('\t\tDados resp_vir >> Correct format. Proceeding...' % test_name)
             dfL.insert(1, 'sample_id', '')
             dfL.fillna('', inplace=True)
 
@@ -199,21 +197,9 @@ if __name__ == '__main__':
                     dfL[column] = ''
                     print('\t\t\t - No \'%s\' column found. Please check for inconsistencies. Meanwhile, an empty \'%s\' column was added.' % (column, column))
 
-            # # generate sample id
-            # dfL.fillna('', inplace=True)
-            # dfL['unique_id'] = dfL[id_columns].astype(str).sum(axis=1) # combine values in rows as a long string
-            # dfL['sample_id'] = dfL['unique_id'].apply(lambda x: generate_id(x)) # generate alphanumeric sample id
-            #
-            # # prevent reprocessing of previously processed samples
-            # if cache_file not in [np.nan, '', None]:
-            #     duplicates = dfL[dfL['sample_id'].isin(dfT['sample_id'].tolist())]['sample_id'].tolist()
-            #     if len(duplicates) > 0:
-            #         print('\t\t * A total of ' + str(len(duplicates)) + ' samples were already processed previously. Skipping...')
-            #     dfL = dfL[~dfL['sample_id'].isin(dfT['sample_id'].tolist())] # remove duplicates
-
 
             # assign id and deduplicate
-            dfL, dfN = deduplicate(dfL, dfN, id_columns)
+            dfL, dfN = deduplicate(dfL, dfN, id_columns, test_name)
             # print('3')
             # print(dfL.head())
 
@@ -224,7 +210,14 @@ if __name__ == '__main__':
 
 
             # starting reformatting process
-            pathogens = {'FLUA': ['VIRUS_Influenza A', 'VIRUS_Influenza H1N1', 'VIRUS_Influenza H3', 'Vírus Influenza A', 'VIRUS_IA', 'VIRUS_H1N1', 'VIRUS_AH3'],'FLUB': ['VIRUS_Influenza B', 'Vírus Influenza B', 'VIRUS_B'], 'META': ['VIRUS_Metapneumovírus', 'VIRUS_MH'],'VSR': ['VIRUS_Sincicial A', 'VIRUS_Sincicial B', 'Vírus Sincicial Respiratório A/B', 'VIRUS_SA', 'VIRUS_SB'],'RINO': ['VIRUS_Rinovírus', 'VIRUS_RH'],'PARA': ['VIRUS_Parainfluenza 1', 'VIRUS_Parainfluenza 2','VIRUS_Parainfluenza 3', 'VIRUS_Parainfluenza 4', 'VIRUS_PH', 'VIRUS_PH2', 'VIRUS_PH3', 'VIRUS_PH4'],'ADENO': ['VIRUS_Adenovirus', 'VIRUS_ADE'], 'BOCA': ['VIRUS_Bocavirus', 'VIRUS_BOC'],'COVS': ['VIRUS_CoV-229E', 'VIRUS_CoV-HKU', 'VIRUS_CoV-NL63', 'VIRUS_CoV-OC43', 'VIRUS_229E', 'VIRUS_HKU', 'VIRUS_NL63', 'VIRUS_OC43'],'SC2': ['VIRUS_SARS_Like', 'VIRUS_SARS-CoV-2', 'Coronavírus SARS-CoV-2', 'VIRUS_SARS', 'VIRUS_COV2'],'ENTERO': ['VIRUS_Enterovírus', 'VIRUS_EV'],'BAC': ['BACTE_Bordetella pertussis', 'BACTE_Bordetella parapertussis', 'BACTE_Mycoplasma pneumoniae', 'BACTE_BP', 'BACTE_BPAR', 'BACTE_MP']}
+            pathogens = {'FLUA': ['VIRUS_Influenza A', 'VIRUS_Influenza H1N1', 'VIRUS_Influenza H3', 'Vírus Influenza A', 'VIRUS_IA', 'VIRUS_H1N1', 'VIRUS_AH3'],
+                         'FLUB': ['VIRUS_Influenza B', 'Vírus Influenza B', 'VIRUS_B'], 'META': ['VIRUS_Metapneumovírus', 'VIRUS_MH'],
+                         'VSR': ['VIRUS_Sincicial A', 'VIRUS_Sincicial B', 'Vírus Sincicial Respiratório A/B', 'VIRUS_SA', 'VIRUS_SB'],
+                         'RINO': ['VIRUS_Rinovírus', 'VIRUS_RH'],'PARA': ['VIRUS_Parainfluenza 1', 'VIRUS_Parainfluenza 2','VIRUS_Parainfluenza 3', 'VIRUS_Parainfluenza 4', 'VIRUS_PH', 'VIRUS_PH2', 'VIRUS_PH3', 'VIRUS_PH4'],
+                         'ADENO': ['VIRUS_Adenovirus', 'VIRUS_ADE'], 'BOCA': ['VIRUS_Bocavirus', 'VIRUS_BOC'],
+                         'COVS': ['VIRUS_CoV-229E', 'VIRUS_CoV-HKU', 'VIRUS_CoV-NL63', 'VIRUS_CoV-OC43', 'VIRUS_229E', 'VIRUS_HKU', 'VIRUS_NL63', 'VIRUS_OC43'],
+                         'SC2': ['VIRUS_SARS_Like', 'VIRUS_SARS-CoV-2', 'Coronavírus SARS-CoV-2', 'VIRUS_SARS', 'VIRUS_COV2'],
+                         'ENTERO': ['VIRUS_Enterovírus', 'VIRUS_EV'],'BAC': ['BACTE_Bordetella pertussis', 'BACTE_Bordetella parapertussis', 'BACTE_Mycoplasma pneumoniae', 'BACTE_BP', 'BACTE_BPAR', 'BACTE_MP']}
 
             # adding missing columns
             if 'Dt. Nascimento' not in dfL.columns.tolist():
@@ -236,7 +229,7 @@ if __name__ == '__main__':
             dfL['Ct_geneS'] = ''
             dfL['Ct_geneN'] = ''
             dfL['Ct_ORF1ab'] = ''
-
+            dfL['Ct_geneE'] = ''
 
             dfN = pd.DataFrame()
             unique_cols = list(set(dfL.columns.tolist()))
@@ -254,7 +247,7 @@ if __name__ == '__main__':
                     for target in tests:
                         # print(file, target)
                         if target in data.keys():
-                            pedido = data['Pedido']
+                            # pedido = data['Pedido']
                             # print(pedido, target, data[target])
                             if data[target] == 'Detectado':
                                 if data[pat + '_test_result'] in ['Not tested', 'Não Detectado']:
@@ -276,6 +269,7 @@ if __name__ == '__main__':
 
         elif 'CT_N' in dfL.columns.tolist():
             # print('\t\tDados covid >> Correct format. Proceeding...')
+            test_name = "Covid-19"
 
             id_columns = ['Pedido', 'Idade', 'Sexo', 'Data Coleta', 'Cidade', 'UF', 'CT_I', 'CT_N', 'CT_ORF1AB']
 
@@ -290,25 +284,14 @@ if __name__ == '__main__':
             dfL.fillna('', inplace=True)
 
 
-            # dfL['unique_id'] = dfL[id_columns].astype(str).sum(axis=1) # combine values in rows as a long string
-            # dfL['sample_id'] = dfL['unique_id'].apply(lambda x: generate_id(x)) # generate alphanumeric sample id
-            #
-            # # prevent reprocessing of previously processed samples
-            # if cache_file not in [np.nan, '', None]:
-            #     duplicates = dfL[dfL['sample_id'].isin(dfT['sample_id'].tolist())]['sample_id'].tolist()
-            #     if len(duplicates) > 0:
-            #         print('\t\t * A total of ' + str(len(duplicates)) + ' samples were already processed previously. Skipping...')
-            #     dfL = dfL[~dfL['sample_id'].isin(dfT['sample_id'].tolist())] # remove duplicates
-
-
             # assign id and deduplicate
-            dfL, dfN = deduplicate(dfL, dfN, id_columns)
+            dfL, dfN = deduplicate(dfL, dfN, id_columns, test_name)
             # print('3')
             # print(dfL.head())
 
             # print(dfL.head())
             if dfL.empty:
-                print('# Returning an empty dataframe')
+                # print('# Returning an empty dataframe')
                 return dfN
 
             # starting reformatting process
@@ -328,6 +311,7 @@ if __name__ == '__main__':
             dfL['Ct_RDRP'] = ''
             dfL['Ct_geneS'] = ''
             dfL['Ct_geneN'] = ''
+            dfL['Ct_geneE'] = ''
 
             # fix decimal values
             dfL['CT_N'] = dfL['CT_N'].str.replace(',', '.')
@@ -453,14 +437,10 @@ if __name__ == '__main__':
 
     # reset index
     dfT = dfT.reset_index(drop=True)
-    key_cols = ['lab_id', 'test_id', 'test_kit', 'sample_id', 'state_code', 'location', 'sex', 'date_testing',
-                'epiweek',
-                'age', 'FLUA_test_result', 'Ct_FluA', 'FLUB_test_result', 'Ct_FluB', 'VSR_test_result', 'Ct_VSR',
-                'SC2_test_result',
-                'Ct_geneN', 'Ct_geneS', 'Ct_ORF1ab', 'Ct_RDRP', 'geneS_detection', 'META_test_result',
-                'RINO_test_result',
-                'PARA_test_result', 'ADENO_test_result', 'BOCA_test_result', 'COVS_test_result', 'ENTERO_test_result',
-                'BAC_test_result']
+    key_cols = ['lab_id', 'test_id', 'test_kit', 'sample_id', 'state_code', 'location', 'sex', 'date_testing', 'epiweek',
+                'age','FLUA_test_result', 'Ct_FluA', 'FLUB_test_result', 'Ct_FluB', 'VSR_test_result', 'Ct_VSR','SC2_test_result', 'Ct_geneE',
+                'Ct_geneN', 'Ct_geneS', 'Ct_ORF1ab', 'Ct_RDRP', 'geneS_detection', 'META_test_result', 'RINO_test_result',
+                'PARA_test_result', 'ADENO_test_result', 'BOCA_test_result', 'COVS_test_result', 'ENTERO_test_result', 'BAC_test_result']
 
     for col in dfT.columns.tolist():
         if col not in key_cols:
