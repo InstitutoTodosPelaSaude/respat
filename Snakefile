@@ -166,8 +166,6 @@ tests = {
 "FLUB": "FLUB_test_result",
 "VSR": "VSR_test_result",
 "SC2": "SC2_test_result",
-"FLUA": "FLUA_test_result",
-"FLUB": "FLUB_test_result",
 "META": "META_test_result",
 "VSR": "VSR_test_result",
 "RINO": "RINO_test_result",
@@ -175,7 +173,6 @@ tests = {
 "ADENO": "ADENO_test_result",
 "BOCA": "BOCA_test_result",
 "COVS": "COVS_test_result",
-"SC2": "SC2_test_result",
 "ENTERO": "ENTERO_test_result",
 "BAC": "BAC_test_result"
 }
@@ -222,7 +219,7 @@ rule demog:
 			--output {output.age_matrix}
 			
 		echo {params.unique_id}
-		sed -i 's/{params.unique_id}/test_result/' {output.age_matrix}
+		sed -i '' 's/{params.unique_id}/test_result/' {output.age_matrix}
 		"""
 
 rule demogposrate_go:
@@ -234,7 +231,8 @@ rule demogposrate_go:
 
 def set_groups2(spl):
 	yvar = tests[spl] + ' age_group'
-	return([yvar])
+	filters = "~" + tests[spl] + ":Not tested",
+	return([yvar, filters])
 
 
 rule posrate_agegroup:
@@ -252,7 +250,8 @@ rule posrate_agegroup:
 		unique_id = "age_group",
 		extra = "country",
 		min_denominator = 50,
-		filter = "~test_result:Not tested",
+		# filter = "~test_result:Not tested",
+		filter = lambda wildcards: set_groups2(wildcards.sample)[1],
 	output:
 # 		week_matrix = rules.files.input.week_matrix,
 # 		allcovid = rules.files.input.allcovid,
@@ -276,7 +275,7 @@ rule posrate_agegroup:
 			--index {params.unique_id} \
 			--unique-id {params.unique_id} \
 			--extra-columns {params.extra} \
-			--filter {params.filter} \
+			--filter \"{params.filter}\" \
 			--output {output.alltests} \
 
 		python3 scripts/normdata.py \
@@ -391,12 +390,12 @@ rule test_results:
 			--unique-id {params.index} \
 			--extra-columns {params.extra_columns} \
 			--new-columns "{params.id_col}" \
-			--filters "{params.filters}" \
+			--filters \"{params.filters}\" \
 			--start-date {params.start_date} \
 			--end-date {params.end_date} \
 			--output {output}
 		
-		sed -i 's/{params.test_col}/test_result/' {output}
+		sed -i '' 's/{params.test_col}/test_result/' {output}
 		"""
 
 
