@@ -45,26 +45,26 @@ rule all:
 		"""
 
 
-rule reshape:
-	message:
-		"""
-		Combine tables with testing data
-		"""
-	input:
-		rename = arguments.rename_file,
-		correction = "data/fix_values.xlsx"
-	params:
-		datadir = arguments.datadir
-	output:
-		matrix = rules.files.input.combined1,
-	shell:
-		"""
-		python3 scripts/reshape_respvir.py \
-			--datadir {params.datadir} \
-			--rename {input.rename} \
-			--correction {input.correction} \
-			--output {output.matrix}
-		"""
+# rule reshape:
+# 	message:
+# 		"""
+# 		Combine tables with testing data
+# 		"""
+# 	input:
+# 		rename = arguments.rename_file,
+# 		correction = "data/fix_values.xlsx"
+# 	params:
+# 		datadir = arguments.datadir
+# 	output:
+# 		matrix = rules.files.input.combined1,
+# 	shell:
+# 		"""
+# 		python3 scripts/reshape_respvir.py \
+# 			--datadir {params.datadir} \
+# 			--rename {input.rename} \
+# 			--correction {input.correction} \
+# 			--output {output.matrix}
+# 		"""
 
 
 rule agegroups:
