@@ -14,7 +14,7 @@ rule arguments:
 		index_column = "division_exposure",
 		date_column = "date_testing",
 		start_date = "2021-12-18",
-		end_date = "2022-10-15" #atualizar data aqui
+		end_date = "2022-12-12" #atualizar data aqui
 
 arguments = rules.arguments.params
 
