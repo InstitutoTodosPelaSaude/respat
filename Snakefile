@@ -14,7 +14,7 @@ rule arguments:
 		index_column = "division_exposure",
 		date_column = "date_testing",
 		start_date = "2021-12-18",
-		end_date = "2022-12-12" #atualizar data aqui
+		end_date = "2022-11-26" #atualizar data aqui
 
 arguments = rules.arguments.params
 
@@ -45,26 +45,26 @@ rule all:
 		"""
 
 
-# rule reshape:
-# 	message:
-# 		"""
-# 		Combine tables with testing data
-# 		"""
-# 	input:
-# 		rename = arguments.rename_file,
-# 		correction = "data/fix_values.xlsx"
-# 	params:
-# 		datadir = arguments.datadir
-# 	output:
-# 		matrix = rules.files.input.combined1,
-# 	shell:
-# 		"""
-# 		python3 scripts/reshape_respvir.py \
-# 			--datadir {params.datadir} \
-# 			--rename {input.rename} \
-# 			--correction {input.correction} \
-# 			--output {output.matrix}
-# 		"""
+rule reshape:
+	message:
+		"""
+		Combine tables with testing data
+		"""
+	input:
+		rename = arguments.rename_file,
+		correction = "data/fix_values.xlsx"
+	params:
+		datadir = arguments.datadir
+	output:
+		matrix = rules.files.input.combined1,
+	shell:
+		"""
+		python3 scripts/reshape_respvir.py \
+			--datadir {params.datadir} \
+			--rename {input.rename} \
+			--correction {input.correction} \
+			--output {output.matrix}
+		"""
 
 
 rule agegroups:
