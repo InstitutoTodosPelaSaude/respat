@@ -1,4 +1,4 @@
-country	CO_MUNICIP	ADM2_PCODE	Populacao	DS_NOMEPAD_municip	CO_UF	state_code	CO_MACSAUD	DS_NOMEPAD_macsaud	state_name	municip_estado	region
+country	CO_MUNICIP	ADM2_PCODE	Populacao	DS_NOMEPAD_municip	CO_UF	state_code	CO_MACSAUD	DS_NOMEPAD_macsaud	state	municip_estado	region
 Brazil	120080	BR1200807	18504	PORTO ACRE	12	AC	1201	MACRO UNICA - AC	Acre	Porto Acre, Acre	Norte
 Brazil	120010	BR1200104	26278	BRASILEIA	12	AC	1201	MACRO UNICA - AC	Acre	Brasileia, Acre	Norte
 Brazil	120013	BR1200138	10266	BUJARI	12	AC	1201	MACRO UNICA - AC	Acre	Bujari, Acre	Norte

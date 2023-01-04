@@ -189,12 +189,12 @@ if __name__ == '__main__':
             format = lambda x, pos: '{:.1}'.format(x) # true data
 
         sns.heatmap(values, xticklabels=df.columns, yticklabels=df.index, cbar=colorbar,
-                    annot_kws={"fontsize":10}, cmap=cmap, norm=norm,
+                    annot_kws={"fontsize":7}, cmap=cmap, norm=norm,
                     cbar_kws={"orientation": "vertical", 'ticks': bins, 'format': FuncFormatter(format)},
                     mask=values < 1e-3, annot=annot, fmt='.0%', linewidths=0.05, linecolor="#CECECE")
     else:
         sns.heatmap(values, xticklabels=df.columns, yticklabels=df.index, vmin=min_value, vmax=max_value,
-                    linewidths=0.05, linecolor="#CECECE", annot_kws={"fontsize":8}, cmap=cmap, cbar=colorbar,
+                    linewidths=0.05, linecolor="#CECECE", annot_kws={"fontsize":7}, cmap=cmap, cbar=colorbar,
                     cbar_kws={"orientation": "vertical"}, mask=values < 0, annot=annot, fmt='.0%')
 
         # cmap3 = mpl.colors.ListedColormap(['white']) # blank values
@@ -220,8 +220,3 @@ if __name__ == '__main__':
         plt.savefig("heatmap_" + config.split('.')[0].split('_')[-1] + ".pdf", format="pdf", bbox_inches="tight")
     else:
         plt.show()
-
-
-
-
-

@@ -200,12 +200,13 @@ if __name__ == '__main__':
                 # print('\nNo rate factor provided. Using "1" instead.')
 
             if norm_variable in ['', None]:
-                # print(df2.loc[id2, time_col])
+                #print(df2.loc[id2, time_col])
                 denominator = float(df2.loc[id2, time_col])
-                # denominator = int(df2.loc[(df2[unique_id2] == id2), time_col])
+                #denominator = int(df2.loc[(df2[unique_id2] == id2), time_col])
             else:
                 denominator = float(df2.loc[id2, norm_variable])
-                # denominator = int(df2.loc[(df2[unique_id2] == id2), norm_variable])
+                #denominator = int(df2.loc[(df2[unique_id2] == id2), norm_variable])
+                #print(df2)
 
             if denominator > min_denominator: # prevent division by zero
                 normalized = '%.5f' % ((numerator * rate_factor) / denominator)

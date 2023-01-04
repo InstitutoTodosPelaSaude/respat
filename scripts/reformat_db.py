@@ -3,7 +3,7 @@
 # Created by: Anderson Brito
 # Email: anderson.brito@itps.org.br
 # Release date: 2022-01-19
-# Last update: 2022-08-01
+# Last update: 2022-12-10
 # Refactor by: Bragatte
 
 import pandas as pd
@@ -188,7 +188,21 @@ if __name__ == '__main__':
 
             # starting reformatting process
             dfN = pd.DataFrame()
-            pathogens = {'FLUA': ['FLUARV'], 'FLUB': ['FLUBRV'], 'VSR': ['RSVRV'], 'SC2': ['NGRV', 'SGRV', 'RDRPGRV', 'EGENERV', 'NGENERV'],'META': [], 'RINO': [], 'PARA': [], 'ADENO': [], 'BOCA': [], 'COVS': [], 'ENTERO': [], 'BAC': []}
+            pathogens = {
+                'SC2': ['NGRV', 'SGRV', 'RDRPGRV', 'EGENERV', 'NGENERV'],
+                'FLUA': ['FLUARV'],
+                'FLUB': ['FLUBRV'], 
+                'VSR': ['RSVRV'], 
+                'META': [], 
+                'RINO': [], 
+                'PARA': [], 
+                'ADENO': [], 
+                'BOCA': [], 
+                'COVS': [], 
+                'ENTERO': [], 
+                'BAC': []
+                }
+
             unique_cols = list(set(dfL.columns.tolist()))
 
             controls = ['ZZFLUA', 'ZZFLUB', 'ZZRSV', 'ZZSARS']
@@ -391,8 +405,20 @@ if __name__ == '__main__':
 
             # starting lab specific reformatting
             dfN = pd.DataFrame()
-            pathogens = {'FLUA': [], 'FLUB': [], 'VSR': [], 'SC2': ['ZZZE', 'ECT', 'ZZZN', 'N2CT', 'ZZZRD', 'ZZZS', 'ZZZORF'],
-                         'META': [], 'RINO': [], 'PARA': [], 'ADENO': [], 'BOCA': [], 'COVS': [], 'ENTERO': [], 'BAC': []}
+            pathogens = {
+                'SC2': ['ZZZE', 'ECT', 'ZZZN', 'N2CT', 'ZZZRD', 'ZZZS', 'ZZZORF'],
+                'FLUA': [], 
+                'FLUB': [], 
+                'VSR': [], 
+                'META': [], 
+                'RINO': [], 
+                'PARA': [], 
+                'ADENO': [], 
+                'BOCA': [], 
+                'COVS': [], 
+                'ENTERO': [], 
+                'BAC': []
+                }
 
             unique_cols = list(set(dfL.columns.tolist()))
 
@@ -526,6 +552,7 @@ if __name__ == '__main__':
 
     dfT['epiweek'] = dfT['date_testing'].apply(lambda x: get_epiweeks(x))
 
+    # add age from birthdate, if age is missing
     if 'birthdate' in dfT.columns.tolist():
         for idx, row in dfT.iterrows():
             birth = dfT.loc[idx, 'birthdate']
@@ -565,8 +592,7 @@ if __name__ == '__main__':
 
     # reset index
     dfT = dfT.reset_index(drop=True)
-    key_cols = ['lab_id', 'test_id', 'test_kit', 'sample_id', 'country', 'region', 'state', 'DS_UF_SIGLA', 'ADM1_PT', 'ADM1_PCODE', 'location',
-'ADM2_PT', 'ADM2_PCODE', 'lat', 'long', 'DS_NOMEPAD_macsaud', 'CO_MACSAUD', 'date_testing', 'epiweek', 'age', 'sex', 'age_group', 'FLUA_test_result',
+    key_cols = ['lab_id', 'test_id', 'test_kit', 'sample_id', 'state', 'location','date_testing', 'epiweek', 'age', 'sex', 'FLUA_test_result',
 'Ct_FluA', 'FLUB_test_result', 'Ct_FluB', 'VSR_test_result', 'Ct_VSR', 'SC2_test_result', 'Ct_geneE', 'Ct_geneN', 'Ct_geneS', 'Ct_ORF1ab', 'Ct_RDRP',
 'geneS_detection', 'META_test_result', 'RINO_test_result', 'PARA_test_result', 'ADENO_test_result', 'BOCA_test_result', 'COVS_test_result',
 'ENTERO_test_result', 'BAC_test_result']
@@ -575,7 +601,6 @@ if __name__ == '__main__':
         if col not in key_cols:
             dfT = dfT.drop(columns=[col])
     dfT = dfT[key_cols]
-
     # print(dfT.columns.tolist)
     dfT['date_testing'] = dfT['date_testing'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else 'XXXXX')
 

@@ -3,7 +3,7 @@
 # Created by: Anderson Brito
 # Email: anderson.brito@itps.org.br
 # Release date: 2022-01-19
-# Last update: 2022-07-13
+# Last update: 2022-12-10
 # Refactor by: Bragatte
 
 import pandas as pd
@@ -151,17 +151,17 @@ if __name__ == '__main__':
         return dfL, dfN
 
 
-
     # Fix datatables
     print('\nFixing datatables...')
-    def fix_datatable(dfL, file):
+    def fix_datatable(dfL,file):
         dfN = dfL
         if 'codigo' in dfL.columns.tolist(): #column with unique row data
+            test_name = "Painel viral DASA"
             # print('\t\tDados resp_vir >> Correct format. Proceeding...')
-            test_name = "Painel viral"
+
+            id_columns = ['codigorequisicao', 'idade', 'sexo', 'data_exame', 'cidade', 'uf']
 
             dfN = pd.DataFrame() # create empty dataframe, and populate it with reformatted data from original lab dataframe
-            id_columns = ['codigorequisicao', 'idade', 'sexo', 'data_exame', 'cidade', 'uf']
 
             for column in id_columns:
                 if column not in dfL.columns.tolist():
@@ -171,6 +171,13 @@ if __name__ == '__main__':
             # missing columns
             dfL['Ct_geneE'] = ''
             dfL['Ct_ORF1ab'] = ''
+            dfL['Ct_geneN'] = ''
+            dfL['Ct_geneS'] = ''
+            dfL['Ct_VSR'] = ''
+            dfL['geneS_detection'] = ''
+            dfL['Ct_RDRP'] = ''
+            dfL['Ct_FluA'] = ''   
+            dfL['Ct_FluB'] = ''
 
             # generate sample id
             dfL.insert(1, 'sample_id', '')
@@ -182,14 +189,25 @@ if __name__ == '__main__':
             # print('3')
             # print(dfL.head())
 
-            # print(dfL.head())
             if dfL.empty:
                 # print('# Returning an empty dataframe')
                 return dfN
 
             # starting lab specific reformatting
-            pathogens = {'FLUA': ['FLUA'], 'FLUB': ['FLUB'], 'VSR': ['VSR'], 'SC2': ['COVID'], 'META': [], 'RINO': [],
-                         'PARA': [], 'ADENO': [], 'BOCA': [], 'COVS': [], 'ENTERO': [], 'BAC': []}
+            pathogens = {
+                'SC2': ['COVID'], 
+                'FLUA': ['FLUA'], 
+                'FLUB': ['FLUB'], 
+                'VSR': ['VSR'], 
+                'META': [], 
+                'RINO': [],
+                'PARA': [], 
+                'ADENO': [], 
+                'BOCA': [], 
+                'COVS': [], 
+                'ENTERO': [], 
+                'BAC': []
+                }
             unique_cols = list(set(dfL.columns.tolist()))
 
             for i, (code, dfR) in enumerate(dfL.groupby('codigorequisicao')):
@@ -424,9 +442,7 @@ if __name__ == '__main__':
     dfT['epiweek'] = dfT['date_testing'].apply(lambda x: get_epiweeks(x))
 
     # print(dfT.columns.tolist())
-    # print(dfT.head())
     # print(len(dfT['sample_id'].tolist()))
-
     # add age from birthdate, if age is missing
     if 'birthdate' in dfT.columns.tolist():
         for idx, row in dfT.iterrows():
@@ -467,8 +483,7 @@ if __name__ == '__main__':
 
     # reset index
     dfT = dfT.reset_index(drop=True)
-    key_cols = ['lab_id', 'test_id', 'test_kit', 'sample_id', 'country', 'region', 'state', 'DS_UF_SIGLA', 'ADM1_PT', 'ADM1_PCODE', 'location',
-'ADM2_PT', 'ADM2_PCODE', 'lat', 'long', 'DS_NOMEPAD_macsaud', 'CO_MACSAUD', 'date_testing', 'epiweek', 'age', 'sex', 'age_group', 'FLUA_test_result',
+    key_cols = ['lab_id', 'test_id', 'test_kit', 'sample_id', 'state', 'location','date_testing', 'epiweek', 'age', 'sex', 'FLUA_test_result',
 'Ct_FluA', 'FLUB_test_result', 'Ct_FluB', 'VSR_test_result', 'Ct_VSR', 'SC2_test_result', 'Ct_geneE', 'Ct_geneN', 'Ct_geneS', 'Ct_ORF1ab', 'Ct_RDRP',
 'geneS_detection', 'META_test_result', 'RINO_test_result', 'PARA_test_result', 'ADENO_test_result', 'BOCA_test_result', 'COVS_test_result',
 'ENTERO_test_result', 'BAC_test_result']
@@ -476,10 +491,8 @@ if __name__ == '__main__':
     for col in dfT.columns.tolist():
         if col not in key_cols:
             dfT = dfT.drop(columns=[col])
-
-    # print(dfT.columns.tolist)
-
     dfT = dfT[key_cols]
+    # print(dfT.columns.tolist)
     dfT['date_testing'] = dfT['date_testing'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else 'XXXXX')
 
     # # fix test results with empty data

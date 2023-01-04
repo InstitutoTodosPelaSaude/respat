@@ -214,7 +214,7 @@ if __name__ == '__main__':
         plot_kind = params.loc['plot_kind', 'value']
         if '.' in colour_scheme:
             ax = df2.plot(ax=ax, kind=plot_kind, stacked=True, color=[colourmap[i] for i in df2.columns], edgecolor='white', lw=0.1,
-                          figsize=(plot_width, plot_heigth), width=0.90, zorder=10)
+            figsize=(plot_width, plot_heigth), width=0.90, zorder=10)
         else:
             if colour_scheme in ['', None]:
                 colour_scheme = 'Greys'

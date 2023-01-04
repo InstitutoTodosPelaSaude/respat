@@ -1,34 +1,7 @@
+# Resp
 # Wildcards setting
 LOCATIONS = ["country", "region", "states"] #, "locations"]
 SAMPLES = ["FLUA", "FLUB", "VSR", "SC2", 'META', 'RINO', 'PARA', 'ADENO', 'BOCA', 'COVS', 'ENTERO', 'BAC']
-
-rule arguments:
-	params:
-		datadir = "data",
-		rename_file = "data/rename_columns.xlsx",
-#		shapefile = "/Users/anderson/GLab Dropbox/Anderson Brito/codes/geoCodes/bra_adm_ibge_2020_shp/bra_admbnda_adm2_ibge_2020.shp",
-		cache = "config/cache_coordinates.tsv",
-		age_groups = "config/demo_bins.txt",
-		geography = "config/tabela_municipio_macsaud_estado_regiao.tsv",
-		population = "config/municipio_faixasetarias_ibgeTCU.tsv",
-		index_column = "division_exposure",
-		date_column = "date_testing",
-		start_date = "2021-12-18",
-		end_date = "2022-11-26" #atualizar data aqui
-
-arguments = rules.arguments.params
-
-rule files:
-	input:
-		expand(["results/{geo}/matrix_{sample}_{geo}_posneg.tsv", "results/{geo}/combined_matrix_{geo}_posneg.tsv", "results/{geo}/combined_matrix_{geo}_posneg_weeks.tsv", "results/{geo}/combined_matrix_{geo}_posneg.tsv", "results/{geo}/combined_matrix_{geo}_totaltests.tsv", "results/{geo}/combined_matrix_{geo}_posrate.tsv", "results/demography/matrix_{sample}_agegroups.tsv"], sample=SAMPLES, geo=LOCATIONS),
-		combined1 = "results/combined_testdata1.tsv",
-		combined2 = "results/combined_testdata2.tsv",
-		combined = "results/combined_testdata.tsv",
-
-		merged = "results/demography/combined_matrix_agegroups.tsv",
-		caserate = "results/demography/combined_matrix_agegroups_100k.tsv",
-		week_matrix = "results/demography/matrix_agegroups_posneg_weeks.tsv",
-		allpat_matrix = "results/country/combined_matrix_country_posneg_allpat_weeks.tsv",
 
 rule all:
 	shell:
@@ -44,56 +17,131 @@ rule all:
 		snakemake --cores all copy_files
 		"""
 
+rule arguments:
+	params:
+		datadir = "data",
+		rename_file = "data/rename_columns.xlsx",
+		correction_file = "data/fix_values.xlsx",
+		cache =  "data/combined_cache.tsv",#first time data/combined0.tsv
+		#shapefile = "config/bra_adm_ibge_2020_shp/bra_admbnda_adm2_ibge_2020.shp",
+		
+		cache_coord = "config/cache_coordinates.tsv",
+		age_groups = "config/demo_bins.txt",
+		date_column = "date_testing",
 
-rule reshape:
+		geography = "config/tabela_municipio_macsaud_estado_regiao.tsv",
+		population = "config/municipio_faixasetarias_ibgeTCU.tsv",
+		index_column = "division_exposure",
+
+		start_date = "2021-12-05",
+		end_date = "2022-12-17" #atualizar data aqui
+
+arguments = rules.arguments.params
+
+rule files:
+	input:
+		expand(["results/{geo}/matrix_{sample}_{geo}_posneg.tsv", "results/{geo}/combined_matrix_{geo}_posneg.tsv", "results/{geo}/combined_matrix_{geo}_posneg_weeks.tsv", "results/{geo}/combined_matrix_{geo}_posneg.tsv", "results/{geo}/combined_matrix_{geo}_totaltests.tsv", "results/{geo}/combined_matrix_{geo}_posrate.tsv", "results/demography/matrix_{sample}_agegroups.tsv"], sample=SAMPLES, geo=LOCATIONS),
+		combined1 = "results/combined1_labs.tsv", #labs
+		combined2 = "results/combined2_age.tsv", #age
+		combined = "results/combined.tsv", #geocols
+
+		merged = "results/demography/combined_matrix_agegroups.tsv",
+		caserate = "results/demography/combined_matrix_agegroups_100k.tsv",
+		week_matrix = "results/demography/matrix_agegroups_posneg_weeks.tsv",
+		allpat_matrix = "results/country/combined_matrix_country_posneg_allpat_weeks.tsv",
+
+rule reformat_hlagyn:
 	message:
 		"""
-		Combine tables with testing data
+		Combine data from HLAGyn
 		"""
 	input:
 		rename = arguments.rename_file,
-		correction = "data/fix_values.xlsx"
+		correction = arguments.correction_file,
+		cache = arguments.cache 
 	params:
 		datadir = arguments.datadir
 	output:
-		matrix = rules.files.input.combined1,
+		matrix = temp("results/combined_hla.tsv"),
 	shell:
 		"""
-		python3 scripts/reshape_respvir.py \
+		python3 scripts/reformat_hlagyn.py \
 			--datadir {params.datadir} \
 			--rename {input.rename} \
 			--correction {input.correction} \
+			--cache {input.cache} \
 			--output {output.matrix}
 		"""
 
-
-rule agegroups:
+rule reformat_dasa:
 	message:
 		"""
-		Add column with age groups
+		Combine data from Dasa
 		"""
 	input:
-		metadata = rules.reshape.output.matrix,
-		bins = arguments.age_groups,
+		rename = arguments.rename_file,
+		correction = arguments.correction_file,
+		cache = rules.reformat_hlagyn.output.matrix # previous lab
 	params:
-		column = "age",
-		group = "age_group",
-		lowest = "0",
-		highest = "200",
+		datadir = arguments.datadir
 	output:
-		matrix = rules.files.input.combined2,
+		matrix = temp("results/combined_dasa.tsv"),
 	shell:
 		"""
-		python3 scripts/groupbyrange.py \
-			--input {input.metadata} \
-			--column {params.column} \
-			--bins {input.bins} \
-			--group {params.group} \
-			--lowest {params.lowest} \
-			--highest {params.highest} \
+		python3 scripts/reformat_dasa.py \
+			--datadir {params.datadir} \
+			--rename {input.rename} \
+			--correction {input.correction} \
+			--cache {input.cache} \
 			--output {output.matrix}
 		"""
 
+
+rule reformat_db:
+	message:
+		"""
+		Combine data from DB Molecular
+		"""
+	input:
+		rename = arguments.rename_file,
+		correction = arguments.correction_file,
+		cache = rules.reformat_dasa.output.matrix # previous lab
+	params:
+		datadir = arguments.datadir
+	output:
+		matrix = temp("results/combined_db.tsv"), #rules.files.input.combined1,
+	shell:
+		"""
+		python3 scripts/reformat_db.py \
+			--datadir {params.datadir} \
+			--rename {input.rename} \
+			--correction {input.correction} \
+			--cache {input.cache} \
+			--output {output.matrix}
+		"""
+
+rule reformat_sabin:
+	message:
+		"""
+		Combine data from SABIN
+		"""
+	input:
+		rename = arguments.rename_file,
+		correction = arguments.correction_file,
+		cache = rules.reformat_db.output.matrix # last lab
+	params:
+		datadir = arguments.datadir
+	output:
+		matrix = rules.files.input.combined1, # new combined1_lab or temp("results/combined_sabin.tsv")
+	shell:
+		"""
+		python3 scripts/reformat_sabin.py \
+			--datadir {params.datadir} \
+			--rename {input.rename} \
+			--correction {input.correction} \
+			--cache {input.cache} \
+			--output {output.matrix}
+		"""
 
 # rule geomatch:
 # 	message:
@@ -102,7 +150,7 @@ rule agegroups:
 # 		"""
 # 	input:
 # 		input_file = rules.agegroups.output.matrix,
-# 		cache = arguments.cache,
+# 		cache_coord = arguments.cache_coord,
 # 		shapefile = arguments.shapefile,
 # 	params:
 # 		geo_columns = "state, location",
@@ -122,11 +170,40 @@ rule agegroups:
 # 			--add-geo {params.add_geo} \
 # 			--lat {params.lat} \
 # 			--long {params.long} \
-# 			--cache {input.cache} \
+# 			--cache {input.cache_coord} \
 # 			--check-match {params.check_match} \
 # 			--target \"{params.target}\" \
 # 			--output {output.matrix}
 # 		"""
+
+
+
+rule agegroups:
+	message:
+		"""
+		Add column with age groups
+		"""
+	input:
+		metadata =  rules.files.input.combined1,
+		bins = arguments.age_groups,
+	params:
+		column = "age",
+		group = "age_group",
+		lowest = "0",
+		highest = "200",
+	output:
+		matrix = rules.files.input.combined2, # new combined2_age
+	shell:
+		"""
+		python3 scripts/groupbyrange.py \
+			--input {input.metadata} \
+			--column {params.column} \
+			--bins {input.bins} \
+			--group {params.group} \
+			--lowest {params.lowest} \
+			--highest {params.highest} \
+			--output {output.matrix}
+		"""
 
 
 rule geocols:
@@ -138,12 +215,12 @@ rule geocols:
 		file = rules.agegroups.output.matrix,
 		newcols = arguments.geography,
 	params:
-		target = "country, region, state_name",
-		index = "state_code",
+		target = "country#5, region#6, state_code#8", # rename_columns
+		index = "state", # config/tabela_municipio_macsaud_estado_regiao 
 		action = "add",
 		mode = "columns"
 	output:
-		matrix = rules.files.input.combined,
+		matrix = rules.files.input.combined, # new combined_cache
 	priority: 10
 	shell:
 		"""
@@ -162,25 +239,25 @@ rule demog_go:
 		expand("results/demography/matrix_{sample}_agegroups.tsv", sample=SAMPLES),
 
 tests = {
-"FLUA": "FLUA_test_result",
-"FLUB": "FLUB_test_result",
-"VSR": "VSR_test_result",
-"SC2": "SC2_test_result",
-"META": "META_test_result",
-"VSR": "VSR_test_result",
-"RINO": "RINO_test_result",
-"PARA": "PARA_test_result",
-"ADENO": "ADENO_test_result",
-"BOCA": "BOCA_test_result",
-"COVS": "COVS_test_result",
-"ENTERO": "ENTERO_test_result",
-"BAC": "BAC_test_result"
+	"SC2": "SC2_test_result",
+	"FLUA": "FLUA_test_result",
+	"FLUB": "FLUB_test_result",
+	"VSR": "VSR_test_result",
+	"META": "META_test_result",
+	"RINO": "RINO_test_result",
+	"PARA": "PARA_test_result",
+	"ADENO": "ADENO_test_result",
+	"BOCA": "BOCA_test_result",
+	"COVS": "COVS_test_result",
+	"SC2": "SC2_test_result",
+	"ENTERO": "ENTERO_test_result",
+	"BAC": "BAC_test_result"
 }
 
 def set_groups(spl):
 	yvar = tests[spl] + ' epiweek'
 	id_col = tests[spl]
-	filter = "sex:F, sex:M, ~age_group:''"
+	filter = "sex:F, sex:M, ~age_group:'' " # filter specific tests, test_kit:test_4
 	add_col = "pathogen:" + spl + ", name:Brasil"
 	return([yvar, id_col, filter, add_col])
 
@@ -212,7 +289,7 @@ rule demog:
 			--format {params.format} \
 			--yvar {params.yvar} \
 			--new-columns \"{params.id_col}\" \
-			--filter "{params.filters}" \
+			--filter \"{params.filters}\" \
 			--unique-id {params.unique_id} \
 			--start-date {params.start_date} \
 			--end-date {params.end_date} \
@@ -231,8 +308,9 @@ rule demogposrate_go:
 
 def set_groups2(spl):
 	yvar = tests[spl] + ' age_group'
-	filters = "~" + tests[spl] + ":Not tested",
-	return([yvar, filters])
+	filters = "~" + tests[spl] + ":Not tested" # filter specific test ->  + ", test_kit:test_4"
+	#return([yvar])
+	return([yvar, filters]) # add
 
 
 rule posrate_agegroup:
@@ -245,20 +323,17 @@ rule posrate_agegroup:
 	params:
 		format = "integer",
 		xvar = "epiweek",
-# 		yvar = "age_group SC2_test_result",
-		yvar = lambda wildcards: set_groups2(wildcards.sample)[0],
+# 		yvar = "age_group SC2_test_result", #only SC2
+		yvar = lambda wildcards: set_groups2(wildcards.sample)[0], # include other pathogens
 		unique_id = "age_group",
 		extra = "country",
 		min_denominator = 50,
-		# filter = "~test_result:Not tested",
-		filter = lambda wildcards: set_groups2(wildcards.sample)[1],
+#		filter = "~test_result:Not tested",
+#		filter = lambda wildcards: set_groups2(wildcards.sample)[1],
 	output:
-# 		week_matrix = rules.files.input.week_matrix,
-# 		allcovid = rules.files.input.allcovid,
-# 		posrate = rules.files.input.posrate,
-		week_matrix = "results/demography/matrix_agegroups_weeks_{sample}_posneg.tsv",
-		alltests = "results/demography/matrix_agegroups_weeks_{sample}_alltests.tsv",
-		posrate = "results/demography/matrix_agegroups_weeks_{sample}_posrate.tsv",
+		week_matrix = "results/demography/matrix_agegroups_weeks_{sample}_posneg.tsv", #rules.files.input.week_matrix,
+		alltests = "results/demography/matrix_agegroups_weeks_{sample}_alltests.tsv", #rules.files.input.allcovid,
+		posrate = "results/demography/matrix_agegroups_weeks_{sample}_posrate.tsv", #rules.files.input.posrate,
 	shell:
 		"""
 		python3 scripts/rows2matrix.py \
@@ -275,7 +350,6 @@ rule posrate_agegroup:
 			--index {params.unique_id} \
 			--unique-id {params.unique_id} \
 			--extra-columns {params.extra} \
-			--filter \"{params.filter}\" \
 			--output {output.alltests} \
 
 		python3 scripts/normdata.py \
@@ -342,7 +416,7 @@ rule test_results_go:
 index_results = {
 "country": ["country", "\'\'"],
 "region": ["region", "\'\'"],
-"states": ["state_name", "state_code country"]
+"states": ["state", "state_code country"]
 # "locations": ["ADM2_PCODE", "ADM2_PT state state_code"]
 }
 
@@ -350,7 +424,7 @@ def set_index_results(spl, loc):
 	yvar = tests[spl] + ' ' + index_results[loc][0]
 	index = index_results[loc][0]
 	extra_cols = index_results[loc][1]
-	filter = "~" + tests[spl] + ":Not tested"
+	filter = "~" + tests[spl] + ":Not tested" # filter specific test ->  + ", test_kit:test_4"
 	add_col = "pathogen:" + spl
 	test_col = tests[spl]
 	return([yvar, index, extra_cols, filter, add_col, test_col])
@@ -446,7 +520,7 @@ rule total_tests_go:
 index_totals = {
 "country": ["pathogen country", "country", "\'\'"],
 "region": ["pathogen region", "region", "\'\'"],
-"states": ["pathogen state_name", "state_name", "state_code country"]
+"states": ["pathogen state", "state", "state_code country"]
 # "locations": ["pathogen ADM2_PCODE", "ADM2_PCODE", "ADM2_PT state state_code"]
 }
 
@@ -578,7 +652,6 @@ rule posneg_allpat:
 	
 
 
-
 rule copy_files:
 	message:
 		"""
@@ -586,9 +659,10 @@ rule copy_files:
 		"""
 	shell:
 		"""
+		cp results/combined.tsv data/combined_cache.tsv
+
 		cp results/demography/combined_matrix_agegroups.tsv figures/pyramid
 		cp results/demography/combined_matrix_agegroups_100k.tsv figures/pyramid
-
 
 		cp results/country/combined_matrix_country_posneg_weeks.tsv figures/barplot
 		cp results/country/combined_matrix_country_posneg_allpat_weeks.tsv figures/barplot
@@ -598,6 +672,7 @@ rule copy_files:
 		cp results/demography/matrix_agegroups_weeks_SC2_posrate.tsv figures/heatmap
 		cp results/demography/matrix_agegroups_weeks_FLUA_posrate.tsv figures/heatmap
 		cp results/demography/matrix_agegroups_weeks_VSR_posrate.tsv figures/heatmap
+		
 	"""
 
 
@@ -631,10 +706,10 @@ rule remove_figs:
 	message: "Removing figures"
 	shell:
 		"""
+		rm figures/*/matrix*
+		rm figures/*/combined*
 		rm figures/*/*.pdf
 		rm figures/*/*.eps
-		rm figures/*/combined*
-		rm figures/*/matrix*
 		"""
 
 

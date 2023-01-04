@@ -13,9 +13,9 @@ if __name__ == '__main__':
     parser.add_argument("--input1", required=True, help="Original dataframe file")
     parser.add_argument("--input2", required=False, help="Files with extra columns to be added or modified, including an index column")
     parser.add_argument("--index", required=False, type=str, help="Column with unique identifiers")
-    parser.add_argument("--action", required=False, type=str,
+    parser.add_argument("--action", required=True, type=str,
                         choices=['add', 'modify', 'reorder'], help="Action to be executed to filter target taxa")
-    parser.add_argument("--mode", required=False, type=str,
+    parser.add_argument("--mode", required=True, type=str,
                         choices=['columns', 'rows'], help="Elements to be processed: columns or rows?")
     parser.add_argument("--targets", required=False,  help="List of columns or rows to be added, remove or modified."
                                                            "It can be provided as a file, one target per line, or as a comma-separated list of targets.")
@@ -41,16 +41,16 @@ if __name__ == '__main__':
     output = args.output
 
 
-    # path = '/Users/anderson/google_drive/ITpS/projetos_itps/metasurvBR/data/metadata_genomes/'
-    # input1 = path + 'metadata_2022-02-26_complement_seqtech_labs_geo10.tsv' # target file
-    # input2 = path + 'changes_locations.tsv' # new data file
-    # # index = 'Estado' # index in common between both dataframes
-    # action = 'modify'
-    # mode = 'rows'
+    # path = '/Users/anderson/google_drive/Other computers/My Mac mini/google_drive/ITpS/projetos_itps/monkeypox/analyses/20220729_monkeypox_relatório0/SES-SP/'
+    # input1 = path + 'MonkeyPox_355030_id_dtsintomas_dtnot_class.xlsx' # target file
+    # input2 = path + 'code_description.tsv' # new data file
+    # index = 'classificaFim' # index in common between both dataframes
+    # action = 'add'
+    # mode = 'columns'
     # # list_targets = path + 'columns.tsv' # list of columns
-    # list_targets = None
+    # list_targets = "category#4"
     # sortby = None
-    # filters = ''
+    # filters = None
     # date_col = None
     # start_date = '' # start date above this limit
     # end_date = '' # end date below this limit
@@ -184,6 +184,7 @@ if __name__ == '__main__':
             df2.fillna('', inplace=True)
             if len(targets) > 0:
                 print('\n# Adding new columns')
+                # print(df2.columns.tolist())
                 df2 = df2[[index] + [col.split('#')[0] for col in targets]]
                 df2 = df2.drop_duplicates(keep='last')
 

@@ -46,6 +46,7 @@ if __name__ == '__main__':
     parser.add_argument("--time-var", required=False, type=str, help="Time variable, when x variable is not temporal data")
     parser.add_argument("--start-date", required=False, type=str,  help="Start date in YYYY-MM-DD format")
     parser.add_argument("--end-date", required=False, type=str,  help="End date in YYYY-MM-DD format")
+    parser.add_argument("--sortby", required=False, nargs='+', type=str, help="Columns to be used to sort the output file")
     parser.add_argument("--output", required=True, help="TSV matrix")
     args = parser.parse_args()
     # print(args)
@@ -64,10 +65,11 @@ if __name__ == '__main__':
     timevar = args.time_var
     start_date = args.start_date
     end_date = args.end_date
+    sortby = args.sortby
     output = args.output
 
-    # path = '/Users/anderson/google_drive/ITpS/projetos_colaboracoes/phyloDF/data/epidemiology/brasil/tsv/'
-    # input = path + 'painel_short.tsv'
+    # path = '/Users/Anderson/Library/CloudStorage/GoogleDrive-anderson.brito@itps.org.br/Outros computadores/My Mac mini/google_drive/ITpS/projetos_itps/vigilanciagenomica/analyses/relatorioXX_20220812/data/'
+    # input = path + 'matrix_full_brazil_epidata_short.tsv'
     # x_var = 'data'
     # x_type = 'time'
     # y_var = ['codmun']
@@ -75,13 +77,14 @@ if __name__ == '__main__':
     # target_variable = 'casosNovos'
     # sum_target = 'no'
     # data_format = 'integer'
-    # add_id_cols = 'pais:Brasil'
-    # extra_cols = ['regiao', 'estado', 'municipio', 'coduf']
-    # filters = "~codmun:"
+    # add_id_cols = ''
+    # extra_cols = ['regiao', 'estado', 'municipio', 'populacaoTCU2019']
+    # filters = "~municipio:"
     # timevar = ''
     # start_date = '2020-03-01' # start date above this limit
-    # end_date = '2021-12-31' # end date below this limit
-    # output = path + 'matrix.tsv'
+    # end_date = '2022-09-27' # end date below this limit
+    # sortby = 'codmun'
+    # output = path + 'matrix_test5.tsv'
 
     def load_table(file):
         df = ''
@@ -154,13 +157,20 @@ if __name__ == '__main__':
                 new_df = new_df.append(df)
             else:
                 new_df = new_df[~new_df[filter_col].isin(filter_val)]
-            # print(new_df)#.head())
         return new_df
 
     # load data
     if filters not in ['', None]:
-        df = filter_df(df, filters)
-    # print(df[y_var])
+        if ':' not in filters:
+            dfC = load_table(filters)
+            dfC['action'] = dfC['action'].apply(lambda x: '~' if x == 'exclude' else '')  # exclude -XX-XX missing dates
+            dfC['filter'] = dfC['action'].astype(str) + dfC['column'].astype(str) + ':' + dfC['value'].astype(str)
+            filters = ', '.join(dfC['filter'].tolist())
+        if filters == '':
+            pass
+        else:
+            df = filter_df(df, filters)
+    #print(set(df["test_kit"].to_list()))
 
     # filter by time
     if x_type == 'time':
@@ -169,7 +179,6 @@ if __name__ == '__main__':
 
     if timevar not in ['', None]:
         today = time.strftime('%Y-%m-%d', time.gmtime())
-
         df[timevar] = df[timevar].str.replace('/', '-', regex=False)
 
         # assess date completeness
@@ -210,7 +219,11 @@ if __name__ == '__main__':
 
     # set new indices
     df.insert(0, 'unique_id1', '')
-    df['unique_id1'] = df[y_var].astype(str).sum(axis=1)
+    if len(y_var) > 1:
+        df['unique_id1'] = df[y_var].astype(str).sum(axis=1)
+    else:
+        df['unique_id1'] = df[y_var].astype(str)
+
     df['unique_id1'] = df['unique_id1'].astype(str)
     df.insert(1, 'unique_id2', '')
     df['unique_id2'] = df[y_unique_id]#.astype(str).sum(axis=1)
@@ -221,7 +234,6 @@ if __name__ == '__main__':
     df2.insert(0, 'unique_id1', '')
     for y_col in y_var:
         df2.insert(0, y_col, '')
-
 
     rows = list(itertools.product(*list_ids))
     for idx, id_names in enumerate(rows):
@@ -246,9 +258,11 @@ if __name__ == '__main__':
     else:
         extra_cols = []
 
+    # print('target = ' + "\'" + target_variable + "\'")
     if target_variable in ['', None]:
         y_var = list(set(y_var))
         df1 = df.groupby([x_var] + ['unique_id1']).size().to_frame(name='count').reset_index() # group and count occorrences
+        # print('Here 1')
     else:
         if sum_target == 'yes':
             if data_format == 'float':
@@ -260,13 +274,10 @@ if __name__ == '__main__':
 
             if data_format == 'float':
                 df1['count'] = df1['count'].round(2)
+            # print('Here 2')
         else:
             df1 = df.rename(columns={target_variable: 'count'})
-
-    # print(df)
-    # if len(y_var) > 0:
-    # df[y_unique_id] = df[y_unique_id].astype(str)
-    # df1[y_var] = df1[y_var].astype(str)
+            # print('Here 3')
 
     df.set_index('unique_id1', inplace=True)
     df = df[~df.index.duplicated(keep='first')]
@@ -285,6 +296,8 @@ if __name__ == '__main__':
                     df2.at[idx, column] = value
     else:
         extra_cols = []
+
+    # print(df1.columns.tolist())
 
     # populate output dataframe
     for idx, row in df1.iterrows():
@@ -312,7 +325,9 @@ if __name__ == '__main__':
             df2.insert(0, col_name, '')
             df2[col_name] = col_value
 
-    df2 = df2.sort_values(by=y_unique_id)
+    if sortby not in ['', [''], None]:
+        df2 = df2.sort_values(by=sortby)
+    else:
+        df2 = df2.sort_values(by=y_unique_id)
     df2.to_csv(output, sep='\t', index=False)
     print('\nConversion successfully completed.\n')
-

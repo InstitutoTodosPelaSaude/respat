@@ -3,7 +3,7 @@
 # Created by: Anderson Brito
 # Email: anderson.brito@itps.org.br
 # Release date: 2022-01-19
-# Last update: 2022-07-13
+# Last update: 2022-11-23
 # Refactor by: Bragatte
 
 import pandas as pd
@@ -49,7 +49,6 @@ if __name__ == '__main__':
     # correction_file = input_folder + 'fix_values.xlsx'
     # cache_file = ''#input_folder + '2022-08-02_combined_data_hlagyn.tsv'
     # output = input_folder + today + '_combined_data_hlagyn.tsv'
-
 
 
     def load_table(file):
@@ -122,7 +121,6 @@ if __name__ == '__main__':
         return id
 
 
-
     def deduplicate(dfL, dfN, id_columns, test_name):
         # generate sample id
         dfL['unique_id'] = dfL[id_columns].astype(str).sum(axis=1)  # combine values in rows as a long string
@@ -130,7 +128,7 @@ if __name__ == '__main__':
 
         # prevent reprocessing of previously processed samples
         if cache_file not in [np.nan, '', None]:
-            duplicates = dfL[dfL['sample_id'].isin(dfT['sample_id'].tolist())]['sample_id'].tolist()
+            duplicates = set(dfL[dfL['sample_id'].isin(dfT['sample_id'].tolist())]['sample_id'].tolist())
             if len(duplicates) == len(set(dfL['sample_id'].tolist())):
                 print('\n\t\t * ALL samples (%s) were already previously processed. All set!' % test_name)
                 dfN = pd.DataFrame()  # create empty dataframe, and populate it with reformatted data from original lab dataframe
@@ -154,43 +152,29 @@ if __name__ == '__main__':
         return dfL, dfN
 
 
-
     # Fix datatables
     print('\nFixing datatables...')
-    def fix_datatable(dfL, file):
+    def fix_datatable(dfL,file):
         dfN = dfL
         # print(dfL.columns.tolist())
         # print(''.join(dfL.columns.tolist()))
         # if lab == 'HLAGyn':
         if 'H1N1' in ''.join(dfL.columns.tolist()) or 'Influenza' in ''.join(dfL.columns.tolist()):#column with unique row data
-            test_name = "Painel viral"
+            test_name = "Painel viral HLAGyn"
+
             # print('\t\tDados resp_vir >> Correct format. Proceeding...' % test_name)
+            # add sample_id and test_kit
             dfL.insert(1, 'sample_id', '')
             dfL.fillna('', inplace=True)
 
             id_columns = ['Pedido', 'Idade', 'Sexo', 'Data Coleta', 'Cidade', 'UF']
 
             test_columns = []
-            if 'Parainfluenza' in ''.join(dfL.columns.tolist()):
-                test_columns = ['VIRUS_Influenza A', 'VIRUS_Influenza H1N1', 'VIRUS_Influenza H3', 'VIRUS_Influenza B',
-                                'VIRUS_Metapneumovírus', 'VIRUS_Sincicial A', 'VIRUS_Sincicial B', 'VIRUS_Rinovírus',
-                                'VIRUS_Parainfluenza 1', 'VIRUS_Parainfluenza 2', 'VIRUS_Parainfluenza 3', 'VIRUS_Parainfluenza 4',
-                                'VIRUS_Adenovirus', 'VIRUS_Bocavirus', 'VIRUS_CoV-229E', 'VIRUS_CoV-HKU', 'VIRUS_CoV-NL63',
-                                'VIRUS_CoV-OC43', 'VIRUS_SARS_Like', 'VIRUS_SARS-CoV-2', 'VIRUS_Enterovírus',
-                                'BACTE_Bordetella pertussis', 'BACTE_Bordetella parapertussis', 'BACTE_Mycoplasma pneumoniae']
-                dfL.insert(1, 'test_kit', 'test_24')
-            elif 'PH4' in ''.join(dfL.columns.tolist()):
-                test_columns = ['VIRUS_IA', 'VIRUS_H1N1', 'VIRUS_AH3', 'VIRUS_B', 'VIRUS_MH', 'VIRUS_SA', 'VIRUS_SB',
-                                'VIRUS_RH', 'VIRUS_PH', 'VIRUS_PH2', 'VIRUS_PH3', 'VIRUS_PH4', 'VIRUS_ADE', 'VIRUS_BOC',
-                                'VIRUS_229E', 'VIRUS_HKU', 'VIRUS_NL63', 'VIRUS_OC43', 'VIRUS_SARS', 'VIRUS_COV2',
-                                'VIRUS_EV', 'BACTE_BP', 'BACTE_BPAR', 'BACTE_MP']
-                dfL.insert(1, 'test_kit', 'test_24')
-            elif 'SARS-CoV-2' in ''.join(dfL.columns.tolist()):
+            if 'SARS-CoV-2' in ''.join(dfL.columns.tolist()):
                 test_columns = ['Vírus Influenza A', 'Vírus Influenza B', 'Vírus Sincicial Respiratório A/B', 'Coronavírus SARS-CoV-2']
                 dfL.insert(1, 'test_kit', 'test_4')
             else:
                 print('WARNING! Unknown file format. Check for inconsistencies.')
-
 
             for column in id_columns + test_columns:
                 if column not in dfL.columns.tolist():
@@ -203,21 +187,25 @@ if __name__ == '__main__':
             # print('3')
             # print(dfL.head())
 
-            # print(dfL.head())
             if dfL.empty:
                 # print('# Returning an empty dataframe')
                 return dfN
 
-
             # starting reformatting process
-            pathogens = {'FLUA': ['VIRUS_Influenza A', 'VIRUS_Influenza H1N1', 'VIRUS_Influenza H3', 'Vírus Influenza A', 'VIRUS_IA', 'VIRUS_H1N1', 'VIRUS_AH3'],
-                         'FLUB': ['VIRUS_Influenza B', 'Vírus Influenza B', 'VIRUS_B'], 'META': ['VIRUS_Metapneumovírus', 'VIRUS_MH'],
-                         'VSR': ['VIRUS_Sincicial A', 'VIRUS_Sincicial B', 'Vírus Sincicial Respiratório A/B', 'VIRUS_SA', 'VIRUS_SB'],
-                         'RINO': ['VIRUS_Rinovírus', 'VIRUS_RH'],'PARA': ['VIRUS_Parainfluenza 1', 'VIRUS_Parainfluenza 2','VIRUS_Parainfluenza 3', 'VIRUS_Parainfluenza 4', 'VIRUS_PH', 'VIRUS_PH2', 'VIRUS_PH3', 'VIRUS_PH4'],
-                         'ADENO': ['VIRUS_Adenovirus', 'VIRUS_ADE'], 'BOCA': ['VIRUS_Bocavirus', 'VIRUS_BOC'],
-                         'COVS': ['VIRUS_CoV-229E', 'VIRUS_CoV-HKU', 'VIRUS_CoV-NL63', 'VIRUS_CoV-OC43', 'VIRUS_229E', 'VIRUS_HKU', 'VIRUS_NL63', 'VIRUS_OC43'],
-                         'SC2': ['VIRUS_SARS_Like', 'VIRUS_SARS-CoV-2', 'Coronavírus SARS-CoV-2', 'VIRUS_SARS', 'VIRUS_COV2'],
-                         'ENTERO': ['VIRUS_Enterovírus', 'VIRUS_EV'],'BAC': ['BACTE_Bordetella pertussis', 'BACTE_Bordetella parapertussis', 'BACTE_Mycoplasma pneumoniae', 'BACTE_BP', 'BACTE_BPAR', 'BACTE_MP']}
+            pathogens = {
+                'SC2': ['VIRUS_SARS_Like', 'VIRUS_SARS-CoV-2', 'Coronavírus SARS-CoV-2', 'VIRUS_SARS', 'VIRUS_COV2'],
+                'FLUA': ['VIRUS_Influenza A', 'VIRUS_Influenza H1N1', 'VIRUS_Influenza H3', 'Vírus Influenza A', 'VIRUS_IA', 'VIRUS_H1N1', 'VIRUS_AH3'],
+                'FLUB': ['VIRUS_Influenza B', 'Vírus Influenza B', 'VIRUS_B'], 
+                'VSR': ['VIRUS_Sincicial A', 'VIRUS_Sincicial B', 'Vírus Sincicial Respiratório A/B', 'VIRUS_SA', 'VIRUS_SB'],
+                'META': ['VIRUS_Metapneumovírus', 'VIRUS_MH'],
+                'RINO': ['VIRUS_Rinovírus', 'VIRUS_RH'],
+                'PARA': ['VIRUS_Parainfluenza 1', 'VIRUS_Parainfluenza 2','VIRUS_Parainfluenza 3', 'VIRUS_Parainfluenza 4', 'VIRUS_PH', 'VIRUS_PH2', 'VIRUS_PH3', 'VIRUS_PH4'],
+                'ADENO': ['VIRUS_Adenovirus', 'VIRUS_ADE'], 
+                'BOCA': ['VIRUS_Bocavirus', 'VIRUS_BOC'],
+                'COVS': ['VIRUS_CoV-229E', 'VIRUS_CoV-HKU', 'VIRUS_CoV-NL63', 'VIRUS_CoV-OC43', 'VIRUS_229E', 'VIRUS_HKU', 'VIRUS_NL63', 'VIRUS_OC43'],
+                'ENTERO': ['VIRUS_Enterovírus', 'VIRUS_EV'],
+                'BAC': ['BACTE_Bordetella pertussis', 'BACTE_Bordetella parapertussis', 'BACTE_Mycoplasma pneumoniae', 'BACTE_BP', 'BACTE_BPAR', 'BACTE_MP']
+                }
 
             # adding missing columns
             if 'Dt. Nascimento' not in dfL.columns.tolist():
@@ -286,17 +274,27 @@ if __name__ == '__main__':
 
             # assign id and deduplicate
             dfL, dfN = deduplicate(dfL, dfN, id_columns, test_name)
-            # print('3')
-            # print(dfL.head())
+            #print(dfL.head())
 
-            # print(dfL.head())
             if dfL.empty:
-                # print('# Returning an empty dataframe')
+                #print('# Returning an empty dataframe')
                 return dfN
 
             # starting reformatting process
-            pathogens = {'FLUA': [], 'FLUB': [], 'VSR': [], 'SC2': [], 'META': [], 'RINO': [],
-            'PARA': [], 'ADENO': [], 'BOCA': [], 'COVS': [], 'ENTERO': [], 'BAC': []}
+            pathogens = {
+                'SC2': [], 
+                'FLUA': [],
+                'FLUB': [], 
+                'VSR': [], 
+                'META': [], 
+                'RINO': [],
+                'PARA': [], 
+                'ADENO': [], 
+                'BOCA': [], 
+                'COVS': [], 
+                'ENTERO': [], 
+                'BAC': []
+                }
 
             for p, t in pathogens.items():
                 if p != 'SC2':
@@ -319,17 +317,17 @@ if __name__ == '__main__':
             dfN = dfL
 
         else:
-            # print('\t\tFile = ' + file)
+            #print('\t\tFile = ' + file)
             print('\t\tWARNING! Unknown file format. Check for inconsistencies.')
 
         return dfN
 
     def rename_columns(id, df):
-        # print(df.columns.tolist())
-        # print(dict_rename[id])
+        #print(df.columns.tolist())
+        #print(dict_rename[id])
         if id in dict_rename:
             df = df.rename(columns=dict_rename[id])
-        # print(df.columns.tolist())
+        #print(df.columns.tolist())
         return df
 
     # open data files
@@ -437,8 +435,7 @@ if __name__ == '__main__':
 
     # reset index
     dfT = dfT.reset_index(drop=True)
-    key_cols = ['lab_id', 'test_id', 'test_kit', 'sample_id', 'country', 'region', 'state', 'DS_UF_SIGLA', 'ADM1_PT', 'ADM1_PCODE', 'location',
-'ADM2_PT', 'ADM2_PCODE', 'lat', 'long', 'DS_NOMEPAD_macsaud', 'CO_MACSAUD', 'date_testing', 'epiweek', 'age', 'sex', 'age_group', 'FLUA_test_result',
+    key_cols = ['lab_id', 'test_id', 'test_kit', 'sample_id', 'state', 'location', 'date_testing', 'epiweek', 'age', 'sex', 'FLUA_test_result',
 'Ct_FluA', 'FLUB_test_result', 'Ct_FluB', 'VSR_test_result', 'Ct_VSR', 'SC2_test_result', 'Ct_geneE', 'Ct_geneN', 'Ct_geneS', 'Ct_ORF1ab', 'Ct_RDRP',
 'geneS_detection', 'META_test_result', 'RINO_test_result', 'PARA_test_result', 'ADENO_test_result', 'BOCA_test_result', 'COVS_test_result',
 'ENTERO_test_result', 'BAC_test_result']
@@ -447,7 +444,7 @@ if __name__ == '__main__':
         if col not in key_cols:
             dfT = dfT.drop(columns=[col])
 
-    # print(dfT.columns.tolist)
+    #print(dfT.columns.tolist)
 
     dfT = dfT[key_cols]
     dfT['date_testing'] = dfT['date_testing'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else 'XXXXX')
