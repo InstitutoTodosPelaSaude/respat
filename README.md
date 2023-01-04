@@ -11,7 +11,7 @@ Para instalar este pipeline, instale primeiro `conda` e na sequência `mamba`:
 ``` bash
 conda install mamba -n base -c conda-forge
 ```
-Alternativamente:
+### Alternativamente:
 ``` bash
 conda install -n base conda-forge::mamba
 ```
@@ -55,7 +55,7 @@ sed -i 's/{params.test_col}/test_result/' {output}
 
 Ref: [macOS - sed command with -i option failing on Mac, but works on Linux - Stack Overflow](https://stackoverflow.com/questions/4247068/sed-command-with-i-option-failing-on-mac-but-works-on-linux)
 
-## Atenção com atualizações de pacotes no env
+### Atenção com atualizações de pacotes no env
 
 Pacote tabulate não deve migrar para versão 0.9 - corrompe processamento do snakefile.
 
