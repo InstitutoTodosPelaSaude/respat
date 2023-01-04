@@ -61,5 +61,5 @@ Pacote tabulate não deve migrar para versão 0.9 - corrompe processamento do sn
 
 Correção pelo terminal, dentro da env, fazer downgrade para versão tabulate 0.8.1
 ```bash
-mamba install -c conda-forge tabulate=0.8.10
+mamba install -c conda-forge tabulate=0.8.9
 ```
