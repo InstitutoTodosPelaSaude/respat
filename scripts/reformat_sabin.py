@@ -3,7 +3,7 @@
 # Created by: Anderson Brito
 # Email: anderson.brito@itps.org.br
 # Release date: 2022-01-19
-# Last update: 2022-12-15
+# Last update: 2023-01-12
 # Refactor by: Bragatte
 
 import pandas as pd
@@ -21,7 +21,7 @@ warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 pd.set_option('display.max_columns', 500)
 pd.options.mode.chained_assignment = None
 
-today = time.strftime('%Y-%m-%d', time.gmtime())
+today = time.strftime('%Y-%m-%d', time.gmtime()) #dentro dp snakefile
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -42,12 +42,13 @@ if __name__ == '__main__':
     cache_file = args.cache
     output = args.output
 
-    # # path = '/Users/Anderson/Library/CloudStorage/GoogleDrive-anderson.brito@itps.org.br/Outros computadores/My Mac mini/google_drive/ITpS/projetos_itps/resp_pathogens/analyses/itps_respat_cache1/'
-    # path = "/Users/Anderson/Library/CloudStorage/GoogleDrive-anderson.brito@itps.org.br/Outros computadores/My Mac mini/google_drive/ITpS/projetos_itps/resp_pathogens/analyses/sabin_dev/"
+# local run
+    # # path = "/Users/**/**/"
+    # path = "/Users/*/respat/"
     # input_folder = path + 'data/'
     # rename_file = input_folder + 'rename_columns.xlsx'
     # correction_file = input_folder + 'fix_values.xlsx'
-    # cache_file = input_folder + 'combined0.tsv'
+    # cache_file = input_folder + 'combined_cache.tsv'
     # output = input_folder + today + '_combined_sabin_test.tsv'
 
 
@@ -93,8 +94,7 @@ if __name__ == '__main__':
     # load value corrections
     dfC = load_table(correction_file)
     dfC.fillna('', inplace=True)
-    dfC = dfC[dfC['lab_id'].isin(["SABIN", "any"])] # filter to correct data into fix_values, just SABIN
-
+    dfC = dfC[dfC['lab_id'].isin(["SABIN", "any"])] #filter to correct data into fix_values SABIN
 
     dict_corrections = {}
     all_ids = list(set(dfC['lab_id'].tolist()))
@@ -117,7 +117,6 @@ if __name__ == '__main__':
                     dict_corrections[id][colname] = {}
                 data_entry = {old_data: new_data}
                 dict_corrections[id][colname].update(data_entry)
-
 
     def generate_id(column_id):
         id = hashlib.sha1(str(column_id).encode('utf-8')).hexdigest()
@@ -186,10 +185,21 @@ if __name__ == '__main__':
                 #print('# Returning an empty dataframe')
                 return dfN
 
-            # starting reformatting process
+            # starting lab specific reformatting
             pathogens = {
-                'SC2': [], 'FLUA': [], 'FLUB': [], 'VSR': [], 'META': [], 'RINO': [],'PARA': [],
-                'ADENO': [], 'BOCA': [], 'COVS': [], 'ENTERO': [], 'BAC': []}
+                'SC2': [], 
+                'FLUA': [],
+                'FLUB': [], 
+                'VSR': [], 
+                'META': [], 
+                'RINO': [],
+                'PARA': [], 
+                'ADENO': [], 
+                'BOCA': [], 
+                'COVS': [], 
+                'ENTERO': [], 
+                'BAC': []
+                }
 
             for p, t in pathogens.items():
                 if p != 'SC2':
@@ -255,6 +265,10 @@ if __name__ == '__main__':
                                 for column, values in columns.items():
                                     # print('\t- ' + column + ' (' + column + ' → ' + str(values) + ')')
                                     df[column] = df[column].apply(lambda x: fix_data_points(lab_id, column, x))
+                            
+                            # checking duplicates
+                            # print(df.columns[df.columns.duplicated(keep=False)])
+                            # print(dfT.columns[dfT.columns.duplicated(keep=False)])
 
                             frames = [dfT, df]
                             df2 = pd.concat(frames).reset_index(drop=True)
@@ -300,18 +314,15 @@ if __name__ == '__main__':
 
     # reset index
     dfT = dfT.reset_index(drop=True)
-    key_cols = ['lab_id', 'test_id', 'test_kit', 'sample_id', 'state', 'location', 'date_testing', 'epiweek', 'age', 'sex', 'FLUA_test_result',
-                'Ct_FluA', 'FLUB_test_result', 'Ct_FluB', 'VSR_test_result', 'Ct_VSR', 'SC2_test_result', 'Ct_geneE', 'Ct_geneN', 'Ct_geneS', 'Ct_ORF1ab', 'Ct_RDRP',
-                'geneS_detection', 'META_test_result', 'RINO_test_result', 'PARA_test_result', 'ADENO_test_result', 'BOCA_test_result', 'COVS_test_result',
-                'ENTERO_test_result', 'BAC_test_result']
+    key_cols = ['lab_id', 'test_id', 'test_kit', 'sample_id', 'state', 'location', 'date_testing', 'epiweek', 'age', 'sex', 'FLUA_test_result', 'Ct_FluA', 'FLUB_test_result', 'Ct_FluB', 'VSR_test_result', 'Ct_VSR', 'SC2_test_result', 'Ct_geneE', 'Ct_geneN', 'Ct_geneS', 'Ct_ORF1ab', 'Ct_RDRP', 'geneS_detection', 'META_test_result', 'RINO_test_result', 'PARA_test_result', 'ADENO_test_result', 'BOCA_test_result', 'COVS_test_result', 'ENTERO_test_result', 'BAC_test_result']
 
     for col in dfT.columns.tolist():
         if col not in key_cols:
             dfT = dfT.drop(columns=[col])
 
+    dfT = dfT[key_cols]
     #print(dfT.columns.tolist)
 
-    dfT = dfT[key_cols]
     dfT['date_testing'] = dfT['date_testing'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else 'XXXXX')
 
     # # fix test results with empty data

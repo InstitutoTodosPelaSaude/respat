@@ -3,7 +3,7 @@
 # Created by: Anderson Brito
 # Email: anderson.brito@itps.org.br
 # Release date: 2022-01-19
-# Last update: 2022-12-10
+# Last update: 2023-01-12
 # Refactor by: Bragatte
 
 import pandas as pd
@@ -21,7 +21,7 @@ warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 pd.set_option('display.max_columns', 500)
 pd.options.mode.chained_assignment = None
 
-today = time.strftime('%Y-%m-%d', time.gmtime())
+today = time.strftime('%Y-%m-%d', time.gmtime()) #dentro dp snakefile
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -42,13 +42,15 @@ if __name__ == '__main__':
     cache_file = args.cache
     output = args.output
 
-    # # path = '/Users/Anderson/Library/CloudStorage/GoogleDrive-anderson.brito@itps.org.br/Outros computadores/My Mac mini/google_drive/ITpS/projetos_itps/resp_pathogens/analyses/itps_respat_cache1/'
-    # path = "/Users/anderson/google_drive/ITpS/projetos_itps/resp_pathogens/analyses/itps_respat_cache1/"
+# local run
+    # # path = "/Users/**/**/"
+    # path = "/Users/*/respat/"
     # input_folder = path + 'data/'
     # rename_file = input_folder + 'rename_columns.xlsx'
     # correction_file = input_folder + 'fix_values.xlsx'
-    # cache_file = ''#input_folder + '2022-08-02_combined_data_dasa.tsv'
-    # output = input_folder + today + '_combined_data_dasa.tsv'
+    # cache_file = input_folder + 'combined_cache.tsv'
+    # output = input_folder + today + '_combined_dasa_test.tsv'
+
 
     def load_table(file):
         df = ''
@@ -92,6 +94,7 @@ if __name__ == '__main__':
     # load value corrections
     dfC = load_table(correction_file)
     dfC.fillna('', inplace=True)
+    dfC = dfC[dfC['lab_id'].isin(["DASA", "any"])] #filter to correct data into fix_values DASA
 
     dict_corrections = {}
     all_ids = list(set(dfC['lab_id'].tolist()))
@@ -155,6 +158,9 @@ if __name__ == '__main__':
     print('\nFixing datatables...')
     def fix_datatable(dfL,file):
         dfN = dfL
+        # print(dfL.columns.tolist())
+        # print(''.join(dfL.columns.tolist()))
+        # if lab == 'DASA':
         if 'codigo' in dfL.columns.tolist(): #column with unique row data
             test_name = "Painel viral DASA"
             # print('\t\tDados resp_vir >> Correct format. Proceeding...')
@@ -186,11 +192,10 @@ if __name__ == '__main__':
 
             # assign id and deduplicate
             dfL, dfN = deduplicate(dfL, dfN, id_columns, test_name)
-            # print('3')
-            # print(dfL.head())
+            #print(dfL.head())
 
             if dfL.empty:
-                # print('# Returning an empty dataframe')
+                #print('# Returning an empty dataframe')
                 return dfN
 
             # starting lab specific reformatting
@@ -352,18 +357,24 @@ if __name__ == '__main__':
             # print('# Returning some dataframe')
 
         else:
+            #print('\t\tFile = ' + file)
             print('\t\tWARNING! Unknown file format. Check for inconsistencies.')
             exit()
         return dfN
 
-
     def rename_columns(id, df):
-        # print(df.columns.tolist())
-        # print(dict_rename[id])
+        #print(df.columns.tolist())
+        #print(dict_rename[id])
         if id in dict_rename:
             df = df.rename(columns=dict_rename[id])
-        # print(df.columns.tolist())
         return df
+
+    # fix data points
+    def fix_data_points(id, col_name, value):
+        new_value = value
+        if value in dict_corrections[id][col_name]:
+            new_value = dict_corrections[id][col_name][value]
+        return new_value
 
     # open data files
     for element in os.listdir(input_folder):
@@ -380,8 +391,6 @@ if __name__ == '__main__':
                             df.fillna('', inplace=True)
                             df.reset_index(drop=True)
 
-                            # print('- ' + str(len(dfT['sample_id'].tolist())) + ' samples (pre)')
-
                             df = fix_datatable(df, filename) # reformat datatable
                             if df.empty:
                                 # print('##### Nothing to be done')
@@ -392,10 +401,13 @@ if __name__ == '__main__':
                             dfT = dfT.reset_index(drop=True)
                             df = df.reset_index(drop=True)
 
-                            # for idx, row in df.iterrows():
-                            #     sid, tid, dtt = df.loc[idx, 'sample_id'], df.loc[idx, 'test_id'], df.loc[idx, 'date_testing']
-                            #     print(sid, tid, dtt)
-
+                            print('\n# Fixing data points...')
+                            for lab_id, columns in dict_corrections.items():
+                                print('\t- Fixing data from: ' + lab_id)
+                                for column, values in columns.items():
+                                    # print('\t- ' + column + ' (' + column + ' → ' + str(values) + ')')
+                                    df[column] = df[column].apply(lambda x: fix_data_points(lab_id, column, x))
+                            
                             # checking duplicates
                             # print(df.columns[df.columns.duplicated(keep=False)])
                             # print(dfT.columns[dfT.columns.duplicated(keep=False)])
@@ -403,27 +415,10 @@ if __name__ == '__main__':
                             frames = [dfT, df]
                             df2 = pd.concat(frames).reset_index(drop=True)
                             dfT = df2
-                            # print('##### Concatenating some data')
-                            # print('- ' + str(len(dfT['sample_id'].tolist())) + ' samples (pos)')
-
 
     dfT = dfT.reset_index(drop=True)
     dfT.fillna('', inplace=True)
 
-    # fix data points
-    def fix_data_points(id, col_name, value):
-        new_value = value
-        if value in dict_corrections[id][col_name]:
-            new_value = dict_corrections[id][col_name][value]
-        return new_value
-
-    # print(dfT.head())
-    print('\n# Fixing data points...')
-    for lab_id, columns in dict_corrections.items():
-        print('\t- Fixing data from: ' + lab_id)
-        for column, values in columns.items():
-            # print('\t- ' + column + ' (' + column + ' → ' + str(values) + ')')
-            dfT[column] = dfT[column].apply(lambda x: fix_data_points(lab_id, column, x))
 
     # reformat dates and get ages
     dfT['date_testing'] = pd.to_datetime(dfT['date_testing'])
@@ -435,14 +430,14 @@ if __name__ == '__main__':
             epiweek = str(Week.fromdate(date, system="cdc")) # get epiweeks
             year, week = epiweek[:4], epiweek[-2:]
             epiweek = str(Week(int(year), int(week)).enddate())
+#             epiweek = str(Week.fromdate(date, system="cdc"))  # get epiweeks
+#             epiweek = epiweek[:4] + '_' + 'EW' + epiweek[-2:]
         except:
             epiweek = ''
         return epiweek
 
     dfT['epiweek'] = dfT['date_testing'].apply(lambda x: get_epiweeks(x))
 
-    # print(dfT.columns.tolist())
-    # print(len(dfT['sample_id'].tolist()))
     # add age from birthdate, if age is missing
     if 'birthdate' in dfT.columns.tolist():
         for idx, row in dfT.iterrows():
@@ -483,23 +478,20 @@ if __name__ == '__main__':
 
     # reset index
     dfT = dfT.reset_index(drop=True)
-    key_cols = ['lab_id', 'test_id', 'test_kit', 'sample_id', 'state', 'location','date_testing', 'epiweek', 'age', 'sex', 'FLUA_test_result',
-'Ct_FluA', 'FLUB_test_result', 'Ct_FluB', 'VSR_test_result', 'Ct_VSR', 'SC2_test_result', 'Ct_geneE', 'Ct_geneN', 'Ct_geneS', 'Ct_ORF1ab', 'Ct_RDRP',
-'geneS_detection', 'META_test_result', 'RINO_test_result', 'PARA_test_result', 'ADENO_test_result', 'BOCA_test_result', 'COVS_test_result',
-'ENTERO_test_result', 'BAC_test_result']
+    key_cols = ['lab_id', 'test_id', 'test_kit', 'sample_id', 'state', 'location', 'date_testing', 'epiweek', 'age', 'sex', 'FLUA_test_result', 'Ct_FluA', 'FLUB_test_result', 'Ct_FluB', 'VSR_test_result', 'Ct_VSR', 'SC2_test_result', 'Ct_geneE', 'Ct_geneN', 'Ct_geneS', 'Ct_ORF1ab', 'Ct_RDRP', 'geneS_detection', 'META_test_result', 'RINO_test_result', 'PARA_test_result', 'ADENO_test_result', 'BOCA_test_result', 'COVS_test_result', 'ENTERO_test_result', 'BAC_test_result']
 
     for col in dfT.columns.tolist():
         if col not in key_cols:
             dfT = dfT.drop(columns=[col])
+
     dfT = dfT[key_cols]
-    # print(dfT.columns.tolist)
+    #print(dfT.columns.tolist)
+
     dfT['date_testing'] = dfT['date_testing'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else 'XXXXX')
 
     # # fix test results with empty data
     # for p in pathogens.keys():
     #     dfT[p + '_test_result'] = dfT[p + '_test_result'].apply(lambda x: 'Negative' if x not in ['Negative', 'Positive'] else x)
-
-
 
     # output duplicates rows
     duplicates = dfT.duplicated().sum()
@@ -509,7 +501,6 @@ if __name__ == '__main__':
         output2 = input_folder + 'duplicates.tsv'
         dfD.to_csv(output2, sep='\t', index=False)
         print('\nWARNING!\nFile with %s duplicate entries saved in:\n%s' % (str(duplicates), output2))
-
 
     # drop duplicates
     dfT = dfT.drop_duplicates(keep='last')
