@@ -43,12 +43,12 @@ if __name__ == '__main__':
     output = args.output
 
     # # path = '/Users/Anderson/Library/CloudStorage/GoogleDrive-anderson.brito@itps.org.br/Outros computadores/My Mac mini/google_drive/ITpS/projetos_itps/resp_pathogens/analyses/itps_respat_cache1/'
-    # path = "/Users/anderson/google_drive/ITpS/projetos_itps/resp_pathogens/analyses/itps_respat_cache1/"
+    # path = "/Users/Anderson/Library/CloudStorage/GoogleDrive-anderson.brito@itps.org.br/Outros computadores/My Mac mini/google_drive/ITpS/projetos_itps/resp_pathogens/analyses/sabin_dev/"
     # input_folder = path + 'data/'
     # rename_file = input_folder + 'rename_columns.xlsx'
     # correction_file = input_folder + 'fix_values.xlsx'
-    # cache_file = ''#input_folder + '2022-08-02_combined_data_hlagyn.tsv'
-    # output = input_folder + today + '_combined_data_hlagyn.tsv'
+    # cache_file = input_folder + 'combined0.tsv'
+    # output = input_folder + today + '_combined_sabin_test.tsv'
 
 
     def load_table(file):
@@ -93,6 +93,8 @@ if __name__ == '__main__':
     # load value corrections
     dfC = load_table(correction_file)
     dfC.fillna('', inplace=True)
+    dfC = dfC[dfC['lab_id'].isin(["SABIN", "any"])] # filter to correct data into fix_values, just SABIN
+
 
     dict_corrections = {}
     all_ids = list(set(dfC['lab_id'].tolist()))
@@ -115,6 +117,7 @@ if __name__ == '__main__':
                     dict_corrections[id][colname] = {}
                 data_entry = {old_data: new_data}
                 dict_corrections[id][colname].update(data_entry)
+
 
     def generate_id(column_id):
         id = hashlib.sha1(str(column_id).encode('utf-8')).hexdigest()
@@ -174,36 +177,7 @@ if __name__ == '__main__':
                 if column not in dfL.columns.tolist():
                     dfL[column] = ''
                     print('\t\t\t - No \'%s\' column found. Please check for inconsistencies. Meanwhile, an empty \'%s\' column was added.' % (column, column))
-            ## Test part
-            # print(dfL)
-            # ###
-            # date_columns = ['DataAssinatura', 'DataAtendimento', 'DataNascimento']
 
-            # for cols in date_columns:
-            #    try:
-            #        # adjust dtype datetime columns - avoid Y%/m% errors
-            #        df[['DataAssinatura', 'DataAtendimento','DataNascimento']] = df[['DataAssinatura', 'DataAtendimento', 'DataNascimento']].apply(pd.to_datetime)
-            #    except:
-
-            # ####
-            # # create a copy of the dataframe
-            # #df_copy = dfL.copy()
-
-            # # update the values in the copy of the dataframe
-            # for index, row in df.iterrows():
-            #     try:
-            #         df.at[index, "DataAssinatura"] = do_some_operation(row["col1"])
-            #         df.at[index, "DataAtendimento"] = do_some_operation(row["col2"])
-            #         df.at[index, "DataNascimento"] = do_some_operation(row["col3"])
-            #     except Exception as e:
-            #         # if an error occurs, print the error message and skip to the next row
-            #         print(f"Error processing row {index}: {e}")
-            #         continue
-
-            # # update the original dataframe with the modified copy
-            # df = df_copy
-
-            # ####
             # assign id and deduplicate
             dfL, dfN = deduplicate(dfL, dfN, id_columns, test_name)
             #print(dfL.head())
@@ -214,19 +188,8 @@ if __name__ == '__main__':
 
             # starting reformatting process
             pathogens = {
-                'SC2': [], 
-                'FLUA': [],
-                'FLUB': [], 
-                'VSR': [], 
-                'META': [], 
-                'RINO': [],
-                'PARA': [], 
-                'ADENO': [], 
-                'BOCA': [], 
-                'COVS': [], 
-                'ENTERO': [], 
-                'BAC': []
-                }
+                'SC2': [], 'FLUA': [], 'FLUB': [], 'VSR': [], 'META': [], 'RINO': [],'PARA': [],
+                'ADENO': [], 'BOCA': [], 'COVS': [], 'ENTERO': [], 'BAC': []}
 
             for p, t in pathogens.items():
                 if p != 'SC2':
@@ -245,7 +208,6 @@ if __name__ == '__main__':
             dfL['Ct_ORF1ab'] = ''
             dfL['geneS_detection'] = ''
 
-
         else:
             #print('\t\tFile = ' + file)
             print('\t\tWARNING! Unknown file format. Check for inconsistencies.')
@@ -257,8 +219,14 @@ if __name__ == '__main__':
         #print(dict_rename[id])
         if id in dict_rename:
             df = df.rename(columns=dict_rename[id])
-        #print(df.columns.tolist())
         return df
+
+    # fix data points
+    def fix_data_points(id, col_name, value):
+        new_value = value
+        if value in dict_corrections[id][col_name]:
+            new_value = dict_corrections[id][col_name][value]
+        return new_value
 
     # open data files
     for element in os.listdir(input_folder):
@@ -281,9 +249,12 @@ if __name__ == '__main__':
                             dfT = dfT.reset_index(drop=True)
                             df = df.reset_index(drop=True)
 
-                            # checking duplicates
-                            # print(df.columns[df.columns.duplicated(keep=False)])
-                            # print(dfT.columns[dfT.columns.duplicated(keep=False)])
+                            print('\n# Fixing data points...')
+                            for lab_id, columns in dict_corrections.items():
+                                print('\t- Fixing data from: ' + lab_id)
+                                for column, values in columns.items():
+                                    # print('\t- ' + column + ' (' + column + ' → ' + str(values) + ')')
+                                    df[column] = df[column].apply(lambda x: fix_data_points(lab_id, column, x))
 
                             frames = [dfT, df]
                             df2 = pd.concat(frames).reset_index(drop=True)
@@ -292,20 +263,6 @@ if __name__ == '__main__':
     dfT = dfT.reset_index(drop=True)
     dfT.fillna('', inplace=True)
 
-    # fix data points
-    def fix_data_points(id, col_name, value):
-        new_value = value
-        if value in dict_corrections[id][col_name]:
-            new_value = dict_corrections[id][col_name][value]
-        return new_value
-
-    # print(dfT.head())
-    print('\n# Fixing data points...')
-    for lab_id, columns in dict_corrections.items():
-        print('\t- Fixing data from: ' + lab_id)
-        for column, values in columns.items():
-            # print('\t- ' + column + ' (' + column + ' → ' + str(values) + ')')
-            dfT[column] = dfT[column].apply(lambda x: fix_data_points(lab_id, column, x))
 
     # reformat dates and get ages
     dfT['date_testing'] = pd.to_datetime(dfT['date_testing'])
@@ -334,18 +291,19 @@ if __name__ == '__main__':
                 birth = pd.to_datetime(birth)
                 age = (test - birth) / np.timedelta64(1, 'Y')
                 dfT.loc[idx, 'age'] = np.round(age, 1)
-            
+
             # Change the data type of the 'age' column to integer
             dfT['age'] = pd.to_numeric(dfT['age'], downcast='integer',errors='coerce').fillna(-1).astype(int)
 
     # fix sex information
     dfT['sex'] = dfT['sex'].apply(lambda x: x[0] if x != '' else x)
+
     # reset index
     dfT = dfT.reset_index(drop=True)
     key_cols = ['lab_id', 'test_id', 'test_kit', 'sample_id', 'state', 'location', 'date_testing', 'epiweek', 'age', 'sex', 'FLUA_test_result',
-'Ct_FluA', 'FLUB_test_result', 'Ct_FluB', 'VSR_test_result', 'Ct_VSR', 'SC2_test_result', 'Ct_geneE', 'Ct_geneN', 'Ct_geneS', 'Ct_ORF1ab', 'Ct_RDRP',
-'geneS_detection', 'META_test_result', 'RINO_test_result', 'PARA_test_result', 'ADENO_test_result', 'BOCA_test_result', 'COVS_test_result',
-'ENTERO_test_result', 'BAC_test_result']
+                'Ct_FluA', 'FLUB_test_result', 'Ct_FluB', 'VSR_test_result', 'Ct_VSR', 'SC2_test_result', 'Ct_geneE', 'Ct_geneN', 'Ct_geneS', 'Ct_ORF1ab', 'Ct_RDRP',
+                'geneS_detection', 'META_test_result', 'RINO_test_result', 'PARA_test_result', 'ADENO_test_result', 'BOCA_test_result', 'COVS_test_result',
+                'ENTERO_test_result', 'BAC_test_result']
 
     for col in dfT.columns.tolist():
         if col not in key_cols:
