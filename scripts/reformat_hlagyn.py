@@ -94,7 +94,7 @@ if __name__ == '__main__':
     # load value corrections
     dfC = load_table(correction_file)
     dfC.fillna('', inplace=True)
-    dfC = dfC[dfC['lab_id'].isin(["SABIN", "any"])] # filter to correct data into fix_values HLAgyn
+    dfC = dfC[dfC['lab_id'].isin(["HLAGyn", "any"])] # filter to correct data into fix_values HLAGyn
 
     dict_corrections = {}
     all_ids = list(set(dfC['lab_id'].tolist()))
