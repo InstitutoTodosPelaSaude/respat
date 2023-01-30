@@ -352,7 +352,7 @@ rule posrate_agegroup:
 			--extra-columns {params.extra} \
 			--output {output.alltests} \
 
-		python3 scripts/normdata.py \
+		python3 scripts/matrix_operations.py \
 			--input1 {output.week_matrix} \
 			--input2 {output.alltests} \
 			--index1 {params.yvar} \
@@ -391,7 +391,7 @@ rule combine_demog:
 			--fillna {params.filler} \
 			--output {output.merged}
 		
-		python3 scripts/normdata.py \
+		python3 scripts/matrix_operations.py \
 			--input1 {output.merged} \
 			--input2 {input.population} \
 			--index1 {params.index1} \
@@ -603,7 +603,7 @@ rule posrate:
 		output_weeks = "results/{geo}/combined_matrix_{geo}_posrate_weeks.tsv"
 	shell:
 		"""
-		python3 scripts/normdata.py \
+		python3 scripts/matrix_operations.py \
 			--input1 {input.file1} \
 			--input2 {input.file2} \
 			--index1 {params.index1} \
@@ -612,7 +612,7 @@ rule posrate:
 			--filter {params.filter} \
 			--output {output.output_days}
 
-		python3 scripts/normdata.py \
+		python3 scripts/matrix_operations.py \
 			--input1 {input.file3} \
 			--input2 {input.file4} \
 			--index1 {params.index1} \
