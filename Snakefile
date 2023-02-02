@@ -391,7 +391,7 @@ rule combine_demog:
 			--fillna {params.filler} \
 			--output {output.merged}
 		
-		python3 scripts/matrix_operations.py \
+		python3 scripts/normdata.py \
 			--input1 {output.merged} \
 			--input2 {input.population} \
 			--index1 {params.index1} \
