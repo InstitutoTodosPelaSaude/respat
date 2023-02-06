@@ -21,6 +21,7 @@ if __name__ == '__main__':
     parser.add_argument("--min-denominator", required=False, type=int, default=0, help="Value X of rolling average window (mean at every X data points in time series)")
     parser.add_argument("--multiply", required=False, nargs=1, type=str, default='no', choices=['yes', 'no'], help="Multiply values, matrix 1 X matrix 2?")
     parser.add_argument("--filter", required=False, type=str, help="Format: '~column_name:value'. Remove '~' to keep only that data category")
+    parser.add_argument("--sortby", required=False, nargs='+', type=str, help="Columns to be used to sort the output file")
     parser.add_argument("--output", required=True, help="TSV matrix with normalized values")
     args = parser.parse_args()
 
@@ -34,6 +35,7 @@ if __name__ == '__main__':
     min_denominator = args.min_denominator
     multiply = args.multiply[0]
     filters = args.filter
+    sortby = args.sortby    
     output = args.output
 
 
@@ -96,12 +98,14 @@ if __name__ == '__main__':
         for filter_col, filter_val in include.items():
             print('\t- Including only rows with \'' + filter_col + '\' = \'' + ', '.join(filter_val) + '\'')
             # print(new_df.size)
-            if new_df.empty:
-                df_filtered = df[df[filter_col].isin(filter_val)]
-                new_df = new_df.append(df_filtered)
+            if filter_col in df.columns.tolist(): #update 2022_02_01
+                if new_df.empty:
+                    df_filtered = df[df[filter_col].isin(filter_val)]
+                    new_df = new_df.append(df_filtered)
+                else:
+                    new_df = new_df[new_df[filter_col].isin(filter_val)]
             else:
-                new_df = new_df[new_df[filter_col].isin(filter_val)]
-            # print(new_df)#.head())
+                print("column not found")
 
         exclude = {}
         for filter_value in criteria.split(','):
@@ -164,7 +168,8 @@ if __name__ == '__main__':
         for col in columns:
             if str(dataframe[col].tolist()[0][0]).isdigit(): # if first character is digit
                 if str(dataframe[col].tolist()[0][-1]).isdigit(): # if last character is digit
-                    dataframe[col] = dataframe[col].astype(int).astype(str)
+                    #dataframe[col] = dataframe[col].astype(int).astype(str)
+                    dataframe[col] = dataframe[col].astype(str) #suggestion Mr. Anderson adicionar IF else
                     # print(dataframe[col].tolist()[0])
                     # print(dataframe.head())
         # else:
@@ -271,6 +276,9 @@ if __name__ == '__main__':
 
     df3 = df3.drop(columns=['unique_id1', 'unique_id2'])
     # df3 = df3[nondate_columns, date_columns]
+
+    if sortby not in ['', None]:
+        df3 = df3.sort_values(by=sortby)
 
     # output converted dataframes
     df3.to_csv(output, sep='\t', index=False)

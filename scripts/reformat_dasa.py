@@ -3,7 +3,7 @@
 # Created by: Anderson Brito
 # Email: anderson.brito@itps.org.br
 # Release date: 2022-01-19
-# Last update: 2023-01-12
+# Last update: 2023-01-17
 # Refactor by: Bragatte
 
 import pandas as pd
@@ -13,6 +13,8 @@ import hashlib
 import time
 import argparse
 from epiweeks import Week
+from tqdm import tqdm
+
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -21,7 +23,7 @@ warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 pd.set_option('display.max_columns', 500)
 pd.options.mode.chained_assignment = None
 
-today = time.strftime('%Y-%m-%d', time.gmtime()) #dentro dp snakefile
+today = time.strftime('%Y-%m-%d', time.gmtime()) #for snakefile
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -67,6 +69,7 @@ if __name__ == '__main__':
             print('Wrong file format. Compatible file formats: TSV, CSV, XLS, XLSX')
             exit()
         return df
+    print('Done load tables')
 
     # load cache file
     if cache_file not in [np.nan, '', None]:
@@ -75,6 +78,7 @@ if __name__ == '__main__':
     else:
         # dfP = pd.DataFrame()
         dfT = pd.DataFrame()
+    print('Done load cache')
 
     # load renaming patterns
     dfR = load_table(rename_file)
@@ -117,10 +121,12 @@ if __name__ == '__main__':
                     dict_corrections[id][colname] = {}
                 data_entry = {old_data: new_data}
                 dict_corrections[id][colname].update(data_entry)
+    print('Load rename_columns')
 
     def generate_id(column_id):
         id = hashlib.sha1(str(column_id).encode('utf-8')).hexdigest()
         return id
+    print('Done hashlib')
 
 
     def deduplicate(dfL, dfN, id_columns, test_name):
@@ -152,6 +158,7 @@ if __name__ == '__main__':
         # print('2')
         # print(dfL.head())
         return dfL, dfN
+    print('Done cache file')
 
 
     # Fix datatables
@@ -165,7 +172,14 @@ if __name__ == '__main__':
             test_name = "Painel viral DASA"
             # print('\t\tDados resp_vir >> Correct format. Proceeding...')
 
-            id_columns = ['codigorequisicao', 'idade', 'sexo', 'data_exame', 'cidade', 'uf']
+            id_columns = [
+                'codigorequisicao',
+                'idade',
+                'sexo',
+                'data_exame',
+                'cidade',
+                'uf'
+                ]
 
             dfN = pd.DataFrame() # create empty dataframe, and populate it with reformatted data from original lab dataframe
 
@@ -329,7 +343,20 @@ if __name__ == '__main__':
                 return dfN
 
             # starting lab specific reformatting
-            pathogens = {'FLUA': [], 'FLUB': [], 'VSR': [], 'SC2': [], 'META': [], 'RINO': [], 'PARA': [], 'ADENO': [], 'BOCA': [], 'COVS': [], 'ENTERO': [], 'BAC': []}
+            pathogens = {
+                'FLUA': [],
+                'FLUB': [],
+                'VSR': [],
+                'SC2': [],
+                'META': [],
+                'RINO': [],
+                'PARA': [],
+                'ADENO': [],
+                'BOCA': [],
+                'COVS': [],
+                'ENTERO': [],
+                'BAC': []
+                }
 
             # target_pathogen = {}
             for p, t in pathogens.items():
@@ -337,7 +364,13 @@ if __name__ == '__main__':
                     dfL[p + '_test_result'] = 'Not tested'
 
             def not_assigned(geo_data):
-                empty = ['', 'SEM CIDADE', 'MUDOU', 'NAO_INFORMADO', 'NAOINFORMADO']
+                empty = [
+                    '',
+                    'SEM CIDADE',
+                    'MUDOU',
+                    'NAO_INFORMADO',
+                    'NAOINFORMADO'
+                    ]
                 if geo_data in empty:
                     geo_data = ''
                 return geo_data
@@ -361,6 +394,7 @@ if __name__ == '__main__':
             print('\t\tWARNING! Unknown file format. Check for inconsistencies.')
             exit()
         return dfN
+    print('Done reformating')
 
     def rename_columns(id, df):
         #print(df.columns.tolist())
@@ -375,6 +409,7 @@ if __name__ == '__main__':
         if value in dict_corrections[id][col_name]:
             new_value = dict_corrections[id][col_name][value]
         return new_value
+    print('Done rename')
 
     # open data files
     for element in os.listdir(input_folder):
@@ -418,7 +453,7 @@ if __name__ == '__main__':
 
     dfT = dfT.reset_index(drop=True)
     dfT.fillna('', inplace=True)
-
+    print('Done fix tables')
 
     # reformat dates and get ages
     dfT['date_testing'] = pd.to_datetime(dfT['date_testing'])
@@ -448,8 +483,11 @@ if __name__ == '__main__':
                 age = (test - birth) / np.timedelta64(1, 'Y')
                 dfT.loc[idx, 'age'] = np.round(age, 1)
 
+    print('Done fix date and ages')
+
     # fix sex information
     dfT['sex'] = dfT['sex'].apply(lambda x: x[0] if x != '' else x)
+    print('Done fix sex')
 
 
     # Add gene detection results
@@ -478,7 +516,40 @@ if __name__ == '__main__':
 
     # reset index
     dfT = dfT.reset_index(drop=True)
-    key_cols = ['lab_id', 'test_id', 'test_kit', 'sample_id', 'state', 'location', 'date_testing', 'epiweek', 'age', 'sex', 'FLUA_test_result', 'Ct_FluA', 'FLUB_test_result', 'Ct_FluB', 'VSR_test_result', 'Ct_VSR', 'SC2_test_result', 'Ct_geneE', 'Ct_geneN', 'Ct_geneS', 'Ct_ORF1ab', 'Ct_RDRP', 'geneS_detection', 'META_test_result', 'RINO_test_result', 'PARA_test_result', 'ADENO_test_result', 'BOCA_test_result', 'COVS_test_result', 'ENTERO_test_result', 'BAC_test_result']
+    key_cols = [
+        'lab_id',
+        'test_id',
+        'test_kit',
+        'sample_id',
+        #'region',
+        'state',
+        'location',
+        'date_testing',
+        'epiweek',
+        'age',
+        'sex',
+        'FLUA_test_result',
+        'Ct_FluA',
+        'FLUB_test_result',
+        'Ct_FluB',
+        'VSR_test_result',
+        'Ct_VSR',
+        'SC2_test_result',
+        'Ct_geneE',
+        'Ct_geneN',
+        'Ct_geneS',
+        'Ct_ORF1ab',
+        'Ct_RDRP',
+        'geneS_detection',
+        'META_test_result',
+        'RINO_test_result',
+        'PARA_test_result',
+        'ADENO_test_result',
+        'BOCA_test_result',
+        'COVS_test_result',
+        'ENTERO_test_result',
+        'BAC_test_result'
+        ]
 
     for col in dfT.columns.tolist():
         if col not in key_cols:

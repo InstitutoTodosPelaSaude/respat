@@ -28,6 +28,7 @@ if __name__ == '__main__':
                                                            "It can be provided as a file, one column name per line, or as a comma-separated list of columns.")
     parser.add_argument("--filters", required=False, type=str, help="Format: '~column_name:value'. Remove '~' to keep only that data category")
     parser.add_argument("--fillna", required=False, default='', help="Filler to replace NA data points")
+    parser.add_argument("--sortby", required=False, nargs='+', type=str, help="Columns to be used to sort the output file")
     parser.add_argument("--output", required=True, help="Merged file")
     args = parser.parse_args()
 
@@ -37,6 +38,7 @@ if __name__ == '__main__':
     columns = args.columns
     filters = args.filters
     filler = args.fillna
+    sortby = args.sortby
     output = args.output
 
     # path = '/Users/anderson/google_drive/ITpS/projetos_itps/metasurvBR/data/metadata_genomes/test_multimerger/'
@@ -160,6 +162,10 @@ if __name__ == '__main__':
             print('\t- ' + c)
         df = df[order_cols]
 
+    if sortby not in ['', None]:
+        df = df.sort_values(by=sortby)
+    
     df.to_csv(output, sep='\t', index=False)
+
 
     print('\nTSV metadata files successfully merged.\n')
