@@ -236,7 +236,7 @@ if __name__ == '__main__':
 
                 target_pathogen = {}
                 for p, t in pathogens.items():
-                    data[p + '_test_result'] = 'Not tested'
+                    data[p + '_test_result'] = "NA" #'Not tested'
                     for g in t:
                         target_pathogen[g] = p
                 dfR['pathogen'] = dfR['codigo'].apply(lambda x: target_pathogen[x])
@@ -361,7 +361,7 @@ if __name__ == '__main__':
             # target_pathogen = {}
             for p, t in pathogens.items():
                 if p != 'SC2':
-                    dfL[p + '_test_result'] = 'Not tested'
+                    dfL[p + '_test_result'] = "NA" #'Not tested'
 
             def not_assigned(geo_data):
                 empty = [

@@ -3,7 +3,7 @@
 # Created by: Anderson Brito
 # Email: anderson.brito@itps.org.br
 # Release date: 2022-01-19
-# Last update: 2023-01-18
+# Last update: 2023-02-06
 # Refactor by: Bragatte
 
 import pandas as pd
@@ -13,6 +13,9 @@ import hashlib
 import time
 import argparse
 from epiweeks import Week
+from tqdm.auto import tqdm
+
+
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -63,11 +66,14 @@ if __name__ == '__main__':
         elif str(file).split('.')[-1] in ['xls', 'xlsx']:
             df = pd.read_excel(file, index_col=None, header=0, sheet_name=0, dtype='str')
             df.fillna('', inplace=True)
+        elif str(file).split('.')[-1] == 'parquet':
+            df = pd.read_parquet(file, engine='auto')
+            df.fillna('', inplace=True)
         else:
-            print('Wrong file format. Compatible file formats: TSV, CSV, XLS, XLSX')
+            print('Wrong file format. Compatible file formats: TSV, CSV, XLS, XLSX, PARQUET')
             exit()
         return df
-    print('Done load tables')
+    print("Done load tables")
 
     # load cache file
     if cache_file not in [np.nan, '', None]:
@@ -75,7 +81,7 @@ if __name__ == '__main__':
         dfT.fillna('', inplace=True)
     else:
         dfT = pd.DataFrame()
-    print('Done load cache')
+    print("Done load cache")
 
     # load renaming patterns
     dfR = load_table(rename_file)
@@ -121,7 +127,7 @@ if __name__ == '__main__':
                     dict_corrections[id][colname] = {}
                 data_entry = {old_data: new_data}
                 dict_corrections[id][colname].update(data_entry)
-    print('Load rename_columns')
+    print("Load rename_columns")
 
 
     def generate_id(column_id):
@@ -156,9 +162,8 @@ if __name__ == '__main__':
         # print('2')
         # print(dfL.head())
         return dfL, dfN
-    print('Done cache file')
-
-
+    print("Done deduplication")
+    
     # Fix datatables
     print('\nFixing datatables...')
     def fix_datatable(dfL,file):
@@ -367,7 +372,7 @@ if __name__ == '__main__':
 
                 for pat, tests in pathogens.items():
                     # print('\n' + pat, tests)
-                    data[pat + '_test_result'] = 'Not tested'
+                    data[pat + '_test_result'] = "NA" #'Not tested'
 
                     for target in tests:
                         # print(file, target)
@@ -375,14 +380,14 @@ if __name__ == '__main__':
                             # pedido = data['Pedido']
                             # print(pedido, target, data[target])
                             if data[target] == 'Detectado':
-                                if data[pat + '_test_result'] in ['Not tested', 'Não Detectado']:
+                                if data[pat + '_test_result'] in ['NA', 'Não Detectado']: #'Not tested'
                                     # print('\t\t\t >>>' + target, data[target], '*', data[pat + '_test_result'])
                                     data[pat + '_test_result'] = 'Detectado'
                                     # print(pedido + ': ' + pat + '_test_result', 'fixed >>>', data[pat + '_test_result'])
                                 # else:
                                     # print(pat + '_test_result', 'fixed >>>', data[pat + '_test_result'])
                             elif data[target] == 'Não Detectado':
-                                if data[pat + '_test_result'] == 'Not tested':
+                                if data[pat + '_test_result'] == 'NA': #Not tested
                                     # print('\t\t\t >>>' + target, data[target], '*', data[pat + '_test_result'])
                                     data[pat + '_test_result'] = 'Não Detectado'
                                     # print(pat + '_test_result', 'fixed >>>', data[pat + '_test_result'])
@@ -445,7 +450,7 @@ if __name__ == '__main__':
 
             for p, t in pathogens.items():
                 if p != 'SC2':
-                    dfL[p + '_test_result'] = 'Not tested'
+                    dfL[p + '_test_result'] = "NA" #'Not tested'
 
             # adding missing columns
             if 'Dt. Nascimento' not in dfL.columns.tolist():
@@ -466,25 +471,28 @@ if __name__ == '__main__':
         else:
             #print('\t\tFile = ' + file)
             print('\t\tWARNING! Unknown file format. Check for inconsistencies.')
-
+            #exit()
         return dfN
-    print('Done reformating')
+    print("Done reformating")
 
     def rename_columns(id, df):
         #print(df.columns.tolist())
         #print(dict_rename[id])
         if id in dict_rename:
             df = df.rename(columns=dict_rename[id])
-        # print(df.columns.tolist())
+            #print(df.columns.tolist())
         return df
+    print("Done rename")
 
-    # fix data points
+    # fix data points create dict from dict
     def fix_data_points(id, col_name, value):
         new_value = value
+        #print(value)
         if value in dict_corrections[id][col_name]:
             new_value = dict_corrections[id][col_name][value]
+            #print(str("test = ") + new_value)
         return new_value
-    print('Done rename')
+    print("Load dictionary for fix_values")
 
     # open data files
     for element in os.listdir(input_folder):
@@ -495,20 +503,27 @@ if __name__ == '__main__':
                 if os.path.isdir(input_folder + element) == True:
                     print('\n# Processing datatables from: ' + id)
                     for filename in sorted(os.listdir(input_folder + element)):
-                        if filename.split('.')[-1] in ['tsv', 'csv', 'xls', 'xlsx'] and filename[0] not in ['~', '_']:
+                        if filename.split('.')[-1] in ['tsv', 'csv', 'xls', 'xlsx', 'parquet'] and filename[0] not in ['~', '_']:
                             print('\n\t- File: ' + filename)
                             df = load_table(input_folder + element + filename)
                             df.fillna('', inplace=True)
                             df.reset_index(drop=True)
 
                             df = fix_datatable(df, filename) # reformat datatable
+                            if df.empty:
+                                # print('##### Nothing to be done')
+                                continue
+
                             df.insert(0, 'lab_id', id)
                             df = rename_columns(id, df) # fix data points
                             dfT = dfT.reset_index(drop=True)
                             df = df.reset_index(drop=True)
 
+                            #print(df.head(2)) # only reformat
+                            #print(dfT.head(2)) # all labs empty without cache
+
                             print('\n# Fixing data points...')
-                            for lab_id, columns in dict_corrections.items():
+                            for lab_id, columns in tqdm(dict_corrections.items()):
                                 print('\t- Fixing data from: ' + lab_id)
                                 for column, values in columns.items():
                                     # print('\t- ' + column + ' (' + column + ' → ' + str(values) + ')')
@@ -525,6 +540,8 @@ if __name__ == '__main__':
     dfT = dfT.reset_index(drop=True)
     dfT.fillna('', inplace=True)
     print('Done fix tables')
+
+#old place where add `Fixing data points...`
 
     # reformat dates and get ages
     dfT['date_testing'] = pd.to_datetime(dfT['date_testing'])
@@ -544,22 +561,6 @@ if __name__ == '__main__':
 
     dfT['epiweek'] = dfT['date_testing'].apply(lambda x: get_epiweeks(x))
 
-    # add age from birthdate, if age is missing
-    if 'birthdate' in dfT.columns.tolist():
-        for idx, row in dfT.iterrows():
-            birth = dfT.loc[idx, 'birthdate']
-            test = dfT.loc[idx, 'date_testing']
-            if birth not in [np.nan, '', None]:
-                birth = pd.to_datetime(birth)
-                age = (test - birth) / np.timedelta64(1, 'Y')
-                dfT.loc[idx, 'age'] = np.round(age, 1)
-    
-    print('Done fix date and ages')
-
-    # fix sex information
-    dfT['sex'] = dfT['sex'].apply(lambda x: x[0] if x != '' else x)
-    print('Done fix sex')
-
     # Add gene detection results
     def check_detection(ctValue):
         try:
@@ -573,7 +574,6 @@ if __name__ == '__main__':
             result = ''
             pass
         return result
-
 
     # Ct value columns
     targets = []
@@ -620,13 +620,48 @@ if __name__ == '__main__':
         'ENTERO_test_result',
         'BAC_test_result'
         ]
+    # key_cols = {
+    #     'lab_id': 'category',
+    #     'test_id': str,
+    #     'test_kit': 'category',
+    #     'sample_id': str,
+    #     # 'region': str,
+    #     'state': 'category',
+    #     'location': str,
+    #     'date_testing': 'datetime64[ns]',
+    #     'epiweek': 'datetime64[ns]',
+    #     'age': 'int16',
+    #     'sex': 'category',
+    #     'FLUA_test_result': 'category',
+    #     'Ct_FluA': 'float32',
+    #     'FLUB_test_result': 'category',
+    #     'Ct_FluB': 'float32',
+    #     'VSR_test_result': 'category',
+    #     'Ct_VSR': 'float32',
+    #     'SC2_test_result': 'category',
+    #     'Ct_geneE': 'float32',
+    #     'Ct_geneN': 'float32',
+    #     'Ct_geneS': 'float32',
+    #     'Ct_ORF1ab': 'float32',
+    #     'Ct_RDRP': 'float32',
+    #     'geneS_detection': 'category',
+    #     'META_test_result': 'category',
+    #     'RINO_test_result': 'category',
+    #     'PARA_test_result': 'category',
+    #     'ADENO_test_result': 'category',
+    #     'BOCA_test_result': 'category',
+    #     'COVS_test_result': 'category',
+    #     'ENTERO_test_result': 'category',
+    #     'BAC_test_result': 'category'
+    #     }
 
     for col in dfT.columns.tolist():
         if col not in key_cols:
             dfT = dfT.drop(columns=[col])
 
     dfT = dfT[key_cols]
-    #print(dfT.columns.tolist)
+    print(dfT.dtypes)
+    #print(dfT.columns.tolist())
 
     dfT['date_testing'] = dfT['date_testing'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else 'XXXXX')
 
@@ -648,6 +683,50 @@ if __name__ == '__main__':
 
     # sorting by date
     dfT = dfT.sort_values(by=['lab_id', 'test_id', 'date_testing'])
+
+
+    # time controller for optimization of functions `def`
+    ## example with tqdm for def
+    # start = time.time()
+    # for load_table in tqdm(range(1), desc='Execution Time'):
+    #     load_table
+    # end = time.time()
+    # print("Execution time for load_table: ", end - start)
+
+    start = time.time()
+    load_table
+    end = time.time()
+    print("Execution time for load_table: ", end - start)
+
+    start = time.time()
+    generate_id
+    end = time.time()
+    print("Execution time for generate_id: ", end - start)
+
+    start = time.time()
+    deduplicate
+    end = time.time()
+    print("Execution time for deduplicate: ", end - start)
+
+    start = time.time()
+    fix_datatable
+    end = time.time()
+    print("Execution time for fix_datatable: ", end - start)
+
+    start = time.time()
+    rename_columns
+    end = time.time()
+    print("Execution time for rename_columns: ", end - start)
+
+    start = time.time()
+    fix_data_points
+    end = time.time()
+    print("Execution time for fix_data_points: ", end - start)
+
+    start = time.time()
+    get_epiweeks
+    end = time.time()
+    print("Execution time for get_epiweeks: ", end - start)
 
     # output combined dataframe
     dfT.to_csv(output, sep='\t', index=False)

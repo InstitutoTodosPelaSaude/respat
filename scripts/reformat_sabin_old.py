@@ -3,7 +3,7 @@
 # Created by: Anderson Brito
 # Email: anderson.brito@itps.org.br
 # Release date: 2022-01-19
-# Last update: 2023-02-06
+# Last update: 2023-01-23
 # Refactor by: Bragatte
 
 import pandas as pd
@@ -161,6 +161,8 @@ if __name__ == '__main__':
 
         return dfL, dfN
     print("Done deduplication")
+
+    print("================================")
     
     # Fix datatables
     print('\nFixing datatables...')
@@ -173,21 +175,6 @@ if __name__ == '__main__':
             test_name = "Covid-19 qualitative detection"
 
             print('\t\tDados covid test antigen >> Correct format. Proceeding...')
-            
-            ## define columns dtypes to reduce the use of memory
-            # print(dfL.dtypes)
-            dfL["OS"] = dfL["OS"].astype('str')
-            dfL["Código Posto"] = dfL["Código Posto"].astype('int16')
-            dfL["Estado"] = dfL["Estado"].astype('str')
-            dfL["Municipio"] = dfL["Municipio"].astype('str')
-            dfL["DataAtendimento"] = pd.to_datetime(dfL["DataAtendimento"])
-            dfL["DataNascimento"] = pd.to_datetime(dfL["DataNascimento"])
-            dfL["Sexo"] = dfL["Sexo"].astype('str')
-            dfL["Descricao"] = dfL["Descricao"].astype('str')
-            dfL["Parametro"] = dfL["Parametro"].astype('str')
-            dfL["Resultado"] = dfL["Resultado"].astype('str')
-            dfL["DataAssinatura"] = pd.to_datetime(dfL["DataAssinatura"])
-            # print(dfL.dtypes)
 
             # add sample_id and test_kit
             dfL.insert(1, 'sample_id', '')
@@ -249,7 +236,7 @@ if __name__ == '__main__':
 
             for p, t in tqdm(pathogens.items()):
                 if p != 'SC2':
-                    dfL[p + '_test_result'] = "NA" #'Not tested' #change for `0``
+                    dfL[p + '_test_result'] = 'Not tested' #change for `0``
 
         else:
             #print('\t\tFile = ' + file)
