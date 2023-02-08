@@ -634,9 +634,9 @@ rule total_tests_go:
 		expand("results/{geo}/combined_matrix_{geo}_totaltests.tsv", geo=LOCATIONS),
 
 index_totals = {
-"country": ["pathogen country", "country", "\'\'"],
-"region": ["pathogen region", "region", "country"],
-"state": ["pathogen state", "state", "state_code country"]
+"country": ["pathogen country test_result", "country", "\'\'"],
+"region": ["pathogen region test_result", "region", "country"],
+"state": ["pathogen state test_result", "state", "state_code country"]
 # "country": ["pathogen country lab_id test_kit test_result", "\'\'"], #0
 # "region": ["pathogen region lab_id test_kit test_result", "\'\'"], #1
 # "state": ["pathogen state lab_id test_kit test_result"] #2
@@ -690,8 +690,6 @@ rule total_tests:
 			--output {output.output2}
 
 		"""
-
-
 		# python3 scripts/collapser.py \
 		# 	--input {input.file} \
 		# 	--index {params.index} \
