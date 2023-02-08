@@ -45,7 +45,7 @@ rule arguments:
 		datadir = "data",
 		rename_file = "data/rename_columns.xlsx",
 		correction_file = "data/fix_values.xlsx",
-		cache =  "data/combined_cache.tsv",#first time data/combined0.tsv
+		cache =  "data/combined0.tsv",#first time data/combined0.tsv
 		shapefile = "config/ibge_2020_shp/bra_admbnda_adm2_ibge_2020.shp",
 		coordinates = "config/cache_coordinates.tsv",
 		age_groups = "config/demo_bins.txt",
@@ -87,7 +87,7 @@ rule reformat_hlagyn:
 		matrix = temp("results/combined_hla.tsv"),
 	shell:
 		"""
-		python3 scripts/reformat_hlagyn.py \
+		python scripts/reformat_hlagyn.py \
 			--datadir {params.datadir} \
 			--rename {input.rename} \
 			--correction {input.correction} \
@@ -110,7 +110,7 @@ rule reformat_dasa:
 		matrix = temp("results/combined_dasa.tsv"),
 	shell:
 		"""
-		python3 scripts/reformat_dasa.py \
+		python scripts/reformat_dasa.py \
 			--datadir {params.datadir} \
 			--rename {input.rename} \
 			--correction {input.correction} \
@@ -133,7 +133,7 @@ rule reformat_db:
 		matrix = temp("results/combined_db.tsv"), #rules.files.input.combined1,
 	shell:
 		"""
-		python3 scripts/reformat_db.py \
+		python scripts/reformat_db.py \
 			--datadir {params.datadir} \
 			--rename {input.rename} \
 			--correction {input.correction} \
@@ -156,7 +156,7 @@ rule reformat_sabin:
 		matrix = rules.files.input.combined1, # new combined1_lab or temp("results/combined_sabin.tsv")
 	shell:
 		"""
-		python3 scripts/reformat_sabin.py \
+		python scripts/reformat_sabin.py \
 			--datadir {params.datadir} \
 			--rename {input.rename} \
 			--correction {input.correction} \
@@ -194,7 +194,7 @@ rule agegroups:
 		matrix = rules.files.input.combined2, # new combined2_age
 	shell:
 		"""
-		python3 scripts/groupbyrange.py \
+		python scripts/groupbyrange.py \
 			--input {input.metadata} \
 			--column {params.column} \
 			--bins {input.bins} \
@@ -225,7 +225,7 @@ rule agegroups:
 # 		matrix = "results/combined_testdata3.tsv"
 # 	shell:
 # 		"""
-# 		python3 scripts/name2shape.py \
+# 		python scripts/name2shape.py \
 # 			--input {input.input_file} \
 # 			--shapefile \"{input.shapefile}\" \
 # 			--geo-columns \"{params.geo_columns}\" \
@@ -257,7 +257,7 @@ rule geocols:
 	priority: 10
 	shell:
 		"""
-		python3 scripts/reformat_dataframe.py \
+		python scripts/reformat_dataframe.py \
 			--input1 {input.file} \
 			--input2 {input.newcols} \
 			--index {params.index} \
@@ -317,7 +317,7 @@ rule demog:
 		age_matrix = "results/demography/matrix_{sample}_agegroups.tsv",
 	shell:
 		"""
-		python3 scripts/rows2matrix.py \
+		python scripts/rows2matrix.py \
 			--input {input.metadata} \
 			--xvar {params.xvar} \
 			--format {params.format} \
@@ -375,7 +375,7 @@ rule posrate_agegroup:
 		posrate = "results/demography/matrix_agegroups_weeks_{sample}_posrate.tsv", #rules.files.input.posrate,
 	shell: #old normdata script 3
 		"""
-		python3 scripts/rows2matrix.py \
+		python scripts/rows2matrix.py \
 			--input {input.metadata} \
 			--xvar {params.xvar} \
 			--format {params.format} \
@@ -384,7 +384,7 @@ rule posrate_agegroup:
 			--unique-id {params.unique_id} \
 			--output {output.week_matrix}
 
-		python3 scripts/collapser.py \
+		python scripts/collapser.py \
 			--input {output.week_matrix} \
 			--index {params.unique_id} \
 			--unique-id {params.unique_id} \
@@ -392,7 +392,7 @@ rule posrate_agegroup:
 			--filter \"{params.filter}\" \
 			--output {output.alltests} \
 
-		python3 scripts/matrix_operations.py \
+		python scripts/matrix_operations.py \
 			--input1 {output.week_matrix} \
 			--input2 {output.alltests} \
 			--index1 {params.yvar} \
@@ -425,7 +425,7 @@ rule combine_demog:
 		#caserate = rules.files.input.caserate,
 	shell: #old normdata script 2
 		"""
-		python3 scripts/multi_merger.py \
+		python scripts/multi_merger.py \
 			--path {params.path_demog} \
 			--regex {params.regex} \
 			--fillna {params.filler} \
@@ -437,7 +437,7 @@ rule combine_demog:
 		"""
 
 		# Não é mais usado!!!!
-		# python3 scripts/normdata.py \
+		# python scripts/normdata.py \
 		# 	--input1 {output.merged} \
 		# 	--input2 {input.population} \
 		# 	--index1 {params.index1} \
@@ -463,7 +463,7 @@ rule ttpd: #total_tests_panel_demog
 		index2 = "epiweek pathogen",
 		ignore2 = "name test_result",
 		## filter positives pathogens of interest VSR SC2 FLUA FLUB
-		filter_testpanelpos =  "test_result:1, pathogen:VSR, pathogen:SC2, pathogen:FLUA ,pathogen:FLUB",
+		filter_testpanelpos =  "test_result:Positive, pathogen:VSR, pathogen:SC2, pathogen:FLUA ,pathogen:FLUB",
 		sortby = "epiweek",
 		sortby2 = "epiweek pathogen",
 		format = "integer",
@@ -475,7 +475,7 @@ rule ttpd: #total_tests_panel_demog
 		totaltestpanel_agegroups_freq = "results/demography/combined_matrix_totaltestpanel_agegroups_freq.tsv", #freq - adding --rate 100.000 output will be incidence 
 	shell:
 		"""
-		python3 scripts/collapser.py \
+		python scripts/collapser.py \
 			--input {input.combi_ages} \
 			--index {params.index} \
 			--unique-id {params.unique_id} \
@@ -485,7 +485,7 @@ rule ttpd: #total_tests_panel_demog
 			--format {params.format} \
 			--output {output.totaltestpanel_agegroups_posweek}
 
-		python3 scripts/collapser.py \
+		python scripts/collapser.py \
 			--input {input.combi_ages} \
 			--index {params.index2} \
 			--unique-id {params.unique_id} \
@@ -495,7 +495,7 @@ rule ttpd: #total_tests_panel_demog
 			--format {params.format} \
 			--output {output.totaltestpanel_agegroups_pos}
 		
-		python3 scripts/matrix_operations.py \
+		python scripts/matrix_operations.py \
 			--input1 {output.totaltestpanel_agegroups_pos} \
 			--input2 {output.totaltestpanel_agegroups_posweek} \
 			--index1 {params.index2} \
@@ -509,9 +509,9 @@ rule test_results_go:
 #		expand("results/{geo}/matrix_{sample}_{geo}_posneg_labtests.tsv", sample=SAMPLES, geo=LOCATIONS),
 
 index_results = {
-"country": ["country lab_id test_kit", "\'\'", "\'\'"], #0 #1 #2
-"region": ["region lab_id test_kit", "country", "country"], #0 #1 #2
-"state": ["state lab_id test_kit", "state_code country", "state_code country"] #2
+"country": ["country lab_id test_kit", "\'\'"], #0 #1 #2
+"region": ["region lab_id test_kit", "country"], #0 #1 #2
+"state": ["state lab_id test_kit", "state_code country"] #2
 # "locations": ["ADM2_PCODE", "ADM2_PT state state_code"]
 }
 
@@ -520,11 +520,10 @@ def set_index_results(spl, loc):
 	index = loc #index_results[loc][0] change
 	index2 = loc + " pathogen test_result"
 	extra_cols = index_results[loc][1]
-	extra_cols2 = index_results[loc][2]
 	filter = "~" + tests[spl] + ":Not tested" # filter specific test ->  + ", test_kit:test_4"
 	add_col = "pathogen:" + spl
 	test_col = tests[spl]
-	return([yvar, index, extra_cols, filter, add_col, test_col, extra_cols2, index2])
+	return([yvar, index, extra_cols, filter, add_col, test_col, index2])
 
 rule test_results:
 	message:
@@ -544,12 +543,9 @@ rule test_results:
 		filters = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[3],
 		id_col = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[4],
 		test_col = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[5],
-		extra_columns2 = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[6],
+		index2 = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[6],
 		
 		sortby = "lab_id test_kit",
-		
-		index2 = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[7],
-		unique_id = "test_result",
 		ignore = "test_kit lab_id",
 		sortby2 = "pathogen",
 
@@ -561,7 +557,7 @@ rule test_results:
 		posneg = "results/{geo}/matrix_{sample}_{geo}_posneg.tsv",
 	shell:
 		"""
-		python3 scripts/rows2matrix.py \
+		python scripts/rows2matrix.py \
 			--input {input.input_file} \
 			--xvar {params.xvar} \
 			--xtype {params.xtype} \
@@ -578,10 +574,10 @@ rule test_results:
 		
 		sed -i '' 's/{params.test_col}/test_result/' {output.posneg_labtests}
 
-		python3 scripts/collapser.py \
+		python scripts/collapser.py \
 			--input {output.posneg_labtests} \
 			--index {params.index2} \
-			--unique-id {params.unique_id} \
+			--unique-id {params.index} \
 			--extra-columns {params.extra_columns} \
 			--ignore {params.ignore} \
 			--sortby {params.sortby2} \
@@ -606,19 +602,21 @@ rule combine_posneg:
 		regex = "*_posneg.tsv",
 		filler = "0",
 		unit = "week", # change here for MONTH
-		format = "integer"
+		format = "integer",
+		sortby = "{geo} pathogen test_result",
 	output:
 		merged = "results/{geo}/combined_matrix_{geo}_posneg.tsv",
 		merged_weeks = "results/{geo}/combined_matrix_{geo}_posneg_weeks.tsv"
 	shell:
 		"""
-		python3 scripts/multi_merger.py \
+		python scripts/multi_merger.py \
 			--path {params.path} \
-			--regex {params.regex} \
+			--regex \"{params.regex}\" \
 			--fillna {params.filler} \
+			--sortby {params.sortby} \
 			--output {output.merged}
 		
-		python3 scripts/aggregator.py \
+		python scripts/aggregator.py \
 			--input {output.merged} \
 			--unit {params.unit} \
 			--format {params.format} \
@@ -637,10 +635,6 @@ index_totals = {
 "country": ["pathogen country", "country", "\'\'"],
 "region": ["pathogen region", "region", "country"],
 "state": ["pathogen state", "state", "state_code country"]
-# "country": ["pathogen country lab_id test_kit test_result", "\'\'"], #0
-# "region": ["pathogen region lab_id test_kit test_result", "\'\'"], #1
-# "state": ["pathogen state lab_id test_kit test_result"] #2
-# # "locations": ["pathogen ADM2_PCODE", "ADM2_PCODE", "ADM2_PT state state_code"]
 }
 
 def set_index_totals(loc):
@@ -663,17 +657,14 @@ rule total_tests:
 		unique_id = lambda wildcards: set_index_totals(wildcards.geo)[1],
 		extra_columns = lambda wildcards: set_index_totals(wildcards.geo)[2],
 		filters = "~test_result:Not tested",
-		#filter_tests = "~test_kit:covid",
 		unit = "week", #change for month
 		ignore = "test_result" #keep one outpute of results
 	output:
 		output1 = "results/{geo}/combined_matrix_{geo}_totaltests.tsv",
-		#output2 = "results/{geo}/combined_matrix_{geo}_paneltests.tsv",
 		output2 = "results/{geo}/combined_matrix_{geo}_totaltests_weeks.tsv",
-		#output4 = "results/{geo}/combined_matrix_{geo}_paneltests_weeks.tsv",
 	shell:
 		"""
-		python3 scripts/collapser.py \
+		python scripts/collapser.py \
 			--input {input.file} \
 			--index {params.index} \
 			--unique-id {params.unique_id} \
@@ -684,28 +675,13 @@ rule total_tests:
 			--output {output.output1}
 
 
-		python3 scripts/aggregator.py \
+		python scripts/aggregator.py \
 			--input {output.output1} \
 			--unit {params.unit} \
 			--format {params.format} \
 			--output {output.output2}
 
 		"""
-		# python3 scripts/collapser.py \
-		# 	--input {input.file} \
-		# 	--index {params.index} \
-		# 	--unique-id {params.unique_id} \
-		# 	--extra-columns {params.extra_columns} \
-		# 	--format {params.format} \
-		# 	--filter \"{params.filter_tests}\" \
-		# 	--ignore {params.ignore} \
-		# 	--output {output.output2}
-
-		# python3 scripts/aggregator.py \
-		# 	--input {output.output2} \
-		# 	--unit {params.unit} \
-		# 	--format {params.format} \
-		# 	--output {output.output4}
 		
 
 rule posrate_go:
@@ -715,8 +691,7 @@ rule posrate_go:
 indexes = {
 "country": ["pathogen country"],
 "region": ["pathogen region"],
-"state": ["pathogen state_code state_code"]
-# "locations": ["pathogen ADM2_PCODE"]
+"state": ["pathogen state_code"]
 }
 
 def getIndex(loc):
@@ -744,22 +719,22 @@ rule posrate:
 		output_weeks = "results/{geo}/combined_matrix_{geo}_posrate_weeks.tsv"
 	shell: #atualizar para matrix_operations
 		"""
-		python3 scripts/normdata.py \
+		python scripts/matrix_operations.py \
 			--input1 {input.file1} \
 			--input2 {input.file2} \
 			--index1 {params.index1} \
 			--index2 {params.index2} \
 			--min-denominator {params.min_denominator} \
-			--filter {params.filter} \
+			--filter1 {params.filter} \
 			--output {output.output_days}
 
-		python3 scripts/normdata.py \
+		python scripts/matrix_operations.py \
 			--input1 {input.file3} \
 			--input2 {input.file4} \
 			--index1 {params.index1} \
 			--index2 {params.index2} \
 			--min-denominator {params.min_denominator} \
-			--filter {params.filter} \
+			--filter1 {params.filter} \
 			--output {output.output_weeks}
 		"""
 
@@ -781,7 +756,7 @@ rule posneg_allpat:
 		allpat_matrix = rules.files.input.allpat_matrix,
 	shell:
 		"""
-		python3 scripts/collapser.py \
+		python scripts/collapser.py \
 			--input {input.input} \
 			--index {params.index} \
 			--unique-id {params.index} \
@@ -833,7 +808,7 @@ rule copy_files:
 #		matrix = "results/"
 #	shell:
 #		"""
-#		python3 scripts/ \
+#		python scripts/ \
 #			--metadata {input.} \
 #			--index-column {params.} \
 #			--extra-columns {params.} \
