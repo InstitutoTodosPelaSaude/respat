@@ -238,7 +238,7 @@ if __name__ == '__main__':
 
                 target_pathogen = {}
                 for p, t in pathogens.items():
-                    data[p + '_test_result'] = 'NA' #'Not tested'
+                    data[p + '_test_result'] = 'Not tested'
                     for g in t:
                         target_pathogen[g] = p
 
@@ -287,32 +287,32 @@ if __name__ == '__main__':
 
                                     if ct_value < genes[gene]:
                                         result = 'DETECTADO'
-                                        data[virus + '_test_result'] = 1 #result
+                                        data[virus + '_test_result'] = result
                                     else: # if Ct is too high
                                         # print('Ct too high for gene', gene)
                                         result = 'NÃO DETECTADO'
-                                        data[virus + '_test_result'] = 0 #result
+                                        data[virus + '_test_result'] = result
                                     # print('\t * ' + gene + ' (' + str(ct_value) + ') = ' + data[virus + '_test_result'])
 
                                 else: # if no Ct is reported
-                                    result = 'NA' #'NÃO DETECTADO'
+                                    result = 'NÃO DETECTADO'
                                     # print('\t - ' + gene + ' (' + str(ct_value) + ') = ' + data[virus + '_test_result'])
-                                    if data[virus + '_test_result'] != 1: #'DETECTADO':
+                                    if data[virus + '_test_result'] != 'DETECTADO':
                                         data[virus + '_test_result'] = result
 
                                 # fix multi-target result
                                 if virus == 'SC2':
-                                    if data[virus + '_test_result'] != 1:#'DETECTADO':
-                                        if result == 1: #'DETECTADO':
+                                    if data[virus + '_test_result'] != 'DETECTADO':
+                                        if result == 'DETECTADO':
                                             data[virus + '_test_result'] = result # fix wrong result, in case at least one target is detected
                                             # print('\t ** ' + gene + ' (' + str(ct_value) + ') = ' + data[virus + '_test_result'])
                             else:
                                 line2 = str(code) + '\t' + gene + '\t' + str(ct_value) + '\t' + dfG.loc[idx, 'Results_All'] + '\t' + str(len(dfR.index)) + '\t' + file + '\n'
                                 # print(line2)
                                 # outfile2.write(line2)
-                                if data[virus + '_test_result'] != 1: #'DETECTADO':
+                                if data[virus + '_test_result'] != 'DETECTADO':
                                     # print('duplicate?')
-                                    if result == 1: #'DETECTADO':
+                                    if result == 'DETECTADO':
                                         for p, t in pathogens.items():
                                             if gene in t:
                                                 data[virus + '_test_result'] = result # get result as shown in original file
@@ -332,7 +332,7 @@ if __name__ == '__main__':
                 dfN = dfN.append(data, ignore_index=True)
                 #print(dfN.columns.tolist())
 
-        elif 'Parametro' in dfL.columns.tolist() and 'C' in dfL['Parametro'].tolist() or 'Parametro' in dfL.columns.tolist() and 'CT' in dfL['Parametro'].tolist():
+        elif 'Parametro' in dfL.columns.tolist() and 'C' in dfL['Parametro'].tolist() or 'Parametro' in dfL.columns.tolist() and 'CT' in dfL['Parametro'].tolist() :
             # print('\t\tDados Omicron >> Correct format. Proceeding...')
             test_name = "Thermo Fisher"
 
@@ -399,13 +399,13 @@ if __name__ == '__main__':
                 # target_pathogen = {}
                 for p, t in pathogens.items():
                     if p != 'SC2':
-                        data[p + '_test_result'] = 'NA' #'Not tested'
+                        data[p + '_test_result'] = 'Not tested'
 
                 if 'SGENE' not in dfG['Exame'].tolist():
                     if 'detectado' in [v.lower() for v in dfG['Resultado'].tolist()]:
-                        new_entry = {'ResultadoLIS': '0.0', 'Exame': 'SGENE', 'Resultado': '1'}
+                        new_entry = {'ResultadoLIS': '0.0', 'Exame': 'SGENE', 'Resultado': 'Detectado'}
                         dfG = dfG.append(new_entry, ignore_index=True)
-                        dfG['Resultado'] = 1 #'Detectado'
+                        dfG['Resultado'] = 'Detectado'
 
                 # fix Ct values
                 genes = pathogens['SC2']
@@ -494,7 +494,7 @@ if __name__ == '__main__':
                 target_pathogen = {}
                 for p, t in pathogens.items():
                     if p != 'SC2':
-                        data[p + '_test_result'] = 'NA' #'Not tested'
+                        data[p + '_test_result'] = 'Not tested'
                     for g in t:
                         target_pathogen[g] = p
 
@@ -655,13 +655,13 @@ if __name__ == '__main__':
     def check_detection(ctValue):
         try:
             if ctValue[0].isdigit() and float(ctValue) > 0:
-                result = 1 #'Detected'
+                result = 'Detected'
             elif ctValue[0].isdigit() and float(ctValue) < 1:
-                result = 0 #'Not detected'
+                result = 'Not detected'
             else:
-                result = 'NA' #''
+                result = ''
         except:
-            result = 'NA' #''
+            result = ''
             pass
         return result
 

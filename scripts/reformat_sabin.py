@@ -249,7 +249,7 @@ if __name__ == '__main__':
 
             for p, t in tqdm(pathogens.items()):
                 if p != 'SC2':
-                    dfL[p + '_test_result'] = "NA" #'Not tested' #change for `0``
+                    dfL[p + '_test_result'] = 'Not tested' #change for `0``
 
         else:
             #print('\t\tFile = ' + file)

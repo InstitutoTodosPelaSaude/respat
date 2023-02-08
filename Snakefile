@@ -346,7 +346,7 @@ rule demogposrate_go:
 
 def set_groups2(spl):
 	yvar = tests[spl] + ' age_group'
-	filters = "~" + tests[spl] + ":NA" # filter specific test ->  + ", test_kit:test_4"
+	filters = "~" + tests[spl] + ":Not tested" # filter specific test ->  + ", test_kit:test_4"
 	#filter_tests = '~testkit:covid, ~testkit:covidantigen, ~testkit:thermo" 
 	#return([yvar])
 	return([yvar, filters]) #, filter_tests]) # add
@@ -419,7 +419,7 @@ rule combine_demog:
 		index1 = "name pathogen test_result epiweek",
 		index2 = "name",
 		rate = "100000",
-		filter = "test_result:1",
+		filter = "test_result:Positive",
 	output:
 		merged = rules.files.input.merged,
 		#caserate = rules.files.input.caserate,
@@ -521,7 +521,7 @@ def set_index_results(spl, loc):
 	index2 = loc + " pathogen test_result"
 	extra_cols = index_results[loc][1]
 	extra_cols2 = index_results[loc][2]
-	filter = "~" + tests[spl] + ":NA" # filter specific test ->  + ", test_kit:test_4"
+	filter = "~" + tests[spl] + ":Not tested" # filter specific test ->  + ", test_kit:test_4"
 	add_col = "pathogen:" + spl
 	test_col = tests[spl]
 	return([yvar, index, extra_cols, filter, add_col, test_col, extra_cols2, index2])
@@ -662,7 +662,7 @@ rule total_tests:
 		index = lambda wildcards: set_index_totals(wildcards.geo)[0],
 		unique_id = lambda wildcards: set_index_totals(wildcards.geo)[1],
 		extra_columns = lambda wildcards: set_index_totals(wildcards.geo)[2],
-		filters = "~test_result:NA",
+		filters = "~test_result:Not tested",
 		#filter_tests = "~test_kit:covid",
 		unit = "week", #change for month
 		#ignore = "lab_id test_kit test_result"
@@ -738,7 +738,7 @@ rule posrate:
 	params:
 		index1 = lambda wildcards: getIndex(wildcards.geo),
 		index2 = lambda wildcards: getIndex(wildcards.geo),
-		filter = 'test_result:1',
+		filter = 'test_result:Positive',
 		min_denominator = 50
 	output:
 		output_days = "results/{geo}/combined_matrix_{geo}_posrate.tsv",

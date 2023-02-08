@@ -3,7 +3,7 @@
 # Created by: Anderson Brito
 # Email: anderson.brito@itps.org.br
 # Release date: 2022-01-19
-# Last update: 2023-02-06
+# Last update: 2023-02-08
 # Refactor by: Bragatte
 
 import pandas as pd
@@ -372,7 +372,7 @@ if __name__ == '__main__':
 
                 for pat, tests in pathogens.items():
                     # print('\n' + pat, tests)
-                    data[pat + '_test_result'] = "NA" #'Not tested'
+                    data[pat + '_test_result'] = 'Not tested'
 
                     for target in tests:
                         # print(file, target)
@@ -380,14 +380,14 @@ if __name__ == '__main__':
                             # pedido = data['Pedido']
                             # print(pedido, target, data[target])
                             if data[target] == 'Detectado':
-                                if data[pat + '_test_result'] in ['NA', 'Não Detectado']: #'Not tested'
+                                if data[pat + '_test_result'] in ['Not tested', 'Não Detectado']:
                                     # print('\t\t\t >>>' + target, data[target], '*', data[pat + '_test_result'])
                                     data[pat + '_test_result'] = 'Detectado'
                                     # print(pedido + ': ' + pat + '_test_result', 'fixed >>>', data[pat + '_test_result'])
                                 # else:
                                     # print(pat + '_test_result', 'fixed >>>', data[pat + '_test_result'])
                             elif data[target] == 'Não Detectado':
-                                if data[pat + '_test_result'] == 'NA': #Not tested
+                                if data[pat + '_test_result'] == 'Not tested':
                                     # print('\t\t\t >>>' + target, data[target], '*', data[pat + '_test_result'])
                                     data[pat + '_test_result'] = 'Não Detectado'
                                     # print(pat + '_test_result', 'fixed >>>', data[pat + '_test_result'])
@@ -450,7 +450,7 @@ if __name__ == '__main__':
 
             for p, t in pathogens.items():
                 if p != 'SC2':
-                    dfL[p + '_test_result'] = "NA" #'Not tested'
+                    dfL[p + '_test_result'] = 'Not tested'
 
             # adding missing columns
             if 'Dt. Nascimento' not in dfL.columns.tolist():
@@ -660,7 +660,7 @@ if __name__ == '__main__':
             dfT = dfT.drop(columns=[col])
 
     dfT = dfT[key_cols]
-    print(dfT.dtypes)
+    #print(dfT.dtypes)
     #print(dfT.columns.tolist())
 
     dfT['date_testing'] = dfT['date_testing'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else 'XXXXX')

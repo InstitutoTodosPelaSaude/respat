@@ -236,7 +236,7 @@ if __name__ == '__main__':
 
                 target_pathogen = {}
                 for p, t in pathogens.items():
-                    data[p + '_test_result'] = "NA" #'Not tested'
+                    data[p + '_test_result'] = 'Not tested'
                     for g in t:
                         target_pathogen[g] = p
                 dfR['pathogen'] = dfR['codigo'].apply(lambda x: target_pathogen[x])
@@ -252,20 +252,20 @@ if __name__ == '__main__':
                         if gene in genes:
                             found.append(gene)
                             if gene not in data:
-                                data[gene] = 'NA' #'' # assign target
-                                if ct_value != 'NA':
+                                data[gene] = '' # assign target
+                                if ct_value != '':
                                     data[gene] = str(ct_value)
 
                                     if ct_value == genes[gene]:
-                                        result = '1' #'DETECTADO'
+                                        result = 'DETECTADO'
                                         data[virus + '_test_result'] = result
                                     else: # target not detected
-                                        result = '0' #'NÃO DETECTADO'
+                                        result = 'NÃO DETECTADO'
                                         data[virus + '_test_result'] = result
 
                                 else: # if no Ct is reported
-                                    result = 'NA' #'NÃO DETECTADO'
-                                    if data[virus + '_test_result'] != '1':#'DETECTADO':
+                                    result = 'NÃO DETECTADO'
+                                    if data[virus + '_test_result'] != 'DETECTADO':
                                         data[virus + '_test_result'] = result
                         else:
                             found.append(gene)
@@ -295,14 +295,14 @@ if __name__ == '__main__':
                 if 'resultado_norm' in dfL.columns.tolist():
                     dfL.rename(columns={'resultado_norm': 'resultado'}, inplace=True)
                     dfL['resultado'] = dfL['resultado'].apply(
-                        lambda x: 0 if x == 'NEGATIVO' else 1)
+                        lambda x: 'NAO DETECTADO' if x == 'NEGATIVO' else 'DETECTADO')
                 else:
                     if 'resultado_original' in dfL.columns.tolist():
                         dfL.rename(columns={'resultado_original': 'resultado'}, inplace=True)
                         dfL['resultado'] = dfL['resultado'].apply(
-                            lambda x: 0 if x == 'NDT' else 1)
+                            lambda x: 'NAO DETECTADO' if x == 'NDT' else 'DETECTADO')
                     else:
-                        dfL['resultado'] == 'NA'
+                        #dfL['resultado'] == 'Not tested'
                         print('No \'result\' column found.')
                         exit()
 
@@ -362,7 +362,7 @@ if __name__ == '__main__':
             # target_pathogen = {}
             for p, t in pathogens.items():
                 if p != 'SC2':
-                    dfL[p + '_test_result'] = "NA" #'Not tested'
+                    dfL[p + '_test_result'] = 'Not tested'
 
             def not_assigned(geo_data):
                 empty = [
@@ -381,13 +381,13 @@ if __name__ == '__main__':
 
             for idx, row in dfL.iterrows():
                 result = dfL.loc[idx, 'resultado']
-                if result == 0:#'NAO DETECTADO':
+                if result == 'NAO DETECTADO':
                     # print(idx)
-                    dfL.loc[idx, 'Gene N'] = 0 #''
-                    dfL.loc[idx, 'Gene ORF'] = 0 #''
-                    dfL.loc[idx, 'Gene S'] = 0 #''
-                else: # if not reported
-                    result = 'NA'
+                    dfL.loc[idx, 'Gene N'] = ''
+                    dfL.loc[idx, 'Gene ORF'] = ''
+                    dfL.loc[idx, 'Gene S'] = ''
+                # else: # if not reported
+                #     result = 'NA'
 
             dfN = dfL
             # print('# Returning some dataframe')
@@ -497,13 +497,13 @@ if __name__ == '__main__':
     def check_detection(ctValue):
         try:
             if ctValue[0].isdigit() and float(ctValue) > 0:
-                result = 1 #'Detected'
+                result = 'Detected'
             elif ctValue[0].isdigit() and float(ctValue) < 1:
-                result = 0 #'Not detected'
+                result = 'Not detected'
             else:
-                result = 'NA' #''
+                result = ''
         except:
-            result = 'NA' #''
+            result = ''
             pass
         return result
 

@@ -1,5 +1,5 @@
 param	value	note
-input	combined_matrix_agegroups.tsv	# input file
+input	combined_matrix_agegroups_manual.tsv	# input file
 scale	absolute	# scale of the data to be plotted as stacks
 y_var	pathogen	# main variable, shown on Y axis
 x_label		# X label
@@ -10,7 +10,7 @@ filter	 epiweek:2022-11-05, epiweek:2022-11-12, epiweek:2022-11-19, epiweek:2022
 ignore_cols	test_result, name	# columns to be ignored in the line plot
 colour_by	pathogen	# variable to be represented in the colour scheme
 colour_scheme	colors.tsv	# colour pallete, if colour file not provided
-legend		# Legend position (e.g. best , upper left, etc. If left empty, no legend will be displayed)
+legend_position		# Legend position (e.g. best , upper left, etc. If left empty, no legend will be displayed)
 plot_label	upper right	# Legend position (e.g. best , upper left, etc. If left empty, no legend will be displayed)
 column_legend	1	# number of columns of the legend
 tick_every	50	# frequency of tick in X axis
