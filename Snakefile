@@ -715,7 +715,7 @@ rule posrate_go:
 indexes = {
 "country": ["pathogen country"],
 "region": ["pathogen region"],
-"state": ["pathogen state_code state_code"]
+"state": ["pathogen state"]
 # "locations": ["pathogen ADM2_PCODE"]
 }
 
@@ -764,7 +764,6 @@ rule posrate:
 		"""
 
 
-
 rule posneg_allpat:
 	message:
 		"""
@@ -808,6 +807,7 @@ rule copy_files:
 		cp results/country/combined_matrix_country_posneg_allpat_weeks.tsv figures/barplot
 
 		cp results/country/combined_matrix_country_posrate_weeks.tsv figures/lineplot
+
 		cp results/state/combined_matrix_state_posrate_weeks.tsv figures/heatmap
 		cp results/demography/matrix_agegroups_weeks_SC2_posrate.tsv figures/heatmap
 		cp results/demography/matrix_agegroups_weeks_FLUA_posrate.tsv figures/heatmap
