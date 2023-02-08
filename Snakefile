@@ -31,6 +31,8 @@ rule all:
 		
 		snakemake --cores all demog_go
 		snakemake --cores all combine_demog
+
+		snakemake --cores all ttpd
 		snakemake --cores all demogposrate_go
 
 		snakemake --cores all posneg_allpat
@@ -54,7 +56,7 @@ rule arguments:
 		index_column = "division_exposure",
 
 		start_date = "2021-12-05",
-		end_date = "2023-01-28" #atualizar data aqui - PRÓXIMO 20230204
+		end_date = "2023-02-04" #atualizar data aqui - PRÓXIMO 20230204
 
 arguments = rules.arguments.params
 
@@ -344,7 +346,7 @@ rule demogposrate_go:
 
 def set_groups2(spl):
 	yvar = tests[spl] + ' age_group'
-	filters = "~" + tests[spl] + ":Not tested" # filter specific test ->  + ", test_kit:test_4"
+	filters = "~" + tests[spl] + ":NA" # filter specific test ->  + ", test_kit:test_4"
 	#filter_tests = '~testkit:covid, ~testkit:covidantigen, ~testkit:thermo" 
 	#return([yvar])
 	return([yvar, filters]) #, filter_tests]) # add
@@ -366,7 +368,7 @@ rule posrate_agegroup:
 		extra = "country",
 		min_denominator = 50,
 #		filter = "~test_result:Not tested",
-#		filter = lambda wildcards: set_groups2(wildcards.sample)[1],
+		filter = lambda wildcards: set_groups2(wildcards.sample)[1],
 	output:
 		week_matrix = "results/demography/matrix_agegroups_weeks_{sample}_posneg.tsv", #rules.files.input.week_matrix,
 		alltests = "results/demography/matrix_agegroups_weeks_{sample}_alltests.tsv", #rules.files.input.allcovid,
@@ -387,6 +389,7 @@ rule posrate_agegroup:
 			--index {params.unique_id} \
 			--unique-id {params.unique_id} \
 			--extra-columns {params.extra} \
+			--filter \"{params.filter}\" \
 			--output {output.alltests} \
 
 		python3 scripts/matrix_operations.py \
@@ -416,7 +419,7 @@ rule combine_demog:
 		index1 = "name pathogen test_result epiweek",
 		index2 = "name",
 		rate = "100000",
-		filter = "test_result:Positive",
+		filter = "test_result:1",
 	output:
 		merged = rules.files.input.merged,
 		#caserate = rules.files.input.caserate,
@@ -460,8 +463,9 @@ rule ttpd: #total_tests_panel_demog
 		index2 = "epiweek pathogen",
 		ignore2 = "name test_result",
 		## filter positives pathogens of interest VSR SC2 FLUA FLUB
-		filter_testpanelpos =  "test_result:Positive, pathogen:VSR, pathogen:SC2, pathogen:FLUA ,pathogen:FLUB",
-		sortby = "pathogen epiweek",
+		filter_testpanelpos =  "test_result:1, pathogen:VSR, pathogen:SC2, pathogen:FLUA ,pathogen:FLUB",
+		sortby = "epiweek",
+		sortby2 = "epiweek pathogen",
 		format = "integer",
 	input:
 		combi_ages = rules.combine_demog.output.merged, #combined_matrix_agegroup.tsv 
@@ -487,7 +491,7 @@ rule ttpd: #total_tests_panel_demog
 			--unique-id {params.unique_id} \
 			--ignore {params.ignore2} \
 			--filter \"{params.filter_testpanelpos}\" \
-			--sortby {params.sortby} \
+			--sortby {params.sortby2} \
 			--format {params.format} \
 			--output {output.totaltestpanel_agegroups_pos}
 		
@@ -502,22 +506,25 @@ rule ttpd: #total_tests_panel_demog
 rule test_results_go:
 	input:
 		expand("results/{geo}/matrix_{sample}_{geo}_posneg.tsv", sample=SAMPLES, geo=LOCATIONS),
+#		expand("results/{geo}/matrix_{sample}_{geo}_posneg_labtests.tsv", sample=SAMPLES, geo=LOCATIONS),
 
 index_results = {
-"country": ["country lab_id test_kit", "\'\'"], #0
-"region": ["region lab_id test_kit", "\'\'"], #1
-"state": ["state lab_id test_kit", "state_code country"] #2
+"country": ["country lab_id test_kit", "\'\'", "\'\'"], #0 #1 #2
+"region": ["region lab_id test_kit", "country", "country"], #0 #1 #2
+"state": ["state lab_id test_kit", "state_code country", "state_code country"] #2
 # "locations": ["ADM2_PCODE", "ADM2_PT state state_code"]
 }
 
 def set_index_results(spl, loc):
 	yvar = tests[spl] + ' ' + index_results[loc][0]
 	index = loc #index_results[loc][0] change
+	index2 = loc + " pathogen test_result"
 	extra_cols = index_results[loc][1]
-	filter = "~" + tests[spl] + ":Not tested" # filter specific test ->  + ", test_kit:test_4"
+	extra_cols2 = index_results[loc][2]
+	filter = "~" + tests[spl] + ":NA" # filter specific test ->  + ", test_kit:test_4"
 	add_col = "pathogen:" + spl
 	test_col = tests[spl]
-	return([yvar, index, extra_cols, filter, add_col, test_col])
+	return([yvar, index, extra_cols, filter, add_col, test_col, extra_cols2, index2])
 
 rule test_results:
 	message:
@@ -536,15 +543,22 @@ rule test_results:
 		extra_columns = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[2],
 		filters = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[3],
 		id_col = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[4],
-
+		test_col = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[5],
+		extra_columns2 = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[6],
+		
 		sortby = "lab_id test_kit",
+		
+		index2 = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[7],
+		unique_id = "test_result",
+		ignore = "test_kit lab_id",
+		sortby2 = "pathogen",
 
 		start_date = arguments.start_date,
 		end_date = arguments.end_date,
 
-		test_col = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[5],
 	output:
-		"results/{geo}/matrix_{sample}_{geo}_posneg.tsv",
+		posneg_labtests = "results/{geo}/matrix_{sample}_{geo}_posneg_labtests.tsv",
+		posneg = "results/{geo}/matrix_{sample}_{geo}_posneg.tsv",
 	shell:
 		"""
 		python3 scripts/rows2matrix.py \
@@ -560,9 +574,18 @@ rule test_results:
 			--start-date {params.start_date} \
 			--end-date {params.end_date} \
 			--sortby {params.sortby} \
-			--output {output}
+			--output {output.posneg_labtests}
 		
-		sed -i '' 's/{params.test_col}/test_result/' {output}
+		sed -i '' 's/{params.test_col}/test_result/' {output.posneg_labtests}
+
+		python3 scripts/collapser.py \
+			--input {output.posneg_labtests} \
+			--index {params.index2} \
+			--unique-id {params.unique_id} \
+			--extra-columns {params.extra_columns} \
+			--ignore {params.ignore} \
+			--sortby {params.sortby2} \
+			--output {output.posneg}
 		"""
 		# Linux
 		#sed -i 's/{params.unique_id}/test_result/' {output.age_matrix}
@@ -612,7 +635,7 @@ rule total_tests_go:
 
 index_totals = {
 "country": ["pathogen country", "country", "\'\'"],
-"region": ["pathogen region", "region", "\'\'"],
+"region": ["pathogen region", "region", "country"],
 "state": ["pathogen state", "state", "state_code country"]
 # "country": ["pathogen country lab_id test_kit test_result", "\'\'"], #0
 # "region": ["pathogen region lab_id test_kit test_result", "\'\'"], #1
@@ -639,7 +662,7 @@ rule total_tests:
 		index = lambda wildcards: set_index_totals(wildcards.geo)[0],
 		unique_id = lambda wildcards: set_index_totals(wildcards.geo)[1],
 		extra_columns = lambda wildcards: set_index_totals(wildcards.geo)[2],
-		filters = "~test_result:Not tested",
+		filters = "~test_result:NA",
 		#filter_tests = "~test_kit:covid",
 		unit = "week", #change for month
 		#ignore = "lab_id test_kit test_result"
@@ -715,7 +738,7 @@ rule posrate:
 	params:
 		index1 = lambda wildcards: getIndex(wildcards.geo),
 		index2 = lambda wildcards: getIndex(wildcards.geo),
-		filter = 'test_result:Positive',
+		filter = 'test_result:1',
 		min_denominator = 50
 	output:
 		output_days = "results/{geo}/combined_matrix_{geo}_posrate.tsv",
