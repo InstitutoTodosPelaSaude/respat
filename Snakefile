@@ -634,9 +634,9 @@ rule total_tests_go:
 		expand("results/{geo}/combined_matrix_{geo}_totaltests.tsv", geo=LOCATIONS),
 
 index_totals = {
-"country": ["pathogen country test_result", "country", "\'\'"],
-"region": ["pathogen region test_result", "region", "country"],
-"state": ["pathogen state test_result", "state", "state_code country"]
+"country": ["pathogen country", "country", "\'\'"],
+"region": ["pathogen region", "region", "country"],
+"state": ["pathogen state", "state", "state_code country"]
 # "country": ["pathogen country lab_id test_kit test_result", "\'\'"], #0
 # "region": ["pathogen region lab_id test_kit test_result", "\'\'"], #1
 # "state": ["pathogen state lab_id test_kit test_result"] #2
@@ -665,7 +665,7 @@ rule total_tests:
 		filters = "~test_result:Not tested",
 		#filter_tests = "~test_kit:covid",
 		unit = "week", #change for month
-		#ignore = "lab_id test_kit test_result"
+		ignore = "test_result" #keep one outpute of results
 	output:
 		output1 = "results/{geo}/combined_matrix_{geo}_totaltests.tsv",
 		#output2 = "results/{geo}/combined_matrix_{geo}_paneltests.tsv",
@@ -678,6 +678,7 @@ rule total_tests:
 			--index {params.index} \
 			--unique-id {params.unique_id} \
 			--extra-columns {params.extra_columns} \
+			--ignore {params.ignore} \
 			--format {params.format} \
 			--filter \"{params.filters}\" \
 			--output {output.output1}
@@ -741,9 +742,9 @@ rule posrate:
 	output:
 		output_days = "results/{geo}/combined_matrix_{geo}_posrate.tsv",
 		output_weeks = "results/{geo}/combined_matrix_{geo}_posrate_weeks.tsv"
-	shell: #old normdata script 1 e 2
+	shell: #atualizar para matrix_operations
 		"""
-		python3 scripts/matrix_operations.py \
+		python3 scripts/normdata.py \
 			--input1 {input.file1} \
 			--input2 {input.file2} \
 			--index1 {params.index1} \
@@ -752,7 +753,7 @@ rule posrate:
 			--filter {params.filter} \
 			--output {output.output_days}
 
-		python3 scripts/matrix_operations.py \
+		python3 scripts/normdata.py \
 			--input1 {input.file3} \
 			--input2 {input.file4} \
 			--index1 {params.index1} \
