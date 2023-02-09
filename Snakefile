@@ -45,7 +45,7 @@ rule arguments:
 		datadir = "data",
 		rename_file = "data/rename_columns.xlsx",
 		correction_file = "data/fix_values.xlsx",
-		cache =  "data/combined_cache.tsv",#first time data/combined0.tsv
+		cache =  "data/combined0.tsv",#first time data/combined0.tsv
 		shapefile = "config/ibge_2020_shp/bra_admbnda_adm2_ibge_2020.shp",
 		coordinates = "config/cache_coordinates.tsv",
 		age_groups = "config/demo_bins.txt",
@@ -118,6 +118,9 @@ rule reformat_dasa:
 			--output {output.matrix}
 		"""
 
+
+
+
 rule reformat_db:
 	message:
 		"""
@@ -164,18 +167,8 @@ rule reformat_sabin:
 			--output {output.matrix}
 		"""
 
-# rule labs:
-# 	message:
-# 		"""
-# 		Combine data from all labs - order of snakefile is important not the rule
-# 		"""
-# 	shell:
-# 		"""
-# 		snakemake reformat_hlagyn -call
-# 		snakemake reformat_dasa -call
-# 		snakemake reformat_db -call
-# 		snakemake reformat_sabin -call
-# 		"""
+
+
 
 rule agegroups:
 	message:
@@ -503,16 +496,16 @@ rule ttpd: #total_tests_panel_demog
 			--output {output.totaltestpanel_agegroups_freq}
 		"""
 
+
+
 rule test_results_go:
 	input:
-		expand("results/{geo}/matrix_{sample}_{geo}_posneg.tsv", sample=SAMPLES, geo=LOCATIONS),
-#		expand("results/{geo}/matrix_{sample}_{geo}_posneg_labtests.tsv", sample=SAMPLES, geo=LOCATIONS),
+		expand("results/{geo}/matrix_{sample}_{geo}_panel_posneg.tsv", sample=SAMPLES, geo=LOCATIONS),
 
 index_results = {
 "country": ["country lab_id test_kit", "\'\'"], #0 #1
 "region": ["region lab_id test_kit", "country"], #0 #1
 "state": ["state lab_id test_kit", "state_code country"] #0 #1
-# "locations": ["ADM2_PCODE", "ADM2_PT state state_code"]
 }
 
 def set_index_results(spl, loc):
@@ -520,10 +513,11 @@ def set_index_results(spl, loc):
 	index = loc #index_results[loc][0] change
 	index2 = loc + " pathogen test_result"
 	extra_cols = index_results[loc][1]
-	filter = "~" + tests[spl] + ":Not tested" # filter specific test ->  + ", test_kit:test_4"
+	filter1 = "~" + tests[spl] + ":Not tested"
+	filter2 = "test_kit:test_4, test_kit:test_24"
 	add_col = "pathogen:" + spl
 	test_col = tests[spl]
-	return([yvar, index, extra_cols, filter, add_col, test_col, index2])
+	return([yvar, index, extra_cols, filter1, filter2, add_col, test_col, index2])
 
 rule test_results:
 	message:
@@ -540,10 +534,11 @@ rule test_results:
 		yvar = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[0],
 		index = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[1],
 		extra_columns = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[2],
-		filters = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[3],
-		id_col = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[4],
-		test_col = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[5],
-		index2 = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[6],
+		filter1 = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[3],
+		filter2 = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[4],
+		id_col = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[5],
+		test_col = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[6],
+		index2 = lambda wildcards: set_index_results(wildcards.sample, wildcards.geo)[7],
 		
 		sortby = "lab_id test_kit",
 		ignore = "test_kit lab_id",
@@ -554,7 +549,8 @@ rule test_results:
 
 	output:
 		posneg_labtests = "results/{geo}/matrix_{sample}_{geo}_posneg_labtests.tsv",
-		posneg = "results/{geo}/matrix_{sample}_{geo}_posneg.tsv",
+		posneg_full = "results/{geo}/matrix_{sample}_{geo}_full_posneg.tsv",
+		posneg_panel = "results/{geo}/matrix_{sample}_{geo}_panel_posneg.tsv",
 	shell:
 		"""
 		python scripts/rows2matrix.py \
@@ -566,7 +562,7 @@ rule test_results:
 			--unique-id {params.index} \
 			--extra-columns {params.extra_columns} \
 			--new-columns "{params.id_col}" \
-			--filters \"{params.filters}\" \
+			--filters \"{params.filter1}\" \
 			--start-date {params.start_date} \
 			--end-date {params.end_date} \
 			--sortby {params.sortby} \
@@ -581,10 +577,23 @@ rule test_results:
 			--extra-columns {params.extra_columns} \
 			--ignore {params.ignore} \
 			--sortby {params.sortby2} \
-			--output {output.posneg}
+			--output {output.posneg_full}
+
+		python scripts/collapser.py \
+			--input {output.posneg_labtests} \
+			--index {params.index2} \
+			--unique-id {params.index} \
+			--extra-columns {params.extra_columns} \
+			--filters \"{params.filter2}\" \
+			--ignore {params.ignore} \
+			--sortby {params.sortby2} \
+			--output {output.posneg_panel}
+
 		"""
 		# Linux
 		#sed -i 's/{params.unique_id}/test_result/' {output.age_matrix}
+
+
 
 rule combine_posneg_go:
 	input:

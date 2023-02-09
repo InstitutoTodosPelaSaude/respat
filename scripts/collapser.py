@@ -33,7 +33,7 @@ if __name__ == '__main__':
     parser.add_argument("--format",required=False, nargs=1, type=str, default='float',
                         choices=['float', 'integer'], help="What is the format of the data points (float/integer)?")
     parser.add_argument("--sortby", required=False, nargs='+', type=str, help="Columns to be used to sort the output file")
-    parser.add_argument("--filter", required=False, type=str, help="Format: '~column_name:value'. Remove '~' to keep only that data category")
+    parser.add_argument("--filters", required=False, type=str, help="Format: '~column_name:value'. Remove '~' to keep only that data category")
     parser.add_argument("--output", required=True, help="Final output in TSV format")
     args = parser.parse_args()
 
@@ -46,7 +46,7 @@ if __name__ == '__main__':
     ignore_cols = args.ignore
     data_format = args.format[0]
     sortby = args.sortby
-    filters = args.filter
+    filters = args.filters
     output = args.output
 
 
