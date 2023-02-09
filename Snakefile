@@ -45,7 +45,7 @@ rule arguments:
 		datadir = "data",
 		rename_file = "data/rename_columns.xlsx",
 		correction_file = "data/fix_values.xlsx",
-		cache =  "data/combined0.tsv",#first time data/combined0.tsv
+		cache =  "data/combined_cache.tsv",#first time data/combined0.tsv
 		shapefile = "config/ibge_2020_shp/bra_admbnda_adm2_ibge_2020.shp",
 		coordinates = "config/cache_coordinates.tsv",
 		age_groups = "config/demo_bins.txt",
@@ -509,9 +509,9 @@ rule test_results_go:
 #		expand("results/{geo}/matrix_{sample}_{geo}_posneg_labtests.tsv", sample=SAMPLES, geo=LOCATIONS),
 
 index_results = {
-"country": ["country lab_id test_kit", "\'\'"], #0 #1 #2
-"region": ["region lab_id test_kit", "country"], #0 #1 #2
-"state": ["state lab_id test_kit", "state_code country"] #2
+"country": ["country lab_id test_kit", "\'\'"], #0 #1
+"region": ["region lab_id test_kit", "country"], #0 #1
+"state": ["state lab_id test_kit", "state_code country"] #0 #1
 # "locations": ["ADM2_PCODE", "ADM2_PT state state_code"]
 }
 
@@ -691,7 +691,7 @@ rule posrate_go:
 indexes = {
 "country": ["pathogen country"],
 "region": ["pathogen region"],
-"state": ["pathogen state_code"]
+"state": ["pathogen state"]
 }
 
 def getIndex(loc):
@@ -752,6 +752,7 @@ rule posneg_allpat:
 		extracol = "country",
 		ignore = "pathogen",
 		format = "integer",
+		filter_test = "~test_result:Não Detectado",
 	output:
 		allpat_matrix = rules.files.input.allpat_matrix,
 	shell:
@@ -762,6 +763,7 @@ rule posneg_allpat:
 			--unique-id {params.index} \
 			--extra-columns {params.extracol} \
 			--ignore {params.ignore} \
+			--filter \"{params.filter_test}\" \
 			--format {params.format} \
 			--output {output.allpat_matrix}
 		"""
