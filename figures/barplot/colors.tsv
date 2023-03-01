@@ -13,3 +13,5 @@ pathogen	ADENO	#40bfbf	Cyan
 pathogen	BAC	#ABABAB	Grey
 test_result	Positive	#F26F61
 test_result	Negative	#577DBD
+geneS_detection	Detected	#ABABAB
+geneS_detection	Not detected	#016C59
