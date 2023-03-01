@@ -9,8 +9,9 @@ from matplotlib.ticker import FuncFormatter
 import matplotlib as mpl
 import argparse
 
-#plt.rcParams['font.family'] = 'Open Sans'
-plt.rcParams['font.family'] = ['Open Sans Light', 'sans-serif'] #linux option
+plt.rcParams['font.family'] = 'Open Sans'
+#plt.rcParams['font.family'] = ['Open Sans Light', 'sans-serif'] #linux option
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(

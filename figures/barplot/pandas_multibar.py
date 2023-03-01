@@ -335,6 +335,8 @@ if __name__ == '__main__':
 
         ax.yaxis.set_tick_params(which='minor', bottom=False)
 
+        ax.tick_params(axis='both', labelsize=12) #updates the tick_params AFB
+
     # ax.axhline(y=np.log(1000), color='#ABABAB', linestyle='--', lw=0.5)
     # handles, labels = ax.get_legend_handles_labels()
 
@@ -344,38 +346,38 @@ if __name__ == '__main__':
         h = mlines.Line2D([], [], color=color, marker='s', linestyle='None', markersize=10, label=label)
         handles.append(h)
 
+## coment to use 1 row 1 column
+    # # print(used_axes)
+    # i = 0
+    # # print(len(axes))
+    # # print(axes)
+    # # print(type(axes[0]))
+    # if type(axes[0]) == np.ndarray: # more than 2 columns and rows
+    #     for axset in axes:
+    #         # print(len(axes))
+    #         for ax in axset:
+    #             # print(ax)
+    #             cur_ax = (i // ncols, i % ncols)
+    #             # print(cur_ax)
 
-    # print(used_axes)
-    i = 0
-    # print(len(axes))
-    # print(axes)
-    # print(type(axes[0]))
-    if type(axes[0]) == np.ndarray: # more than 2 columns and rows
-        for axset in axes:
-            # print(len(axes))
-            for ax in axset:
-                # print(ax)
-                cur_ax = (i // ncols, i % ncols)
-                # print(cur_ax)
+    #             if cur_ax not in used_axes:
+    #                 axes[i // ncols][i % ncols].axis('tight')
+    #                 axes[i // ncols][i % ncols].axis('off')
+    #                 # print('done')
 
-                if cur_ax not in used_axes:
-                    axes[i // ncols][i % ncols].axis('tight')
-                    axes[i // ncols][i % ncols].axis('off')
-                    # print('done')
+    #             i += 1
+    # else: # single column or single row
+    #     # print(len(axes))
+    #     for ax in axes:
+    #         # print(ax)
+    #         cur_ax = (i // ncols, i % ncols)
 
-                i += 1
-    else: # single column or single row
-        # print(len(axes))
-        for ax in axes:
-            # print(ax)
-            cur_ax = (i // ncols, i % ncols)
-
-            # print(cur_ax)
-            # print(used_axes)
-            if cur_ax not in used_axes:
-                axes[i].axis('tight')
-                axes[i].axis('off')
-            i += 1
+    #         # print(cur_ax)
+    #         # print(used_axes)
+    #         if cur_ax not in used_axes:
+    #             axes[i].axis('tight')
+    #             axes[i].axis('off')
+    #         i += 1
 
     if legend_pos not in ['', None]:
 
