@@ -24,6 +24,8 @@ dependencies:
 - munch=2.5.0
 - openpyxl=3.0.9
 - tabulate=0.8.9
+- shapely
+
 
 - pip:
   - epiweeks
