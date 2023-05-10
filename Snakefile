@@ -23,7 +23,6 @@ SAMPLES = [
 rule all:
 	shell:
 		"""
-
 		snakemake --cores all test_results_go
 		snakemake --cores all combine_posneg_go
 		snakemake --cores all total_tests_go
@@ -55,8 +54,8 @@ rule arguments:
 		population = "config/municipio_faixasetarias_ibgeTCU.tsv",
 		index_column = "division_exposure",
 
-		start_date = "2021-12-05",
-		end_date = "2023-02-04" #atualizar data aqui - PRÓXIMO 20230204
+		start_date = "2022-01-02",
+		end_date = "2023-04-01" #atualizar data aqui
 
 arguments = rules.arguments.params
 
@@ -144,6 +143,7 @@ rule reformat_db:
 			--output {output.matrix}
 		"""
 
+
 rule reformat_sabin:
 	message:
 		"""
@@ -152,11 +152,11 @@ rule reformat_sabin:
 	input:
 		rename = arguments.rename_file,
 		correction = arguments.correction_file,
-		cache = rules.reformat_db.output.matrix # last lab
+		cache = rules.reformat_db.output.matrix
 	params:
 		datadir = arguments.datadir
 	output:
-		matrix = rules.files.input.combined1, # new combined1_lab or temp("results/combined_sabin.tsv")
+		matrix = temp("results/combined_sabin.tsv"), #rules.files.input.combined1,
 	shell:
 		"""
 		python scripts/reformat_sabin.py \
@@ -168,6 +168,28 @@ rule reformat_sabin:
 		"""
 
 
+rule reformat_fleury:
+	message:
+		"""
+		Combine data from Fleury
+		"""
+	input:
+		rename = arguments.rename_file,
+		correction = arguments.correction_file,
+		cache = rules.reformat_sabin.output.matrix # last lab
+	params:
+		datadir = arguments.datadir
+	output:
+		matrix = rules.files.input.combined1, # new combined1_lab or temp("results/combined_fleury.tsv")
+	shell:
+		"""
+		python scripts/reformat_fleury.py \
+			--datadir {params.datadir} \
+			--rename {input.rename} \
+			--correction {input.correction} \
+			--cache {input.cache} \
+			--output {output.matrix}
+		"""
 
 
 rule agegroups:
@@ -339,7 +361,7 @@ rule demogposrate_go:
 
 def set_groups2(spl):
 	yvar = tests[spl] + ' age_group'
-	filters = "~" + tests[spl] + ":Not tested" # filter specific test ->  + ", test_kit:test_4"
+	filters = "~" + tests[spl] + ":NT" # filter specific test ->  + ", test_kit:test_4"
 	#filter_tests = '~testkit:covid, ~testkit:covidantigen, ~testkit:thermo" 
 	#return([yvar])
 	return([yvar, filters]) #, filter_tests]) # add
@@ -355,12 +377,10 @@ rule posrate_agegroup:
 	params:
 		format = "integer",
 		xvar = "epiweek",
-# 		yvar = "age_group SC2_test_result", #only SC2
 		yvar = lambda wildcards: set_groups2(wildcards.sample)[0], # include other pathogens
 		unique_id = "age_group",
 		extra = "country",
 		min_denominator = 50,
-#		filter = "~test_result:Not tested",
 		filter = lambda wildcards: set_groups2(wildcards.sample)[1],
 	output:
 		week_matrix = "results/demography/matrix_agegroups_weeks_{sample}_posneg.tsv", #rules.files.input.week_matrix,
@@ -412,7 +432,7 @@ rule combine_demog:
 		index1 = "name pathogen test_result epiweek",
 		index2 = "name",
 		rate = "100000",
-		filter = "test_result:Positive",
+		filter = "test_result:Pos",
 	output:
 		merged = rules.files.input.merged,
 		#caserate = rules.files.input.caserate,
@@ -449,14 +469,13 @@ rule ttpd: #total_tests_panel_demog
 	params:
 		## filter for pathogens of interest VSR SC2 FLUA FLUB
 		## percentual of positivy among the panel tests
-		#filter_testspanelposneg =  "test_result:Positive, test_result:Negative, pathogen:VSR, pathogen:SC2, pathogen:FLUA ,pathogen:FLUB",
 		index = "epiweek",
 		unique_id = "epiweek", 
 		ignore = "name pathogen test_result",
 		index2 = "epiweek pathogen",
 		ignore2 = "name test_result",
 		## filter positives pathogens of interest VSR SC2 FLUA FLUB
-		filter_testpanelpos =  "test_result:Positive, pathogen:VSR, pathogen:SC2, pathogen:FLUA ,pathogen:FLUB",
+		filter_testpanelpos =  "test_result:Pos, pathogen:VSR, pathogen:SC2, pathogen:FLUA ,pathogen:FLUB",
 		sortby = "epiweek",
 		sortby2 = "epiweek pathogen",
 		format = "integer",
@@ -513,8 +532,8 @@ def set_index_results(spl, loc):
 	index = loc #index_results[loc][0] change
 	index2 = loc + " pathogen test_result"
 	extra_cols = index_results[loc][1]
-	filter1 = "~" + tests[spl] + ":Not tested"
-	filter2 = "test_kit:test_4, test_kit:test_24"
+	filter1 = "~" + tests[spl] + ":NT"
+	filter2 = "test_kit:test_4, test_kit:test_21, test_kit:test_24"
 	add_col = "pathogen:" + spl
 	test_col = tests[spl]
 	return([yvar, index, extra_cols, filter1, filter2, add_col, test_col, index2])
@@ -665,7 +684,7 @@ rule total_tests:
 		index = lambda wildcards: set_index_totals(wildcards.geo)[0],
 		unique_id = lambda wildcards: set_index_totals(wildcards.geo)[1],
 		extra_columns = lambda wildcards: set_index_totals(wildcards.geo)[2],
-		filters = "~test_result:Not tested",
+		filters = "~test_result:NT",
 		unit = "week", #change for month
 		ignore = "test_result" #keep one outpute of results
 	output:
@@ -721,7 +740,7 @@ rule posrate:
 	params:
 		index1 = lambda wildcards: getIndex(wildcards.geo),
 		index2 = lambda wildcards: getIndex(wildcards.geo),
-		filter = 'test_result:Positive',
+		filter = 'test_result:Pos',
 		min_denominator = 50
 	output:
 		output_days = "results/{geo}/combined_matrix_{geo}_posrate.tsv",

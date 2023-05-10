@@ -1,4 +1,4 @@
-name: mon
+name: diag
 
 channels:
 - defaults

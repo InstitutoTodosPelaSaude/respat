@@ -139,7 +139,7 @@ if __name__ == '__main__':
 
                 return dfN, dfL
             else:
-                print('\n\t\t * A total of %s out of %s samples (%s) were already previously processed.' % (str(len(duplicates)), str(len(set(dfL['sample_id'].tolist()))), test_name))
+                print('\n\t\t * A total of %s out of %s samples were already previously processed.' % (str(len(duplicates)), str(len(set(dfL['sample_id'].tolist())))))
                 new_samples = len(set(dfL['sample_id'].tolist())) - len(duplicates)
                 print('\t\t\t - Processing %s new samples...' % (str(new_samples)))
                 dfL = dfL[~dfL['sample_id'].isin(dfT['sample_id'].tolist())]  # remove duplicates
@@ -219,8 +219,8 @@ if __name__ == '__main__':
         for i, (code, dfR) in enumerate(dfL.groupby('CODIGO REQUISICAO')):
             data = {} # one data row for each request
             target_pathogen = {}
-            for p, t in pathogens.items(): # set all tests as 'NA' first, to than changed it to Pos or Neg as appropriate
-                data[p + '_test_result'] = 'NA'
+            for p, t in pathogens.items(): # set all tests as 'NT' first, to than changed it to Pos or Neg as appropriate
+                data[p + '_test_result'] = 'NT'
                 for g in t:
                     target_pathogen[g] = p
 
@@ -334,10 +334,6 @@ if __name__ == '__main__':
             dfN = dfN.append(data, ignore_index=True)
             # print(set(dfN['COVS_test_result'].tolist()))
 
-        # dfN = dfN[['CODIGO REQUISICAO', 'EXAME', 'PATOGENO', 'RESULTADO', 'sample_id', 'FLUA_test_result', 'FLUB_test_result', 'VSR_test_result', 'SC2_test_result', 'META_test_result', 'RINO_test_result', 'PARA_test_result', 'ADENO_test_result', 'BOCA_test_result', 'COVS_test_result', 'ENTERO_test_result', 'BAC_test_result']]
-        # dfN = dfN.sort_values(by=['EXAME'])
-        # dfN.to_csv(output, sep='\t', index=False)
-        # print(alltypes)
         return dfN
 
 
