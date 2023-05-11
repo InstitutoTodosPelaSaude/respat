@@ -684,8 +684,8 @@ if __name__ == '__main__':
         'lab_id',
         'test_id',
         'test_kit',
+        'patient_id',
         'sample_id',
-        # 'region',
         'state',
         'location',
         'date_testing',
@@ -712,8 +712,8 @@ if __name__ == '__main__':
         'BOCA_test_result',
         'COVS_test_result',
         'ENTERO_test_result',
-        'BAC_test_result',
-    ]
+        'BAC_test_result'
+        ]
 
     for col in dfT.columns.tolist():
         if col not in key_cols:
