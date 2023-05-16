@@ -2,8 +2,8 @@
 
 # Created by: Anderson Brito
 # Email: anderson.brito@itps.org.br
-# Release date: 2022-XX-XX
-# Last update: 2022-XX-XX
+# Release date: 2022-12-15
+# Last update: 2023-05-12
 # Refactor by: Bragatte
 
 import pandas as pd
@@ -70,9 +70,15 @@ if __name__ == '__main__':
     if cache_file not in [np.nan, '', None]:
         dfT = load_table(cache_file)
         dfT.fillna('', inplace=True)
+
+        # fix state and location encoding
+        dfT['state'] = dfT['state'].apply(lambda x: x.encode('latin-1').decode('utf-8'))
+        dfT['location'] = dfT['location'].apply(lambda x: x.encode('latin-1').decode('utf-8'))
+
     else:
         # dfP = pd.DataFrame()
         dfT = pd.DataFrame()
+
 
     # load renaming patterns
     dfR = load_table(rename_file)
@@ -133,10 +139,6 @@ if __name__ == '__main__':
                 print('\n\t\t * ALL samples (%s) were already previously processed. All set!' % len(duplicates))
                 dfN = pd.DataFrame()  # create empty dataframe, and populate it with reformatted data from original lab dataframe
                 dfL = pd.DataFrame()
-
-                # print('1')
-                # print(dfL.head())
-
                 return dfN, dfL
             else:
                 print('\n\t\t * A total of %s out of %s samples were already previously processed.' % (str(len(duplicates)), str(len(set(dfL['sample_id'].tolist())))))
@@ -146,9 +148,6 @@ if __name__ == '__main__':
         else:
             new_samples = len(dfL['sample_id'].tolist())
             print('\n\t\t\t - Processing %s new samples...' % (str(new_samples)))
-
-        # print('2')
-        # print(dfL.head())
         return dfL, dfN
 
 
@@ -176,7 +175,6 @@ if __name__ == '__main__':
         ignore = ['Vï¿½rus respiratï¿½rios - detecï¿½ï¿½o', 'INCONCLUSIVO', '']
         dfL = dfL[~dfL['PATOGENO'].isin(ignore)]
         dfL = dfL[~dfL['RESULTADO'].isin(ignore)]
-
 
         # generate sample id
         dfL.insert(1, 'sample_id', '')
@@ -227,8 +225,6 @@ if __name__ == '__main__':
             exam = list(set(dfR['EXAME'].tolist()))[0] # exam name
             if exam not in alltypes:
                 alltypes.append(exam)
-
-            # print('\n\n', code, exam, dfR['PATOGENO'].tolist())
 
             # iterate over different test types
             if exam in ['2019NCOV', 'AGCOVIDNS', 'COVID19GX', 'COVID19POCT', 'COVID19SALI','INFLUENZAPCR', 'AGSINCURG', 'VRSAG']: # single tests
@@ -305,13 +301,11 @@ if __name__ == '__main__':
 
                 # assign test result
                 for pathogen, dfG in dfR.groupby('pathogen'):
-                    # print(dfG[['pathogen', 'RESULTADO']])
                     test_results = dfG['RESULTADO'].tolist()
 
                     positive = ''
                     for res in test_results:
                         if positive == '':
-                            # print(pathogen, res)
                             if res in positives:
                                 result = 'Pos'
                                 data[pathogen + '_test_result'] = result
@@ -321,28 +315,21 @@ if __name__ == '__main__':
                                 data[pathogen + '_test_result'] = result
             else:
                 pass
-                # print('Unknown test = ' + exame)
 
             # add remaining columns into data dict
             unique_cols = list(set(dfR.columns.tolist()))
-            # print(unique_cols)
 
             for col in unique_cols:
                 data[col] = dfR[col].tolist()[0]
-            # print(data)
 
             dfN = dfN.append(data, ignore_index=True)
-            # print(set(dfN['COVS_test_result'].tolist()))
 
         return dfN
 
 
     def rename_columns(id, df):
-        # print(df.columns.tolist())
-        # print(dict_rename[id])
         if id in dict_rename:
             df = df.rename(columns=dict_rename[id])
-        # print(df.columns.tolist())
         return df
 
     # open data files
@@ -360,13 +347,9 @@ if __name__ == '__main__':
                             df.fillna('', inplace=True)
                             df.reset_index(drop=True)
 
-                            # print('- ' + str(len(dfT['sample_id'].tolist())) + ' samples (pre)')
-                            # print('- ' + str(len(dfT['sample_id'].tolist())) + ' samples (pre)')
-
                             df = fix_datatable(df, pathogens) # reformat datatable
 
                             if df.empty:
-                                # print('##### Nothing to be done')
                                 continue
 
                             df.insert(0, 'lab_id', id)
@@ -378,9 +361,6 @@ if __name__ == '__main__':
                             frames = [dfT, df]
                             df2 = pd.concat(frames).reset_index(drop=True)
                             dfT = df2
-                            # print('##### Concatenating some data')
-                            # print('- ' + str(len(dfT['sample_id'].tolist())) + ' samples (pos)')
-
                             # dfT.to_csv(output, sep='\t', index=False)
 
 
@@ -419,9 +399,6 @@ if __name__ == '__main__':
 
     dfT['epiweek'] = dfT['date_testing'].apply(lambda x: get_epiweeks(x))
 
-    # print(dfT.columns.tolist())
-    # print(dfT.head())
-    # print(len(dfT['sample_id'].tolist()))
 
     # add age from birthdate, if age is missing
     if 'birthdate' in dfT.columns.tolist():
@@ -480,20 +457,16 @@ if __name__ == '__main__':
         'BAC_test_result'
         ]
 
+
+
     for col in dfT.columns.tolist():
         if col not in key_cols:
             dfT = dfT.drop(columns=[col])
 
-    # print(dfT.columns.tolist)
 
     # keep only key columns, and find null dates
     dfT = dfT[key_cols]
     dfT['date_testing'] = dfT['date_testing'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else 'XXXXX')
-
-    # # fix test results with empty data
-    # for p in pathogens.keys():
-    #     dfT[p + '_test_result'] = dfT[p + '_test_result'].apply(lambda x: 'Neg' if x not in ['Neg', 'Pos'] else x)
-
 
 
     # output duplicates rows

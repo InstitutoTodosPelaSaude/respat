@@ -14,9 +14,9 @@ SAMPLES = [
 	'RINO', 
 	'PARA', 
 	'ADENO', 
-	'BOCA', 
 	'COVS', 
 	'ENTERO', 
+	'BOCA', 
 	'BAC']
 
 
@@ -116,7 +116,6 @@ rule reformat_dasa:
 			--cache {input.cache} \
 			--output {output.matrix}
 		"""
-
 
 
 
@@ -305,7 +304,7 @@ tests = {
 def set_groups(spl):
 	yvar = tests[spl] + ' epiweek' #[0]
 	id_col = tests[spl] #[1]
-	filter = "sex:F, sex:M, ~age_group:'', ~test_kit:covid, ~test_kit:covidantigen, ~test_kit:thermo, ~test_kit:''" #[2] gráfico de pirâmide somente kit
+	filter = "sex:F, sex:M, ~age_group:'', test_kit:test_4, test_kit:test_21, test_kit:test_24, ~test_kit:''" #[2] gráfico de pirâmide somente kit
 
 	add_col = "pathogen:" + spl + ", name:Brasil" #[3] 
 	return([yvar, id_col, filter, add_col])
@@ -449,23 +448,14 @@ rule combine_demog:
 		cp results/demography/combined_matrix_agegroup.tsv figures/pyramid
 		"""
 
-		# Não é mais usado!!!!
-		# python scripts/normdata.py \
-		# 	--input1 {output.merged} \
-		# 	--input2 {input.population} \
-		# 	--index1 {params.index1} \
-		# 	--index2 {params.index2} \
-		# 	--rate {params.rate} \
-		# 	--filter {params.filter} \
-		# 	--output {output.caserate} \
-
-		# cp results/demography/combined_matrix_agegroup_100k.tsv figures/pyramid
 
 rule ttpd: #total_tests_panel_demog
 	message:
 		"""
 		Total tests for panels demog flow
 		"""
+	input:
+		combi_ages = rules.combine_demog.output.merged, #combined_matrix_agegroup.tsv 
 	params:
 		## filter for pathogens of interest VSR SC2 FLUA FLUB
 		## percentual of positivy among the panel tests
@@ -479,8 +469,6 @@ rule ttpd: #total_tests_panel_demog
 		sortby = "epiweek",
 		sortby2 = "epiweek pathogen",
 		format = "integer",
-	input:
-		combi_ages = rules.combine_demog.output.merged, #combined_matrix_agegroup.tsv 
 	output:
 		totaltestpanel_agegroups_posweek = "results/demography/combined_matrix_totaltestpanel_agegroups_posweek.tsv", #denominator
 		totaltestpanel_agegroups_pos = "results/demography/combined_matrix_totaltestpanel_agegroups_pos.tsv", #numerator
@@ -519,7 +507,7 @@ rule ttpd: #total_tests_panel_demog
 
 rule test_results_go:
 	input:
-		expand("results/{geo}/matrix_{sample}_{geo}_panel_posneg.tsv", sample=SAMPLES, geo=LOCATIONS),
+		expand("results/{geo}/matrix_{sample}_{geo}_posneg_panel.tsv", sample=SAMPLES, geo=LOCATIONS),
 
 index_results = {
 "country": ["country lab_id test_kit", "\'\'"], #0 #1
@@ -567,9 +555,9 @@ rule test_results:
 		end_date = arguments.end_date,
 
 	output:
-		posneg_labtests = "results/{geo}/matrix_{sample}_{geo}_posneg_labtests.tsv",
-		posneg_full = "results/{geo}/matrix_{sample}_{geo}_full_posneg.tsv",
-		posneg_panel = "results/{geo}/matrix_{sample}_{geo}_panel_posneg.tsv",
+		posneg_labtests = "results/{geo}/matrix_{sample}_{geo}_posneg_labtests.tsv", # todos os testes
+		posneg_full = "results/{geo}/matrix_{sample}_{geo}_posneg_full.tsv", # positivos e negativos totais
+		posneg_panel = "results/{geo}/matrix_{sample}_{geo}_posneg_panel.tsv", # apenas painel
 	shell:
 		"""
 		python scripts/rows2matrix.py \
@@ -627,7 +615,7 @@ rule combine_posneg:
 		"""
 	params:
 		path = "results/{geo}",
-		regex = "*_posneg.tsv",
+		regex = "*_full.tsv",
 		filler = "0",
 		unit = "week", # change here for MONTH
 		format = "integer",
