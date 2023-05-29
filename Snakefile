@@ -5,6 +5,7 @@ LOCATIONS = [
 	"region",
 	"state"]
 	#, "locations"]
+
 SAMPLES = [
 	"FLUA",
 	"FLUB", 
@@ -44,7 +45,7 @@ rule arguments:
 		datadir = "data",
 		rename_file = "data/rename_columns.xlsx",
 		correction_file = "data/fix_values.xlsx",
-		cache =  "data/combined0.tsv",#first time data/combined0.tsv
+		cache = "data/combined0.tsv", #"data/combined_fleury_all.tsv", #first time data/combined0.tsv
 		shapefile = "config/ibge_2020_shp/bra_admbnda_adm2_ibge_2020.shp",
 		coordinates = "config/cache_coordinates.tsv",
 		age_groups = "config/demo_bins.txt",
@@ -55,7 +56,7 @@ rule arguments:
 		index_column = "division_exposure",
 
 		start_date = "2022-01-02",
-		end_date = "2023-04-01" #atualizar data aqui
+		end_date = "2023-05-27" #atualizar data aqui
 
 arguments = rules.arguments.params
 
@@ -217,7 +218,6 @@ rule agegroups:
 			--highest {params.highest} \
 			--output {output.matrix}
 		"""
-
 
 # rule geomatch:
 # 	message:

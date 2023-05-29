@@ -6,7 +6,7 @@ x_label		# X label
 y_label		# Y label
 groupby	country	# column containing categories of data to be plotted as subplots
 plot_kind	bar	# type of plot: bar, barh
-filter	test_result:Positive, pathogen:SC2, pathogen:VSR, pathogen:FLUA, pathogen:FLUB	# comma-separated list of rows to keep or remove rows. Format: '~column_name:value'. Remove '~' to keep only that data category.
+filter	test_result:Pos, pathogen:SC2, pathogen:VSR, pathogen:FLUA, pathogen:FLUB	# comma-separated list of rows to keep or remove rows. Format: '~column_name:value'. Remove '~' to keep only that data category.
 ignore_cols	test_result, 2021-12-18, 2022-07-30	# columns to be ignored in the line plot
 colour_by	pathogen	# variable to be represented in the colour scheme
 colour_scheme	colors.tsv	# colour pallete, if colour file not provided

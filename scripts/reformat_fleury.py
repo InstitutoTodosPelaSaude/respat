@@ -99,6 +99,7 @@ if __name__ == '__main__':
     # load value corrections
     dfC = load_table(correction_file)
     dfC.fillna('', inplace=True)
+    dfC = dfC[dfC['lab_id'].isin(["FLEURY", "any"])] ## filter to correct data into fix_values FLEURY
 
     dict_corrections = {}
     all_ids = list(set(dfC['lab_id'].tolist()))
@@ -130,7 +131,7 @@ if __name__ == '__main__':
     def deduplicate(dfL, dfN, id_columns):
         # generate sample id
         dfL['unique_id'] = dfL[id_columns].astype(str).sum(axis=1)  # combine values in rows as a long string
-        dfL['sample_id'] = dfL['unique_id'].apply(lambda x: generate_id(x))  # generate alphanumeric sample id
+        dfL['sample_id'] = dfL['unique_id'].apply(lambda x: generate_id(x)[:16])  # generate alphanumeric sample id
 
         # prevent reprocessing of previously processed samples
         if cache_file not in [np.nan, '', None]:
@@ -335,7 +336,7 @@ if __name__ == '__main__':
     # open data files
     for element in os.listdir(input_folder):
         if not element.startswith('_'):
-            if element == 'Fleury': # check if folder is the correct one
+            if element == 'FLEURY': # check if folder is the correct one
                 id = element
                 element = element + '/'
                 if os.path.isdir(input_folder + element) == True:
@@ -454,10 +455,8 @@ if __name__ == '__main__':
         'BOCA_test_result',
         'COVS_test_result',
         'ENTERO_test_result',
-        'BAC_test_result'
+        'BAC_test_result',
         ]
-
-
 
     for col in dfT.columns.tolist():
         if col not in key_cols:

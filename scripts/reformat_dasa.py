@@ -466,7 +466,7 @@ if __name__ == '__main__':
                                         age = (test - birth) / np.timedelta64(1, 'Y')
                                         df.loc[idx, 'age'] = np.round(age, 1)                  ## this gives decimals
                                         #df.loc[idx, 'age'] = int(age)
-                                    print(f'Processing tests {idx + 1} of {len(df)}')            ## print processed lines 
+                                    #print(f'Processing tests {idx + 1} of {len(df)}')            ## print processed lines 
 
                                     ## Change the data type of the 'age' column to integer
                                     df['age'] = pd.to_numeric(df['age'], downcast='integer',errors='coerce').fillna(-1).astype(int)

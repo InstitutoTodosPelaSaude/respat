@@ -8,9 +8,9 @@ rolling_average	1	# Should rolling average be calculated?
 xlabel		# X label
 ylabel		# Y label
 category_order		# order of categories listed in 'categories'
-tick_every	1	# frequency of tick in X axis
-filter	test_result:Positive, pathogen:SC2, pathogen:FLUA, pathogen:FLUB, pathogen:VSR	# comma-separated list of rows to keep or remove rows. Format: '~column_name:value'. Remove '~' to keep only that data category.
-ignore_cols	"country, test_result, 2021-12-11, 2021-12-18, 2021-12-25, 2022-01-01,2022-01-08, 2022-01-15, 2022-01-22, 2022-01-29, 2022-09-24
+tick_every	2	# frequency of tick in X axis
+filter	test_result:Pos, pathogen:SC2, pathogen:FLUA, pathogen:FLUB, pathogen:VSR	# comma-separated list of rows to keep or remove rows. Format: '~column_name:value'. Remove '~' to keep only that data category.
+ignore_cols	"country, test_result
 "	# columns to be ignored in the line plot
 colours	colors.tsv	# colours to be assigned to each line, in alphabetic order of yvar
 show_markers	5	# show markers at each point? If yes, add value > 0, if no, add zero.
