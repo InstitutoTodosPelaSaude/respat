@@ -7,13 +7,14 @@ y_label		# Y label
 groupby	country	# column containing categories of data to be plotted as subplots
 plot_kind	bar	# type of plot: bar, barh
 filter		# comma-separated list of rows to keep or remove rows. Format: '~column_name:value'. Remove '~' to keep only that data category.
-ignore_cols	2021-12-18, 2021-12-25, 2022-01-01, 2022-01-08, 2022-01-15, 2022-01-22, 2022-01-29	# columns to be ignored in the line plot
+ignore_cols	2021-11-06, 2021-11-13, 2021-11-20, 2021-11-27, 2021-12-04, 2021-12-11, 2021-12-18, 2021-12-25, 2022-01-01, 2022-01-08, 2022-01-15, 2022-01-22, 2022-01-29, 2022-02-05, 2022-02-12, 2022-02-19, 2022-02-26, 2022-03-05, 2022-03-12, 2022-03-19, 2022-03-26, 2022-04-02, 2022-04-09, 2022-04-16, 2022-04-23, 2022-04-30, 2022-05-07, 2022-05-14, 2022-05-21, 2022-05-28, 2022-06-04, 2022-06-11, 2022-06-18, 2022-06-25	# columns to be ignored in the line plot
 colour_by	test_result	# variable to be represented in the colour scheme
 colour_scheme	colors.tsv	# colour pallete, if colour file not provided
-legend		# Legend position (e.g. best , upper left, etc. If left empty, no legend will be displayed)
+legend_position	horizontal	# Legend position: horizontal (bottom), or vertical (right side)
 plot_label		# Legend position (e.g. best , upper left, etc. If left empty, no legend will be displayed)
-column_legend	1	# number of columns of the legend
-tick_every	1	# frequency of tick in X axis
+column_legend	4	# number of columns of the legend
+xtick_every	2	# frequency of tick in X axis
+ytick_every	10000	# frequency of tick in Y axis
 tick_order		# order of ticks in non-numerical axis
 show_grid	y	# show grip for X or Y axis?
 nrows	1	# number of rows of the multiplot
@@ -21,7 +22,7 @@ ncols	1	# number of columns of the multiplot
 same_yscale	no	# same Y axis scale
 same_xscale	no	# same Y axis scale
 min_y		# minimum value for Y axis
-max_y		# maximum value for Y axis
+max_y	50000	# maximum value for Y axis
 log_scale	no	# convert values to white scale
-figsize	7, 3.5	# figure size: width and height, in inches
+figsize	7, 6	# figure size: width and height, in inches
 backend	pdf	# matplotlib backend (recommended: pdf, Qt5Agg). Options: 'GTK3Agg', 'GTK3Cairo', 'GTK4Agg', 'GTK4Cairo', 'MacOSX', 'nbAgg', 'QtAgg', 'QtCairo', 'Qt5Agg', 'Qt5Cairo', 'TkAgg', 'TkCairo', 'WebAgg', 'WX', 'WXAgg', 'WXCairo', 'agg', 'cairo', 'pdf', 'pgf', 'ps', 'svg', 'template'

@@ -15,7 +15,6 @@ import argparse
 from epiweeks import Week
 from tqdm import tqdm
 
-
 import warnings
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -24,16 +23,19 @@ warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 pd.set_option('display.max_columns', 500)
 pd.options.mode.chained_assignment = None
 
-today = time.strftime('%Y-%m-%d', time.gmtime()) ## for snakefile
+today = time.strftime('%Y-%m-%d', time.gmtime())  ## for snakefile
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description="Combine and reformat data tables from multiple sources and output a single TSV file",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument("--datadir", required=True, help="Name of the folder containing independent folders for each lab")
-    parser.add_argument("--rename", required=False, help="TSV, CSV, or excel file containing new standards for column names")
-    parser.add_argument("--correction", required=False, help="TSV, CSV, or excel file containing data points requiring corrections")
+    parser.add_argument("--datadir", required=True,
+                        help="Name of the folder containing independent folders for each lab")
+    parser.add_argument("--rename", required=False,
+                        help="TSV, CSV, or excel file containing new standards for column names")
+    parser.add_argument("--correction", required=False,
+                        help="TSV, CSV, or excel file containing data points requiring corrections")
     parser.add_argument("--cache", required=False, help="Previously processed data files")
     parser.add_argument("--output", required=True, help="TSV file aggregating all columns listed in the 'rename file'")
     args = parser.parse_args()
@@ -45,15 +47,12 @@ if __name__ == '__main__':
     cache_file = args.cache
     output = args.output
 
-# local run
-    # # path = "/Users/**/**/"
-    # path = "/Users/*/respat/"
+    # path = "/Users/Anderson/Desktop/20230616_fixrespat2/"
     # input_folder = path + 'data/'
     # rename_file = input_folder + 'rename_columns.xlsx'
     # correction_file = input_folder + 'fix_values.xlsx'
-    # cache_file = input_folder + 'combined_cache.tsv'
-    # output = input_folder + today + '_combined_dbmolecular_test.tsv'
-
+    # cache_file = input_folder + 'combined_20230615.tsv'
+    # output = input_folder + today + '_combined_dbmolecular.tsv'
 
     def load_table(file):
         df = ''
@@ -73,6 +72,8 @@ if __name__ == '__main__':
             print('Wrong file format. Compatible file formats: TSV, CSV, XLS, XLSX, PARQUET')
             exit()
         return df
+
+
     # print('Done load tables')
 
     ## load cache file
@@ -102,7 +103,7 @@ if __name__ == '__main__':
     ## load value corrections
     dfC = load_table(correction_file)
     dfC.fillna('', inplace=True)
-    dfC = dfC[dfC['lab_id'].isin(["DB Molecular", "any"])] ## filter to correct data into fix_values DB
+    dfC = dfC[dfC['lab_id'].isin(["DB Mol", "any"])]  ## filter to correct data into fix_values DB
 
     dict_corrections = {}
     all_ids = list(set(dfC['lab_id'].tolist()))
@@ -125,20 +126,22 @@ if __name__ == '__main__':
                     dict_corrections[id][colname] = {}
                 data_entry = {old_data: new_data}
                 dict_corrections[id][colname].update(data_entry)
-    # print('Load rename_columns')
 
+
+    # print('Load rename_columns')
 
     def generate_id(column_id):
         id = hashlib.sha1(str(column_id).encode('utf-8')).hexdigest()
         return id
-    # print('Done hashlib')
 
+
+    # print('Done hashlib')
 
     def deduplicate(dfL, dfN, id_columns, test_name):
         ## generate sample id
         dfL['unique_id'] = dfL[id_columns].astype(str).sum(axis=1)  ## combine values in rows as a long string
-        dfL['sample_id'] = dfL['unique_id'].apply(lambda x: generate_id(x)[:16])  ## generate alphanumeric sample id with 16 characters
-
+        dfL['sample_id'] = dfL['unique_id'].apply(
+            lambda x: generate_id(x)[:16])  ## generate alphanumeric sample id with 16 characters
 
         ## prevent reprocessing of previously processed samples
         if cache_file not in [np.nan, '', None]:
@@ -164,14 +167,17 @@ if __name__ == '__main__':
         # print('2')
         # print(dfL.head())
         return dfL, dfN
+
+
     # print('Done cache file')
 
     # Fix datatables
     print('\nFixing datatables...')
-    def fix_datatable(dfL,file):
+
+    def fix_datatable(dfL, file):
         dfN = dfL
-        if 'Codigo' in dfL.columns.tolist() and 'RESP4' in dfL['Codigo'].tolist(): ## column with unique row data
-            test_name = "Painel viral"
+        if 'Codigo' in dfL.columns.tolist() and 'RESP4' in dfL['Codigo'].tolist():  ## column with unique row data
+            test_name = "test_4"
 
             # print('\t\tDados resp_vir >> Correct format. Proceeding...')
             # add sample_id and test_kit
@@ -188,13 +194,15 @@ if __name__ == '__main__':
                 'UF',
                 'Sexo',
                 'DataHoraLiberacaoClinica',
-                ]
-            
-            dfL = dfL.rename(columns={'Resultado':'Results_All'}) 
+            ]
+
+            dfL = dfL.rename(columns={'Resultado': 'Results_All'})
             for column in id_columns:
                 if column not in dfL.columns.tolist():
                     dfL[column] = ''
-                    print('\t\t\t - No \'%s\' column found. Please check for inconsistencies.\n\t\t\t   Meanwhile, an empty \'%s\' column was added.' % (column, column))
+                    print(
+                        '\t\t\t - No \'%s\' column found. Please check for inconsistencies.\n\t\t\t   Meanwhile, an empty \'%s\' column was added.' % (
+                        column, column))
 
             ## assign id and deduplicate
             dfL, dfN = deduplicate(dfL, dfN, id_columns, test_name)
@@ -231,17 +239,17 @@ if __name__ == '__main__':
                 'ZZSARS',
             ]
 
-            dfL = dfL[~dfL['Parametro'].isin(controls)] ## remove controls from column Parametro
+            dfL = dfL[~dfL['Parametro'].isin(controls)]  ## remove controls from column Parametro
             for i, (code, dfR) in enumerate(dfL.groupby('NumeroPedido')):
-                data = {} ## one data row for each request
+                data = {}  ## one data row for each request
 
                 for col in unique_cols:
                     data[col] = dfR[col].tolist()[0]
-                #print(dfR['Parametro'].unique())
+                # print(dfR['Parametro'].unique())
 
                 target_pathogen = {}
                 for p, t in pathogens.items():
-                    data[p + '_test_result'] = 'Not tested'
+                    data[p + '_test_result'] = 'NT'
                     for g in t:
                         target_pathogen[g] = p
 
@@ -252,65 +260,67 @@ if __name__ == '__main__':
                     if p in dfR['Parametro'].tolist():
                         data['test_kit'] = 'test_4'
                     else:
-                        data['test_kit'] = 'covid'
+                        data['test_kit'] = 'covid_pcr'
 
                 genes = {
-                    'FLUARV':40.0,
-                    'FLUBRV':40.0,
-                    'RSVRV':40.0,
-                    'NGRV':40.0,
-                    'SGRV':40.0,
-                    'RDRPGRV':40.0,
-                    'EGENERV':40.0,
-                    }
+                    'FLUARV': 40.0,
+                    'FLUBRV': 40.0,
+                    'RSVRV': 40.0,
+                    'NGRV': 40.0,
+                    'SGRV': 40.0,
+                    'RDRPGRV': 40.0,
+                    'EGENERV': 40.0,
+                }
                 found = []
 
                 for virus, dfG in dfR.groupby('pathogen'):
-                    #print('>>> Test for', virus)
+                    # print('>>> Test for', virus)
                     for idx, row in dfG.iterrows():
                         gene = dfG.loc[idx, 'Parametro']
                         ct_value = dfG.loc[idx, 'ResultadoLIS']
-                        result = '' # to be determined
+                        result = ''  # to be determined
                         if gene in genes:
                             found.append(gene)
                             if gene not in data:
-                                data[gene] = '' #'' # assign target
-                                if ct_value != '': #'': # Ct value exists, fix inconsistencies
+                                data[gene] = ''  # '' # assign target
+                                if ct_value != '':  # '': # Ct value exists, fix inconsistencies
                                     if '.' in ct_value:
                                         ct_value = ct_value.replace('.', '')
                                         if len(ct_value) < 5:
-                                            ct_value = ct_value + '0'*(5-len(ct_value))
+                                            ct_value = ct_value + '0' * (5 - len(ct_value))
 
-                                    ct_value = float(ct_value)/1000
+                                    ct_value = float(ct_value) / 1000
                                     if ct_value > 50:
-                                        ct_value = ct_value/10
+                                        ct_value = ct_value / 10
 
-                                    ct_value = np.round(ct_value, 2)
-                                    data[gene] = str(ct_value) # assign corrected Ct value
+                                    ct_value = np.round(ct_value, 1)
+                                    data[gene] = str(ct_value)  # assign corrected Ct value
 
                                     if ct_value < genes[gene]:
                                         result = 'DETECTADO'
                                         data[virus + '_test_result'] = 'Pos'
-                                    else: # if Ct is too high
+                                    else:  # if Ct is too high
                                         # print('Ct too high for gene', gene)
                                         result = 'NÃO DETECTADO'
                                         data[virus + '_test_result'] = 'Neg'
                                     # print('\t * ' + gene + ' (' + str(ct_value) + ') = ' + data[virus + '_test_result'])
 
-                                else: # if no Ct is reported
+                                else:  # if no Ct is reported
                                     result = 'NÃO DETECTADO'
                                     # print('\t - ' + gene + ' (' + str(ct_value) + ') = ' + data[virus + '_test_result'])
                                     if data[virus + '_test_result'] != 'DETECTADO':
-                                        data[virus + '_test_result'] = 'NA'
+                                        data[virus + '_test_result'] = 'Neg'
 
                                 # fix multi-target result
                                 if virus == 'SC2':
                                     if data[virus + '_test_result'] != 'DETECTADO':
                                         if result == 'DETECTADO':
-                                            data[virus + '_test_result'] = 'Pos' # fix wrong result, in case at least one target is detected
+                                            data[
+                                                virus + '_test_result'] = 'Pos'  # fix wrong result, in case at least one target is detected
                                             # print('\t ** ' + gene + ' (' + str(ct_value) + ') = ' + data[virus + '_test_result'])
                             else:
-                                line2 = str(code) + '\t' + gene + '\t' + str(ct_value) + '\t' + dfG.loc[idx, 'Results_All'] + '\t' + str(len(dfR.index)) + '\t' + file + '\n'
+                                line2 = str(code) + '\t' + gene + '\t' + str(ct_value) + '\t' + dfG.loc[
+                                    idx, 'Results_All'] + '\t' + str(len(dfR.index)) + '\t' + file + '\n'
                                 # print(line2)
                                 # outfile2.write(line2)
                                 if data[virus + '_test_result'] != 'DETECTADO':
@@ -318,8 +328,10 @@ if __name__ == '__main__':
                                     if result == 'DETECTADO':
                                         for p, t in pathogens.items():
                                             if gene in t:
-                                                data[virus + '_test_result'] = result # get result as shown in original file
-                                                print('\t *** ' + gene + ', Ct = (' + str(ct_value) + ') = ' + data[virus + '_test_result'])
+                                                data[
+                                                    virus + '_test_result'] = result  # get result as shown in original file
+                                                print('\t *** ' + gene + ', Ct = (' + str(ct_value) + ') = ' + data[
+                                                    virus + '_test_result'])
                         else:
                             found.append(gene)
 
@@ -333,11 +345,12 @@ if __name__ == '__main__':
                                 print('Gene ' + g + ' in an anomaly. Check for inconsistencies')
 
                 dfN = dfN.append(data, ignore_index=True)
-                #print(dfN.columns.tolist())
+                # print(dfN.columns.tolist())
 
-        elif 'Parametro' in dfL.columns.tolist() and 'C' in dfL['Parametro'].tolist() or 'Parametro' in dfL.columns.tolist() and 'CT' in dfL['Parametro'].tolist() :
+        elif 'Parametro' in dfL.columns.tolist() and 'C' in dfL[
+            'Parametro'].tolist() or 'Parametro' in dfL.columns.tolist() and 'CT' in dfL['Parametro'].tolist():
             # print('\t\tDados Omicron >> Correct format. Proceeding...')
-            test_name = "Thermo Fisher"
+            test_name = "thermo"
 
             dfL.insert(1, 'sample_id', '')
             dfL.insert(1, 'test_kit', 'thermo')
@@ -361,7 +374,9 @@ if __name__ == '__main__':
             for column in id_columns:
                 if column not in dfL.columns.tolist():
                     dfL[column] = ''
-                    print('\t\t\t - No \'%s\' column found. Please check for inconsistencies.\n\t\t\t   Meanwhile, an empty \'%s\' column #was added.' % (column, column))
+                    print(
+                        '\t\t\t - No \'%s\' column found. Please check for inconsistencies.\n\t\t\t   Meanwhile, an empty \'%s\' column #was added.' % (
+                        column, column))
 
             ## assign id and deduplicate
             dfL, dfN = deduplicate(dfL, dfN, id_columns, test_name)
@@ -374,11 +389,7 @@ if __name__ == '__main__':
 
             ## starting lab specific reformatting
             pathogens = {
-                'SC2': [
-                    'NGENE',
-                    'SGENE',
-                    'ORF1AB',
-                ],
+                'SC2': ['NGENE', 'SGENE', 'ORF1AB'],
                 'FLUA': [],
                 'FLUB': [],
                 'VSR': [],
@@ -402,7 +413,7 @@ if __name__ == '__main__':
                 # target_pathogen = {}
                 for p, t in pathogens.items():
                     if p != 'SC2':
-                        data[p + '_test_result'] = 'NA'#'Not tested'
+                        data[p + '_test_result'] = 'NT'  # 'Not tested'
 
                 if 'SGENE' not in dfG['Exame'].tolist():
                     if 'detectado' in [v.lower() for v in dfG['Resultado'].tolist()]:
@@ -419,21 +430,20 @@ if __name__ == '__main__':
                         if '.' in ct_value:
                             ct_value = ct_value.replace('.', '')
                             if len(ct_value) < 5:
-                                ct_value = ct_value + '0'*(5-len(ct_value))
+                                ct_value = ct_value + '0' * (5 - len(ct_value))
 
-                        ct_value = float(ct_value)/1000
+                        ct_value = float(ct_value) / 1000
                         if ct_value > 50:
-                            ct_value = ct_value/10
-                        data[gene] = str(np.round(ct_value, 2))
+                            ct_value = ct_value / 10
+                        data[gene] = str(np.round(ct_value, 1))
 
                 dfN = dfN.append(data, ignore_index=True)
-            
-        elif 'ParametroLIS' in dfL.columns.tolist(): ## unique column
-            test_name = "Covid-19"
 
+        elif 'ParametroLIS' in dfL.columns.tolist():  ## unique column
+            test_name = "covid_pcr"
             # print('\t\tDados covid >> Correct format. Proceeding...')
             dfL.insert(1, 'sample_id', '')
-            dfL.insert(1, 'test_kit', 'covid')
+            dfL.insert(1, 'test_kit', 'covid_pcr')
             dfL.fillna('', inplace=True)
 
             id_columns = [
@@ -452,7 +462,9 @@ if __name__ == '__main__':
             for column in id_columns:
                 if column not in dfL.columns.tolist():
                     dfL[column] = ''
-                    print('\t\t\t - No \'%s\' column found. Please check for inconsistencies.\n\t\t\t   Meanwhile, an empty \'%s\' column #was added.' % (column, column))
+                    print(
+                        '\t\t\t - No \'%s\' column found. Please check for inconsistencies.\n\t\t\t   Meanwhile, an empty \'%s\' column #was added.' % (
+                        column, column))
 
             ## assign id and deduplicate
             dfL, dfN = deduplicate(dfL, dfN, id_columns, test_name)
@@ -465,15 +477,7 @@ if __name__ == '__main__':
             ## starting lab specific reformatting
             dfN = pd.DataFrame()
             pathogens = {
-                'SC2': [
-                    'ZZZE',
-                    'ECT',
-                    'ZZZN',
-                    'N2CT',
-                    'ZZZRD',
-                    'ZZZS',
-                    'ZZZORF',
-                ],
+                'SC2': ['ZZZE', 'ECT', 'ZZZN', 'N2CT', 'ZZZRD', 'ZZZS', 'ZZZORF'],
                 'FLUA': [],
                 'FLUB': [],
                 'VSR': [],
@@ -498,7 +502,7 @@ if __name__ == '__main__':
                 target_pathogen = {}
                 for p, t in pathogens.items():
                     if p != 'SC2':
-                        data[p + '_test_result'] = 'NA' #'Not tested'
+                        data[p + '_test_result'] = 'NT'  # 'Not tested'
                     for g in t:
                         target_pathogen[g] = p
 
@@ -534,21 +538,19 @@ if __name__ == '__main__':
                     for idx, row in dfG.iterrows():
                         gene = dfG.loc[idx, 'ParametroLIS']
                         ct_value = dfG.loc[idx, 'ResultadoLIS']
-                        if gene in genes:## and gene not in controls:
+                        if gene in genes:  ## and gene not in controls:
                             if gene not in data:
-                                data[gene] = 'NA' ## assign target
-                                # if ct_value != '':
-                                #     # data[gene] = str(ct_value)
-                                if '.' in ct_value:
-                                    ct_value = ct_value.replace('.', '')
-                                    if len(ct_value) < 5:
-                                        ct_value = ct_value + '0'*(5-len(ct_value))
+                                if ct_value != '':
+                                    if '.' in ct_value:
+                                        ct_value = ct_value.replace('.', '')
+                                        if len(ct_value) < 5:
+                                            ct_value = ct_value + '0' * (5 - len(ct_value))
 
-                                ct_value = float(ct_value)/1000
-                                if ct_value > 50:
-                                    ct_value = ct_value/10
-                                # print(ct_value)
-                                data[gene] = str(np.round(ct_value, 2))
+                                    ct_value = float(ct_value) / 1000
+                                    if ct_value > 50:
+                                        ct_value = ct_value / 10
+                                    # print(ct_value)
+                                    data[gene] = str(np.round(ct_value, 1))
                 dfN = dfN.append(data, ignore_index=True)
 
         else:
@@ -556,8 +558,9 @@ if __name__ == '__main__':
             print('\t\tWARNING! Unknown file format. Check for inconsistencies!')
 
         return dfN
-    # print('Done reformating')
 
+
+    # print('Done reformating')
 
     def rename_columns(id, df):
         # print(df.columns.tolist())
@@ -573,12 +576,14 @@ if __name__ == '__main__':
         if value in dict_corrections[id][col_name]:
             new_value = dict_corrections[id][col_name][value]
         return new_value
+
+
     # print('Done rename')
 
     ## open data files
-    for element in os.listdir(input_folder):
+    for element in tqdm(os.listdir(input_folder)):
         if not element.startswith('_'):
-            if element == 'DB Mol': ## check if folder is the correct one
+            if element == 'DB Mol':  ## check if folder is the correct one
                 id = element
                 element = element + '/'
                 if os.path.isdir(input_folder + element) == True:
@@ -590,7 +595,7 @@ if __name__ == '__main__':
                             df.fillna('', inplace=True)
                             df.reset_index(drop=True)
 
-                            df = fix_datatable(df, filename) ## reformat datatable
+                            df = fix_datatable(df, filename)  ## reformat datatable
                             df.insert(0, 'lab_id', id)
                             # print(df.columns.tolist())
 
@@ -603,9 +608,9 @@ if __name__ == '__main__':
                                 print('\t- Fixing data from: ' + lab_id)
                                 for column, values in columns.items():
                                     # print('\t- ' + column + ' (' + column + ' → ' + str(values) + ')')
-                                    if column in df.columns.tolist(): ##in case the column exist
+                                    if column in df.columns.tolist():  ##in case the column exist
                                         df[column] = df[column].apply(lambda x: fix_data_points(lab_id, column, x))
-                            
+
                             ## add age from birthdate, if age is missing
                             if 'birthdate' in df.columns.tolist():
                                 for idx, row in tqdm(df.iterrows()):
@@ -613,18 +618,20 @@ if __name__ == '__main__':
                                     test = df.loc[idx, 'date_testing']
                                     if birth not in [np.nan, '', None]:
                                         birth = pd.to_datetime(birth)
-                                        test = pd.to_datetime(test) ## add to correct dtypes for calculations
+                                        test = pd.to_datetime(test)  ## add to correct dtypes for calculations
                                         age = (test - birth) / np.timedelta64(1, 'Y')
-                                        df.loc[idx, 'age'] = np.round(age, 1) ## this gives decimals
-                                        #df.loc[idx, 'age'] = int(age)
-                                    #print(f'Processing tests {idx + 1} of {len(df)}') ## print processed lines 
+                                        df.loc[idx, 'age'] = np.round(age, 1)  ## this gives decimals
+                                        # df.loc[idx, 'age'] = int(age)
+                                    # print(f'Processing tests {idx + 1} of {len(df)}') ## print processed lines
 
                                     ## Change the data type of the 'age' column to integer
-                                    df['age'] = pd.to_numeric(df['age'], downcast='integer',errors='coerce').fillna(-1).astype(int)
+                                    df['age'] = pd.to_numeric(df['age'], downcast='integer', errors='coerce').fillna(
+                                        -1).astype(int)
                                     df['age'] = df['age'].apply(int)
 
                             ## fix sex information
-                            df['sex'] = df['sex'].apply(lambda x: x[0] if x != '' else x)
+                            if 'sex' in df.columns.tolist():
+                                df['sex'] = df['sex'].apply(lambda x: x[0] if x != '' else x)
 
                             frames = [dfT, df]
 
@@ -633,7 +640,6 @@ if __name__ == '__main__':
 
     dfT = dfT.reset_index(drop=True)
     dfT.fillna('', inplace=True)
-    print('Done fix tables')
 
     ## reformat dates and get ages
     dfT['date_testing'] = pd.to_datetime(dfT['date_testing'])
@@ -643,14 +649,13 @@ if __name__ == '__main__':
     def get_epiweeks(date):
         try:
             date = pd.to_datetime(date)
-            epiweek = str(Week.fromdate(date, system="cdc")) ## get epiweeks
+            epiweek = str(Week.fromdate(date, system="cdc"))  ## get epiweeks
             year, week = epiweek[:4], epiweek[-2:]
             epiweek = str(Week(int(year), int(week)).enddate())
-            # epiweek = str(Week.fromdate(date, system="cdc"))  ## get epiweeks
-            # epiweek = epiweek[:4] + '_' + 'EW' + epiweek[-2:]
         except:
             epiweek = ''
         return epiweek
+
 
     dfT['epiweek'] = dfT['date_testing'].apply(lambda x: get_epiweeks(x))
 
@@ -659,9 +664,9 @@ if __name__ == '__main__':
     def check_detection(ctValue):
         try:
             if ctValue[0].isdigit() and float(ctValue) > 0:
-                result = 'Pos' #'Detected'
+                result = 'SGTP'  # 'Detected'
             elif ctValue[0].isdigit() and float(ctValue) < 1:
-                result = 'Neg' #'Not detected'
+                result = 'SGTF'  # 'Not detected'
             else:
                 result = 'NA'
         except:
@@ -669,14 +674,10 @@ if __name__ == '__main__':
             pass
         return result
 
-    ## Ct value columns
-    targets = []
-    for col in dfT.columns.tolist():
-        if col == 'Ct_geneS':
-            new_col = col.split('_')[1] + '_detection'
-            if new_col not in targets:
-                targets.append(new_col)
-            dfT[new_col] = dfT[col].apply(lambda x: check_detection(x))
+
+    ## add gene S detection column based on Ct values from thermo tests
+    dfT['geneS_detection'] = dfT.apply(lambda row: check_detection(row.Ct_geneS) if row.test_kit == 'thermo' else None,
+                                       axis=1)
 
     ## reset index
     dfT = dfT.reset_index(drop=True)
@@ -713,19 +714,23 @@ if __name__ == '__main__':
         'COVS_test_result',
         'ENTERO_test_result',
         'BAC_test_result'
-        ]
+    ]
 
     for col in dfT.columns.tolist():
         if col not in key_cols:
             dfT = dfT.drop(columns=[col])
 
     dfT = dfT[key_cols]
-    # print(dfT.columns.tolist)
-    dfT['date_testing'] = dfT['date_testing'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else 'XXXXX')
 
-    ## fix test results with empty data
-    # for p in pathogens.keys():
-    #     dfT[p + '_test_result'] = dfT[p + '_test_result'].apply(lambda x: 'Negative' if x not in ['Negative', 'Positive'] else x)
+    def date2str(value):
+        try:
+            value = value.strftime('%Y-%m-%d')
+        except:
+            value = ''
+        return value
+
+    dfT['date_testing'] = dfT['date_testing'].apply(lambda x: date2str(x))
+
 
     # output duplicates rows
     duplicates = dfT.duplicated().sum()
@@ -750,40 +755,10 @@ if __name__ == '__main__':
     # end = time.time()
     # print("Execution time for load_table: ", end - start)
 
-    start = time.time()
-    load_table
-    end = time.time()
-    print("Execution time for load_table: ", end - start)
-
     # start = time.time()
-    # generate_id
+    # load_table
     # end = time.time()
-    # print("Execution time for generate_id: ", end - start)
-
-    # start = time.time()
-    # deduplicate
-    # end = time.time()
-    # print("Execution time for deduplicate: ", end - start)
-
-    # start = time.time()
-    # fix_datatable
-    # end = time.time()
-    # print("Execution time for fix_datatable: ", end - start)
-
-    # start = time.time()
-    # rename_columns
-    # end = time.time()
-    # print("Execution time for rename_columns: ", end - start)
-
-    # start = time.time()
-    # fix_data_points
-    # end = time.time()
-    # print("Execution time for fix_data_points: ", end - start)
-
-    # start = time.time()
-    # get_epiweeks
-    # end = time.time()
-    # print("Execution time for get_epiweeks: ", end - start)
+    # print("Execution time for load_table: ", end - start)
 
     ## output combined dataframe
     dfT.to_csv(output, sep='\t', index=False)

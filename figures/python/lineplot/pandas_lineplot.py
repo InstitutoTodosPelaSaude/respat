@@ -8,7 +8,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 import argparse
 
 # matplotlib.use('Qt5Agg')
-#plt.rcParams['font.family'] = 'Arial' #mac options
+plt.rcParams['font.family'] = 'Arial' #mac options
 # plt.rcParams['font.family'] = ['Open Sans Light', 'sans-serif'] #linux option
 
 if __name__ == '__main__':

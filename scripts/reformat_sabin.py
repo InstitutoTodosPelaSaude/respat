@@ -162,6 +162,8 @@ if __name__ == '__main__':
         return dfL, dfN
     # print("Done deduplication")
     
+
+
     ## Fix datatables
     print('\nFixing datatables...')
     def fix_datatable(dfL,file):
@@ -170,9 +172,9 @@ if __name__ == '__main__':
         # print(''.join(dfL.columns.tolist()))
         # if lab == 'SABIN':
         if 'OS' in dfL.columns.tolist(): # and '' in dfL['Codigo'].tolist(): #column with unique row data
-            test_name = "Covid-19 qualitative detection"
+            test_name = "covid"
 
-            print('\t\tDados covid test antigen >> Correct format. Proceeding...')
+            # print('\t\tDados covid test antigen >> Correct format. Proceeding...')
             
             ## define columns dtypes to reduce the use of memory
             # print(dfL.dtypes)
@@ -192,7 +194,7 @@ if __name__ == '__main__':
             ## add sample_id and test_kit
             dfL.insert(1, 'sample_id', '')
             dfL.insert(1, 'test_kit', '')
-            dfL["test_kit"] = df["Parametro"].apply(lambda x: "covid_antigen" if x == "COVIDECO" else "covid") #separate by rows in column test_kit
+            dfL["test_kit"] = df["Parametro"].apply(lambda x: "covid_antigen" if x == "COVIDECO" else "covid_pcr") # separate by rows in column test_kit
             dfL.fillna('', inplace=True)
 
             id_columns = [
@@ -205,7 +207,7 @@ if __name__ == '__main__':
                 'Resultado',
                 ] 
 
-            for column in tqdm(id_columns):
+            for column in id_columns:
                 if column not in dfL.columns.tolist():
                     dfL[column] = ''
                     print('\t\t\t - No \'%s\' column found. Please check for inconsistencies. Meanwhile, an empty \'%s\' column was added.' % (column, column))
@@ -225,43 +227,33 @@ if __name__ == '__main__':
 
             ## assign id and deduplicate
             dfL, dfN = deduplicate(dfL, dfN, id_columns, test_name)
-            #print(dfL.dtypes)
-
-            ## list of column names to check - attempts to correct wrong date types
-            # column_datetime = ['DataAtendimento', 'DataNascimento', 'DataAssinatura']
-
-            ## loop through each row and check if the specified column is in the datetime format
-            # for i, row in dfL.iterrows():
-            #     for column_name in column_datetime:
-            #         if not pd.to_datetime(row[column_datetime], errors='coerce').notna().all():
-            #             dfL.drop(i, inplace=True)
-
-            # print(dfL.dtypes)
-            # print(df)
 
             if dfL.empty:
                 #print('# Returning an empty dataframe')
                 return dfN
 
-            # starting lab specific reformatting
-            pathogens = {
-                'SC2': [], 
-                'FLUA': [],
-                'FLUB': [], 
-                'VSR': [], 
-                'META': [], 
-                'RINO': [],
-                'PARA': [], 
-                'ADENO': [], 
-                'BOCA': [], 
-                'COVS': [], 
-                'ENTERO': [], 
-                'BAC': []
-                }
+            ## starting reformatting process
 
-            for p, t in tqdm(pathogens.items()):
+            pathogens = [
+                'SC2',
+                'FLUA',
+                'FLUB', 
+                'VSR', 
+                'META', 
+                'RINO',
+                'PARA', 
+                'ADENO', 
+                'BOCA', 
+                'COVS', 
+                'ENTERO', 
+                'BAC'
+            ]
+
+            for p in pathogens:
                 if p != 'SC2':
-                    dfL[p + '_test_result'] = 'NA' # 'Not tested' 
+                    dfL[p + '_test_result'] = 'NT' # 'Not tested'
+
+            dfN = dfL
 
         else:
             #print('\t\tFile = ' + file)
@@ -318,7 +310,7 @@ if __name__ == '__main__':
                             # print(dfT.head(2)) ## all labs empty without cache
 
                             print('\n# Fixing data points...')
-                            for lab_id, columns in tqdm(dict_corrections.items()):
+                            for lab_id, columns in dict_corrections.items():
                                 print('\t- Fixing data from: ' + lab_id)
                                 for column, values in columns.items():
                                     # print('\t- ' + column + ' (' + column + ' → ' + str(values) + ')')
@@ -330,7 +322,7 @@ if __name__ == '__main__':
 
                             ## add age from birthdate, if age is missing
                             if 'birthdate' in df.columns.tolist():
-                                for idx, row in tqdm(df.iterrows()):
+                                for idx, row in df.iterrows():
                                     birth = df.loc[idx, 'birthdate']
                                     test = df.loc[idx, 'date_testing']
                                     if birth not in [np.nan, '', None]:
@@ -423,18 +415,21 @@ if __name__ == '__main__':
         'BAC_test_result'
         ]
 
-    for col in tqdm(dfT.columns.tolist()):
+    for col in dfT.columns.tolist():
         if col not in key_cols:
             dfT = dfT.drop(columns=[col])
 
     dfT = dfT[key_cols]
     # print(dfT.columns.tolist())
 
-    dfT['date_testing'] = dfT['date_testing'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else 'XXXXX')
+    def date2str(value):
+        try:
+            value = value.strftime('%Y-%m-%d')
+        except:
+            value = ''
+        return value
 
-    ## fix test results with empty data
-    # for p in pathogens.keys():
-    #     dfT[p + '_test_result'] = dfT[p + '_test_result'].apply(lambda x: 'Negative' if x not in ['Negative', 'Positive'] else x)
+    dfT['date_testing'] = dfT['date_testing'].apply(lambda x: date2str(x))
 
     ## output duplicates rows
     duplicates = dfT.duplicated().sum()
@@ -464,36 +459,6 @@ if __name__ == '__main__':
     load_table
     end = time.time()
     print("Execution time for load_table: ", end - start)
-
-    # start = time.time()
-    # generate_id
-    # end = time.time()
-    # print("Execution time for generate_id: ", end - start)
-
-    # start = time.time()
-    # deduplicate
-    # end = time.time()
-    # print("Execution time for deduplicate: ", end - start)
-
-    # start = time.time()
-    # fix_datatable
-    # end = time.time()
-    # print("Execution time for fix_datatable: ", end - start)
-
-    # start = time.time()
-    # rename_columns
-    # end = time.time()
-    # print("Execution time for rename_columns: ", end - start)
-
-    # start = time.time()
-    # fix_data_points
-    # end = time.time()
-    # print("Execution time for fix_data_points: ", end - start)
-
-    # start = time.time()
-    # get_epiweeks
-    # end = time.time()
-    # print("Execution time for get_epiweeks: ", end - start)
 
     ## output combined dataframe
     dfT.to_csv(output, sep='\t', index=False)

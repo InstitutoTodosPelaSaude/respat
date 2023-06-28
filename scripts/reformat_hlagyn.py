@@ -164,6 +164,8 @@ if __name__ == '__main__':
         return dfL, dfN
     # print("Done deduplication")
     
+
+
     ## Fix datatables
     print('\nFixing datatables...')
     def fix_datatable(dfL,file):
@@ -362,6 +364,7 @@ if __name__ == '__main__':
             dfL['Ct_geneN'] = ''
             dfL['Ct_ORF1ab'] = ''
             dfL['Ct_geneE'] = ''
+            dfL['patient_id'] = ''
 
             dfN = pd.DataFrame()
             unique_cols = list(set(dfL.columns.tolist()))
@@ -374,7 +377,7 @@ if __name__ == '__main__':
 
                 for pat, tests in pathogens.items():
                     # print('\n' + pat, tests)
-                    data[pat + '_test_result'] = 'NA' #'Not tested'
+                    data[pat + '_test_result'] = 'NT' #'Not tested'
 
                     for target in tests:
                         # print(file, target)
@@ -382,14 +385,14 @@ if __name__ == '__main__':
                             # pedido = data['Pedido']
                             # print(pedido, target, data[target])
                             if data[target] == 'Detectado':
-                                if data[pat + '_test_result'] in ['NA', 'Não Detectado']:
+                                if data[pat + '_test_result'] in ['NT', 'Não Detectado']:
                                     # print('\t\t\t >>>' + target, data[target], '*', data[pat + '_test_result'])
                                     data[pat + '_test_result'] = 'Pos' #'Detectado'
                                     # print(pedido + ': ' + pat + '_test_result', 'fixed >>>', data[pat + '_test_result'])
                                 # else:
                                     # print(pat + '_test_result', 'fixed >>>', data[pat + '_test_result'])
                             elif data[target] == 'Não Detectado':
-                                if data[pat + '_test_result'] == 'NA': #'Not tested':
+                                if data[pat + '_test_result'] == 'NT': #'Not tested':
                                     # print('\t\t\t >>>' + target, data[target], '*', data[pat + '_test_result'])
                                     data[pat + '_test_result'] = 'Neg' #'Não Detectado'
                                     # print(pat + '_test_result', 'fixed >>>', data[pat + '_test_result'])
@@ -401,7 +404,7 @@ if __name__ == '__main__':
 
         elif 'CT_N' in dfL.columns.tolist():
             # print('\t\tDados covid >> Correct format. Proceeding...')
-            test_name = "Covid-19"
+            test_name = "covid_pcr"
 
             id_columns = [
                 'Pedido',
@@ -422,7 +425,7 @@ if __name__ == '__main__':
 
             ## generate sample id
             dfL.insert(1, 'sample_id', '')
-            dfL.insert(1, 'test_kit', 'covid')
+            dfL.insert(1, 'test_kit', 'covid_pcr')
             dfL.fillna('', inplace=True)
 
 
@@ -453,7 +456,7 @@ if __name__ == '__main__':
 
             for p, t in pathogens.items():
                 if p != 'SC2':
-                    dfL[p + '_test_result'] = 'NA' #'Not tested'
+                    dfL[p + '_test_result'] = 'NT' #'Not tested'
 
             ## adding missing columns
             if 'Dt. Nascimento' not in dfL.columns.tolist():
@@ -584,29 +587,8 @@ if __name__ == '__main__':
 
     dfT['epiweek'] = dfT['date_testing'].apply(lambda x: get_epiweeks(x))
 
-    ## Add gene detection results
-    def check_detection(ctValue):
-        try:
-            if ctValue[0].isdigit() and float(ctValue) > 0:
-                result = 'Pos' #'Detected'
-            elif ctValue[0].isdigit() and float(ctValue) < 1:
-                result = 'Neg' #'Not detected'
-            else:
-                result = 'NA'
-        except:
-            result = ''
-            pass
-        return result
-
-
-    # Ct value columns
-    targets = []
-    for col in dfT.columns.tolist():
-        if col == 'Ct_geneS':
-            new_col = col.split('_')[1] + '_detection'
-            if new_col not in targets:
-                targets.append(new_col)
-            dfT[new_col] = dfT[col].apply(lambda x: check_detection(x))
+    ## add gene S detection column (blank)
+    dfT['geneS_detection'] = ''
 
     # reset index
     dfT = dfT.reset_index(drop=True)
@@ -686,11 +668,16 @@ if __name__ == '__main__':
 
     dfT = dfT[key_cols]
 
-    dfT['date_testing'] = dfT['date_testing'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else 'XXXXX')
+    def date2str(value):
+        try:
+            value = value.strftime('%Y-%m-%d')
+        except:
+            value = ''
+        return value
 
-    ## fix test results with empty data
-    # for p in pathogens.keys():
-    #     dfT[p + '_test_result'] = dfT[p + '_test_result'].apply(lambda x: 'Negative' if x not in ['Negative', 'Positive'] else x)
+    dfT['date_testing'] = dfT['date_testing'].apply(lambda x: date2str(x))
+
+    # dfT['date_testing'] = dfT['date_testing'].apply(lambda x: x.strftime('%Y-%m-%d') if x is pd.Timestamp else '')
 
     ## output duplicates rows
     duplicates = dfT.duplicated().sum()
@@ -720,36 +707,6 @@ if __name__ == '__main__':
     load_table
     end = time.time()
     print("Execution time for load_table: ", end - start)
-
-    # start = time.time()
-    # generate_id
-    # end = time.time()
-    # print("Execution time for generate_id: ", end - start)
-
-    # start = time.time()
-    # deduplicate
-    # end = time.time()
-    # print("Execution time for deduplicate: ", end - start)
-
-    # start = time.time()
-    # fix_datatable
-    # end = time.time()
-    # print("Execution time for fix_datatable: ", end - start)
-
-    # start = time.time()
-    # rename_columns
-    # end = time.time()
-    # print("Execution time for rename_columns: ", end - start)
-
-    # start = time.time()
-    # fix_data_points
-    # end = time.time()
-    # print("Execution time for fix_data_points: ", end - start)
-
-    # start = time.time()
-    # get_epiweeks
-    # end = time.time()
-    # print("Execution time for get_epiweeks: ", end - start)
 
     # output combined dataframe
     dfT.to_csv(output, sep='\t', index=False)

@@ -1,0 +1,28 @@
+param	value	note
+input	combined_matrix_agegroup.tsv	# input file
+scale	absolute	# scale of the data to be plotted as stacks
+y_var	pathogen	# main variable, shown on Y axis
+x_label		# X label
+y_label	Faixa etária	# Y label
+groupby	epiweek	# column containing categories of data to be plotted as subplots
+plot_kind	barh	# type of plot: bar, barh
+filter	epiweek:2023-06-03, epiweek:2023-06-10, epiweek:2023-06-17, epiweek:2023-06-24, test_result:Pos, ~pathogen:SC2, ~pathogen:FLUA, ~pathogen:FLUB, ~pathogen:VSR	# comma-separated list of rows to keep or remove rows. Format: '~column_name:value'. Remove '~' to keep only that data category.
+ignore_cols	test_result, name	# columns to be ignored in the line plot
+colour_by	pathogen	# variable to be represented in the colour scheme
+colour_scheme	colors.tsv	# colour pallete, if colour file not provided
+legend_position		# Legend position: horizontal (right side), or vertical (bottom)
+plot_label	upper right	# Legend position (e.g. best , upper left, etc. If left empty, no legend will be displayed)
+column_legend	4	# number of columns of the legend
+xtick_every	5	# frequency of tick in X axis
+ytick_every	1	# frequency of tick in Y axis
+tick_order	0-4, 4-9, 9-19, 19-29, 29-39, 39-49, 49-59, 59-69, 69-79, 80+	# order of ticks in non-numerical axis # 0-4, 5-9, 10-19, 20-29, 30-39, 40-49, 50-59, 60-69, 70-79, 80+ # 0-4, 4-9, 9-19, 19-29, 29-39, 39-49, 49-59, 59-69, 69-79, 80+
+show_grid	x	# show grip for X or Y axis?
+nrows	1	# number of rows of the multiplot
+ncols	4	# number of columns of the multiplot
+same_yscale	yes	# same Y axis scale
+same_xscale	yes	# same Y axis scale
+min_y		# minimum value for Y axis
+max_y		# maximum value for Y axis
+log_scale	no	# convert values to white scale
+figsize	7, 2.2	# figure size: width and height, in inches
+backend	pdf	# matplotlib backend (recommended: pdf, Qt5Agg). Options: 'GTK3Agg', 'GTK3Cairo', 'GTK4Agg', 'GTK4Cairo', 'MacOSX', 'nbAgg', 'QtAgg', 'QtCairo', 'Qt5Agg', 'Qt5Cairo', 'TkAgg', 'TkCairo', 'WebAgg', 'WX', 'WXAgg', 'WXCairo', 'agg', 'cairo', 'pdf', 'pgf', 'ps', 'svg', 'template'

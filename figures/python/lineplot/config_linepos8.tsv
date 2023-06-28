@@ -1,20 +1,19 @@
 param	value	note
-input	combined_matrix_country_posrate_weeks.tsv	# input file
+input	combined_matrix_country_posrate_full_weeks.tsv	# input file
 categories	pathogen	# main variable, shown on Y axis
-min_y	-0.1	# minimum value for Y axis
-max_y	0.7	# maximum value for Y axis
 y_format	percentage	# Format of Y axis valus (percentage or ratio)
 rolling_average	1	# Should rolling average be calculated?
 xlabel		# X label
 ylabel		# Y label
 category_order		# order of categories listed in 'categories'
 tick_every	2	# frequency of tick in X axis
-filter	test_result:Pos, pathogen:SC2, pathogen:FLUA, pathogen:FLUB, pathogen:VSR	# comma-separated list of rows to keep or remove rows. Format: '~column_name:value'. Remove '~' to keep only that data category.
-ignore_cols	"country, test_result
-"	# columns to be ignored in the line plot
+filter	test_result:Pos, pathogen:RINO, pathogen:ADENO, pathogen:COVS, pathogen:PARA	# comma-separated list of rows to keep or remove rows. Format: '~column_name:value'. Remove '~' to keep only that data category.
+ignore_cols	country, test_result, 2021-11-06, 2021-11-13, 2021-11-20, 2021-11-27, 2021-12-04, 2021-12-11, 2021-12-18, 2021-12-25, 2022-01-01, 2022-01-08, 2022-01-15, 2022-01-22, 2022-01-29, 2022-02-05, 2022-02-12, 2022-02-19, 2022-02-26, 2022-03-05, 2022-03-12, 2022-03-19, 2022-03-26, 2022-04-02, 2022-04-09, 2022-04-16, 2022-04-23, 2022-04-30, 2022-05-07, 2022-05-14, 2022-05-21, 2022-05-28, 2022-06-04, 2022-06-11, 2022-06-18, 2022-06-25	# columns to be ignored in the line plot
 colours	colors.tsv	# colours to be assigned to each line, in alphabetic order of yvar
 show_markers	5	# show markers at each point? If yes, add value > 0, if no, add zero.
 show_grid	y	# show grip for X or Y axis?
-show_legend	no	# yes or no
+show_legend	yes	# yes or no
+min_y	-0.05	# minimum value for Y axis
+max_y	0.5	# maximum value for Y axis
 figsize	7, 3.5	# figure size: width and height, in inches
 backend	pdf	# matplotlib backend (recommended: pdf, Qt5Agg). Options: 'GTK3Agg', 'GTK3Cairo', 'GTK4Agg', 'GTK4Cairo', 'MacOSX', 'nbAgg', 'QtAgg', 'QtCairo', 'Qt5Agg', 'Qt5Cairo', 'TkAgg', 'TkCairo', 'WebAgg', 'WX', 'WXAgg', 'WXCairo', 'agg', 'cairo', 'pdf', 'pgf', 'ps', 'svg', 'template'

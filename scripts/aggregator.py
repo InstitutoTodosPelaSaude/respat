@@ -6,9 +6,6 @@ import time
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-import platform
-print('Python version:', platform.python_version())
-print('Pandas version:', pd.__version__)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(

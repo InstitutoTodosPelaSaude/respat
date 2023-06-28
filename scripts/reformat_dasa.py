@@ -171,7 +171,7 @@ if __name__ == '__main__':
         # print(''.join(dfL.columns.tolist()))
         # if lab == 'DASA':
         if 'codigo' in dfL.columns.tolist(): ##column with unique row data
-            test_name = "Painel viral DASA"
+            test_name = "test_4"
             # print('\t\tDados resp_vir >> Correct format. Proceeding...')
 
             id_columns = [
@@ -238,7 +238,7 @@ if __name__ == '__main__':
 
                 target_pathogen = {}
                 for p, t in pathogens.items():
-                    data[p + '_test_result'] = 'NA' #'Not tested'
+                    data[p + '_test_result'] = 'NT' #'Not tested'
                     for g in t:
                         target_pathogen[g] = p
                 dfR['pathogen'] = dfR['codigo'].apply(lambda x: target_pathogen[x])
@@ -254,21 +254,18 @@ if __name__ == '__main__':
                         if gene in genes:
                             found.append(gene)
                             if gene not in data:
-                                data[gene] = 'NA' #'' ## assign target
-                                if ct_value != 'NA':
-                                    data[gene] = str(ct_value)
-
-                                    if ct_value == genes[gene]:
-                                        result = 'DETECTADO'
-                                        data[virus + '_test_result'] = 'Pos' #result
-                                    else: ## target not detected
-                                        result = 'NÃO DETECTADO'
-                                        data[virus + '_test_result'] = 'Neg' #result
-
-                                else: ## if no Ct is reported
+                                data[gene] = str(ct_value)
+                                if ct_value == genes[gene]: # if Ct = 1
+                                    result = 'DETECTADO'
+                                    data[virus + '_test_result'] = 'Pos' #result
+                                else: # if Ct = 0
                                     result = 'NÃO DETECTADO'
-                                    if data[virus + '_test_result'] != 'DETECTADO':
-                                        data[virus + '_test_result'] =  'NA'# result
+                                    data[virus + '_test_result'] = 'Neg' #result
+
+                                # else: ## if no Ct is reported
+                                #     result = 'NÃO DETECTADO'
+                                #     if data[virus + '_test_result'] != 'DETECTADO':
+                                #         data[virus + '_test_result'] =  'NT'# result
                         else:
                             found.append(gene)
 
@@ -291,21 +288,16 @@ if __name__ == '__main__':
 
         elif 'Gene S' in dfL.columns.tolist():
             # print('\t\tDados covid >> Correct format. Proceeding...')
-            test_name = "Thermo Fisher"
+            test_name = "thermo"
 
             if 'resultado' not in dfL.columns.tolist():
                 if 'resultado_norm' in dfL.columns.tolist():
                     dfL.rename(columns={'resultado_norm': 'resultado'}, inplace=True)
-                    dfL['resultado'] = dfL['resultado'].apply(
-                        lambda x: 'Neg' if x == 'NAO DETECTADO' else 'Pos')
-                        # lambda x: 'NAO DETECTADO' if x == 'NEGATIVO' else 'DETECTADO')
                 else:
                     if 'resultado_original' in dfL.columns.tolist():
                         dfL.rename(columns={'resultado_original': 'resultado'}, inplace=True)
-                        dfL['resultado'] = dfL['resultado'].apply(
-                            lambda x: 'Neg' if x == 'NDT' else 'Pos')
+                        dfL['resultado'] = dfL['resultado'].apply(lambda x: 'Neg' if x == 'NDT' else 'Pos')
                     else:
-                        # dfL['resultado'] == 'Not tested'
                         print('No \'result\' column found.')
                         exit()
 
@@ -365,7 +357,7 @@ if __name__ == '__main__':
             # target_pathogen = {}
             for p, t in pathogens.items():
                 if p != 'SC2':
-                    dfL[p + '_test_result'] = 'NA' #'Not tested'
+                    dfL[p + '_test_result'] = 'NT' #'Not tested'
 
             def not_assigned(geo_data):
                 empty = [
@@ -385,12 +377,14 @@ if __name__ == '__main__':
             for idx, row in dfL.iterrows():
                 result = dfL.loc[idx, 'resultado']
                 if result == 'NAO DETECTADO':
-                    # print(idx)
                     dfL.loc[idx, 'Gene N'] = ''
                     dfL.loc[idx, 'Gene ORF'] = ''
                     dfL.loc[idx, 'Gene S'] = ''
                 else: # if not reported
                     result = 'NA'
+                    dfL.loc[idx, 'Gene N'] = str(round(float(dfL.loc[idx, 'Gene N']), 1))
+                    dfL.loc[idx, 'Gene ORF'] = str(round(float(dfL.loc[idx, 'Gene ORF']), 1))
+                    dfL.loc[idx, 'Gene S'] = str(round(float(dfL.loc[idx, 'Gene S']), 1))
 
             dfN = dfL
             # print('# Returning some dataframe')
@@ -522,15 +516,16 @@ if __name__ == '__main__':
     def check_detection(ctValue):
         try:
             if ctValue[0].isdigit() and float(ctValue) > 0:
-                result = 'Pos' #'Detected'
+                result = 'SGTP' #'Detected'
             elif ctValue[0].isdigit() and float(ctValue) < 1:
-                result = 'Neg' #'Not detected'
+                result = 'SGTF' #'Not detected'
             else:
-                result = 'NA' #''
+                result = 'NA'
         except:
             result = ''
             pass
         return result
+
 
     ## Ct value columns
     targets = []
@@ -539,6 +534,7 @@ if __name__ == '__main__':
             new_col = col.split('_')[1] + '_detection'
             if new_col not in targets:
                 targets.append(new_col)
+
             dfT[new_col] = dfT[col].apply(lambda x: check_detection(x))
 
 
@@ -585,11 +581,22 @@ if __name__ == '__main__':
 
     dfT = dfT[key_cols]
 
-    dfT['date_testing'] = dfT['date_testing'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else 'XXXXX')
+    # for idx, row in dfT.iterrows():
+    #     date = dfT.loc[idx, 'date_testing']
+    #     if type(date) == str:
+    #         lab = dfT.loc[idx, 'lab_id']
+    #         sid = dfT.loc[idx, 'sample_id']
+    #         print(date, lab, sid)
 
-    ## fix test results with empty data
-    # for p in pathogens.keys():
-    #     dfT[p + '_test_result'] = dfT[p + '_test_result'].apply(lambda x: 'Negative' if x not in ['Negative', 'Positive'] else x)
+    def date2str(value):
+        try:
+            value = value.strftime('%Y-%m-%d')
+        except:
+            value = ''
+        return value
+
+    dfT['date_testing'] = dfT['date_testing'].apply(lambda x: date2str(x))
+
 
     ## output duplicates rows
     duplicates = dfT.duplicated().sum()
@@ -619,35 +626,6 @@ if __name__ == '__main__':
     end = time.time()
     print("Execution time for load_table: ", end - start)
 
-    # start = time.time()
-    # generate_id
-    # end = time.time()
-    # print("Execution time for generate_id: ", end - start)
-
-    # start = time.time()
-    # deduplicate
-    # end = time.time()
-    # print("Execution time for deduplicate: ", end - start)
-
-    # start = time.time()
-    # fix_datatable
-    # end = time.time()
-    # print("Execution time for fix_datatable: ", end - start)
-
-    # start = time.time()
-    # rename_columns
-    # end = time.time()
-    # print("Execution time for rename_columns: ", end - start)
-
-    # start = time.time()
-    # fix_data_points
-    # end = time.time()
-    # print("Execution time for fix_data_points: ", end - start)
-
-    # start = time.time()
-    # get_epiweeks
-    # end = time.time()
-    # print("Execution time for get_epiweeks: ", end - start)
 
     ## output combined dataframe
     dfT.to_csv(output, sep='\t', index=False)
