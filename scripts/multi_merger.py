@@ -18,7 +18,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Merge dataframes in diretorories according to regular expression",
+        description="Merge dataframes in diretories according to regular expression",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("--path", required=False, help="Metadata file 1")

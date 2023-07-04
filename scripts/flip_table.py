@@ -3,10 +3,10 @@ from pylab import *
 
 matplotlib.use('Qt5Agg')
 plt.rcParams['font.family'] = 'Arial'
-
+description= "Loads a tabular data file and performs filtering on rows and columns based on specific criteria. It then transposes the resulting dataframe. The transposed dataframe is stored for further processing or visualization purposes."
 path = '/Users/anderson/GLab Dropbox/Anderson Brito/ITpS/projetos_itps/sgtf_omicron/analyses/run6_20220131_sgtf/figures/donnut/'
 input = path + 'matrix_states_detection_week.tsv'
-filter_c = 'DS_UF_SIGLA, 2022_EW03'
+filter_c = '' #DS_UF_SIGLA, 2022_EW03
 filter_r = ''
 
 def load_table(file):
