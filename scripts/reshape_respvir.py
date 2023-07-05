@@ -24,7 +24,7 @@ today = time.strftime('%Y-%m-%d', time.gmtime())
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Combine and reformat data tables from multiple sources and output a single TSV file",
+        description="Combine and reformat data tables from multiple sources and output a single TSV file.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("--datadir", required=True, help="Name of the folder containing independent folders for each lab")

@@ -28,7 +28,7 @@ today = time.strftime('%Y-%m-%d', time.gmtime()) ##for snakefile
 ## Args
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Performs diverse data processing tasks for specific Hilab lab cases. It seamlessly loads and combines data from multiple sources and formats into a unified dataframe. It applies renaming and correction rules to columns, generates unique identifiers, and eliminates duplicates based on prior data processing. Age information is derived from birth dates, and sex information is adjusted accordingly. The resulting dataframe is sorted by date and saved as a TSV file. Duplicate rows are also identified and saved separately for further analysis.,
+        description="Performs diverse data processing tasks for specific Hilab lab cases. It seamlessly loads and combines data from multiple sources and formats into a unified dataframe. It applies renaming and correction rules to columns, generates unique identifiers, and eliminates duplicates based on prior data processing. Age information is derived from birth dates, and sex information is adjusted accordingly. The resulting dataframe is sorted by date and saved as a TSV file. Duplicate rows are also identified and saved separately for further analysis.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("--datadir", required=True, help="Name of the folder containing independent folders for each lab")

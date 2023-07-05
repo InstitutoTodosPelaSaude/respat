@@ -17,8 +17,7 @@ pd.set_option('max_columns', 100)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Fix data columns based on user-defined patterns. It takes original data in a TSV file and patterns in another TSV file. The script compares values in the data columns with the patterns and replaces them if their similarity exceeds a specified threshold. The corrected data is saved in a new TSV file, with the option to remove original columns and generate a separate file showing the conversions.
-",
+        description="Fix data columns based on user-defined patterns. It takes original data in a TSV file and patterns in another TSV file. The script compares values in the data columns with the patterns and replaces them if their similarity exceeds a specified threshold. The corrected data is saved in a new TSV file, with the option to remove original columns and generate a separate file showing the conversions.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("--input", required=True, help="TSV file with the original data")
