@@ -3,7 +3,7 @@
 # Created by: Anderson Brito
 # Email: andersonfbrito@gmail.com
 # Release date: 2020-05-24
-# Last update: 2021-06-22
+## Last update: 2023-07-04
 
 from Bio import Phylo
 from Bio import SeqIO
@@ -13,7 +13,7 @@ import json
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Rename taxa names in tree and sequence files, and prune trees according to list provided by the user",
+        description="Perform various operations on different types of input files, including FASTA, NWK, TSV, and JSON files. The script provides options to rename taxa names in tree and sequence files, as well as prune trees based on a user-provided list. The output is a filtered file based on the specified action (keep, remove, or rename).",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("--input", required=True, help="FASTA, NWK, TSV or JSON input file to be processed")

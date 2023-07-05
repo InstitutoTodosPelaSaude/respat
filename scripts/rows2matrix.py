@@ -6,7 +6,7 @@
 #
 #
 # Release date: 2021-08-22
-# Last update: 2021-12-21
+# Last update: 2023-07-04
 
 import pandas as pd
 import argparse
@@ -27,7 +27,7 @@ import platform
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Generate matrix of occurrences at the intersection of two or more columns",
+        description="Converts stacked rows of values into a matrix. It processes a TSV file, performs operations like filtering and aggregation, and generates a matrix of occurrences at the intersection of two or more columns, allowing customization of variables, targets, filters, and sorting.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("--input", required=True, help="TSV file with data to be aggregated as two-dimensional matrix")

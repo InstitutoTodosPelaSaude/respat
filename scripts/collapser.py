@@ -6,7 +6,7 @@
 #
 #
 # Release date: 2021-08-22
-# Last update: 2023-02-03
+## Last update: 2023-07-04
 
 import pandas as pd
 import argparse
@@ -20,7 +20,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Colapse groups of two or more rows, summing up corresponding values in matrix",
+        description="Collapses groups of two or more rows with the same index values in a matrix. It converts stacked rows of values into the matrix format by taking an input file and specifying index columns, a unique identifier column, and optional extra columns. The corresponding values within each group are summed up, resulting in a consolidated matrix. The final matrix is then saved as a TSV file.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("--input", required=True, help="Matrix of daily case counts per location")

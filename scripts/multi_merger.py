@@ -4,7 +4,7 @@
 # Created by: Anderson Brito
 # Email: andersonfbrito@gmail.com
 # Release date: 2022-02-03
-# Last update: 2022-02-03
+## Last update: 2023-07-04
 
 import pandas as pd
 import os
@@ -18,7 +18,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Merge dataframes in diretories according to regular expression",
+        description="Merges TSV/CSV files in a directory based on a regular expression. It concatenates files into a single dataframe, removes duplicates based on an index column, and saves the merged file. Columns can be selected, ordered, and filtered. Missing values can be filled.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("--path", required=False, help="Metadata file 1")

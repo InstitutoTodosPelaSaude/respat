@@ -1,10 +1,12 @@
+# Last update: 2023-07-04
+
 import argparse
 import pandas as pd
 
 if __name__ == '__main__':
 
     # Parse command-line arguments
-    parser = argparse.ArgumentParser(description='Split an Excel file into separate tab files')
+    parser = argparse.ArgumentParser(description='Split an Excel file into separate tab files. It reads the input Excel file, iterates through each sheet, and saves each sheet as a separate TSV file. Provide the input file name using the --input argument.')
     parser.add_argument('--input', help='Input Excel file name')
     args = parser.parse_args()
 

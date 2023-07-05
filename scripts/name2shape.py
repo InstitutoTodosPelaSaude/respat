@@ -1,3 +1,5 @@
+## Last update: 2023-07-04
+
 from geopy.geocoders import Nominatim
 from shapely.geometry import Point
 from difflib import SequenceMatcher
@@ -22,7 +24,7 @@ print('Geopandas version:', gpd.__version__)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Match location names to shapefile polygons, using coordinates",
+        description="Matches location names to shapefile polygons using coordinates. It utilizes geopy, shapely, pandas, geopandas, and other libraries. The script takes input files, shapefiles, and various options as command-line arguments. It searches for coordinates of locations, matches them to shapefile polygons, and outputs the results.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("--input", required=True, help="TVS file containing location names")

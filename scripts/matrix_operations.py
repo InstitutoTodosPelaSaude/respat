@@ -1,3 +1,5 @@
+## Last update: 2023-07-04
+
 import pandas as pd
 import numpy as np
 import argparse
@@ -8,7 +10,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Perform mathematical operations with data matrices",
+        description="Performs various operations on input files, such as merging and manipulating data. It allows for filtering, normalization, and calculations involving multiple matrices. The resulting output is a TSV matrix with the normalized values.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("--input1", required=True, help="Main matrix, used as the numerator")

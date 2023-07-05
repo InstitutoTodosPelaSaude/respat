@@ -1,10 +1,12 @@
+## Last update: 2023-07-04
+
 import pandas as pd
 import time
 import argparse
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Filter dataframe based on user defined parameters provided in a \'config.tsv\' file",
+        description="filters a dataframe using parameters specified in a\'config.tsv\' file. It performs row and date filtering, column dropping, and data sorting. The filtered dataframe is saved to an output file.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("--config", required=True, help="Parameter file")

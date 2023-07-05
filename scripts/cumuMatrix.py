@@ -1,10 +1,12 @@
+## Last update: 2023-07-04
+
 import pandas as pd
 import argparse
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Generate matrix with increasing, cumulative counts from time series",
+        description="Generates a matrix of cumulative counts from a time series. It takes an input file, an index column for the Y-axis, and an optional row filter. The resulting matrix is saved as a TSV file.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("--input", required=True, help="Time series counts")

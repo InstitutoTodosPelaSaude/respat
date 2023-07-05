@@ -1,3 +1,5 @@
+## Last update: 2023-07-04
+
 import pandas as pd
 import argparse
 import os
@@ -7,7 +9,7 @@ import time
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Modify dataframe by adding, removing or modifying columns and rows",
+        description="Manipulates a dataframe by adding, modifying, or removing columns and rows. It takes input files and performs actions based on user-defined parameters. The actions can include adding or modifying columns, filtering rows, and sorting the dataframe. The modified dataframe is then saved to an output file.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("--input1", required=True, help="Original dataframe file")

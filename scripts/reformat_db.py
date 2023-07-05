@@ -3,7 +3,7 @@
 # Created by: Anderson Brito
 # Email: anderson.brito@itps.org.br
 # Release date: 2022-01-19
-# Last update: 2023-03-03
+## Last update: 2023-04-07
 # Refactor by: Bragatte
 
 import pandas as pd
@@ -27,7 +27,7 @@ today = time.strftime('%Y-%m-%d', time.gmtime())  ## for snakefile
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Combine and reformat data tables from multiple sources and output a single TSV file",
+        description="Performs diverse data processing tasks for specific DB Molecular lab cases. It seamlessly loads and combines data from multiple sources and formats into a unified dataframe. It applies renaming and correction rules to columns, generates unique identifiers, and eliminates duplicates based on prior data processing. Age information is derived from birth dates, and sex information is adjusted accordingly. The resulting dataframe is sorted by date and saved as a TSV file. Duplicate rows are also identified and saved separately for further analysis.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("--datadir", required=True,

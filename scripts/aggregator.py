@@ -1,3 +1,5 @@
+## Last update: 2023-07-04
+
 import pandas as pd
 from epiweeks import Week
 import argparse
@@ -9,7 +11,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Aggregate daily counts as epiweeks, months or year",
+        description="Aggregates daily counts per location based on the specified time unit (week, month, or year). The input is a matrix of daily counts, and the output is a TSV matrix with aggregated counts. The script can handle data points in float or integer format and can represent weeks as start or end dates. The conversion is performed within a specified date range if provided.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("--input", required=True, help="Matrix of daily counts per location")

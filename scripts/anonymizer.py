@@ -1,10 +1,12 @@
+## Last update: 2023-07-04
+
 import pandas as pd
 import argparse
 import hashlib
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Add a new column with an index generated out of data columns",
+        description="Add a new column with an index generated out of data columns. This script adds a new column to a dataframe with an index generated from specified data columns. It generates a unique identifier for each row by hashing the concatenation of the values in the specified columns. Rows with duplicated indexes can be optionally removed. The modified dataframe is saved in a new file.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("--input", required=True, help="Original dataframe file")

@@ -1,10 +1,12 @@
+## Last update: 2023-07-04
+
 import pandas as pd
 import argparse
 import os
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Aggregate daily counts as epiweeks, months or year",
+        description="Aggregates daily counts into intervals such as epiweeks, months, or years. It adds a new column indicating the interval for each value and allows for data filtering before aggregation. The output is saved to a file.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("--input", required=True, help="Matrix with numeric data to be grouped based on specific ranges")

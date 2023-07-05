@@ -3,8 +3,7 @@
 # Created by: Anderson Brito
 # Email: anderson.brito@itps.org.br
 # Release date: 2022-12-15
-# Last update: 2023-05-12
-# Refactor by: Bragatte
+## Last update: 2023-07-04
 
 import pandas as pd
 import os
@@ -25,7 +24,7 @@ today = time.strftime('%Y-%m-%d', time.gmtime())
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Combine and reformat data tables from multiple sources and output a single TSV file",
+        description="Performs diverse data processing tasks for specific Fleury lab cases. It seamlessly loads and combines data from multiple sources and formats into a unified dataframe. It applies renaming and correction rules to columns, generates unique identifiers, and eliminates duplicates based on prior data processing. Age information is derived from birth dates, and sex information is adjusted accordingly. The resulting dataframe is sorted by date and saved as a TSV file. Duplicate rows are also identified and saved separately for further analysis.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("--datadir", required=True, help="Name of the folder containing independent folders for each lab")

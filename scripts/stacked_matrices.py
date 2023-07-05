@@ -1,10 +1,12 @@
+# Last update: 2023-07-04
+
 import pandas as pd
 import argparse
 import os
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Pairwise association between corresponding columns and rows in two matrices, generating stacked rows with data",
+        description="Allows filtering, combining, and exporting data from two matrices into a TSV file. It takes two input files and a unique identifier column, performing pairwise association between corresponding columns and rows. Custom filtering based on criteria is supported, and extra columns can be added to the output results. ",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("--input1", required=True, help="Matrix with data to be displayed in the X axis")
