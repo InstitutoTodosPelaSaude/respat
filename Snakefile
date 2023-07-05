@@ -22,6 +22,11 @@ SAMPLES = [
 
 
 rule all:
+	message:
+		"""
+		Execute all rules at terminal commands in a logical order.
+		"""
+
 	shell:
 		"""
 		snakemake --cores all test_results_go
@@ -40,11 +45,16 @@ rule all:
 
 		
 rule arguments:
+	message:
+		"""
+		Define parameters for the pipeline including the structure of the folders, files and names.
+		"""
+
 	params:
 		datadir = "data",
 		rename_file = "data/rename_columns.xlsx",
 		correction_file = "data/fix_values.xlsx",
-		cache = "data/combined0.tsv", #"data/combined0.tsv", #"data/combined_fleury_all.tsv", #first time data/combined0.tsv
+		cache = "data/combined0.tsv",  ## first time data/combined0.tsv
 		shapefile = "config/ibge_2020_shp/bra_admbnda_adm2_ibge_2020.shp",
 		coordinates = "config/cache_coordinates.tsv",
 		age_groups = "config/demo_bins.txt",
@@ -55,11 +65,15 @@ rule arguments:
 		index_column = "division_exposure",
 
 		start_date = "2021-11-01",
-		end_date = "2023-06-24" #atualizar data aqui
+		end_date = "2023-06-24" ## update last epidemiological week here
 
 arguments = rules.arguments.params
 
 rule files:
+	message:
+		"""
+		Define the names for output files generated and to be used along the pipeline.
+		"""
 	input:
 		expand(["results/{geo}/matrix_{sample}_{geo}_posneg.tsv", "results/{geo}/combined_matrix_{geo}_posneg.tsv", "results/{geo}/combined_matrix_{geo}_posneg_weeks.tsv", "results/{geo}/combined_matrix_{geo}_posneg.tsv", "results/{geo}/combined_matrix_{geo}_totaltests.tsv", "results/{geo}/combined_matrix_{geo}_posrate.tsv", "results/demography/matrix_{sample}_agegroups.tsv"], sample=SAMPLES, geo=LOCATIONS),
 		combined1 = "results/combined1_labs.tsv", #labs
@@ -74,7 +88,7 @@ rule files:
 rule reformat_hlagyn:
 	message:
 		"""
-		Combine data from HLAGyn
+		Given the input data from the HLAGyn laboratory, we combine multiple files, create unique hashes for each row, manipulate and clean column variables, apply 'if' statements for specific cases, incorporate age and sex information, eliminate duplicates, and finally, save the output in a relational structure.
 		"""
 	input:
 		rename = arguments.rename_file,
@@ -97,7 +111,7 @@ rule reformat_hlagyn:
 rule reformat_dasa:
 	message:
 		"""
-		Combine data from Dasa
+		Given the input data from the DASA laboratory, we combine multiple files, create unique hashes for each row, manipulate and clean column variables, apply 'if' statements for specific cases, incorporate age and sex information, eliminate duplicates, and finally, save the output in a relational structure.
 		"""
 	input:
 		rename = arguments.rename_file,
@@ -122,7 +136,7 @@ rule reformat_dasa:
 rule reformat_db:
 	message:
 		"""
-		Combine data from DB Molecular
+		Given the input data from the DB Molecular laboratory, we combine multiple files, create unique hashes for each row, manipulate and clean column variables, apply 'if' statements for specific cases, incorporate age and sex information, eliminate duplicates, and finally, save the output in a relational structure.
 		"""
 	input:
 		rename = arguments.rename_file,
@@ -146,7 +160,7 @@ rule reformat_db:
 rule reformat_sabin:
 	message:
 		"""
-		Combine data from SABIN
+		Given the input data from the SABIN laboratory, we combine multiple files, create unique hashes for each row, manipulate and clean column variables, apply 'if' statements for specific cases, incorporate age and sex information, eliminate duplicates, and finally, save the output in a relational structure.
 		"""
 	input:
 		rename = arguments.rename_file,
@@ -170,7 +184,7 @@ rule reformat_sabin:
 rule reformat_fleury:
 	message:
 		"""
-		Combine data from Fleury
+		Given the input data from the Fleury laboratory, we combine multiple files, create unique hashes for each row, manipulate and clean column variables, apply 'if' statements for specific cases, incorporate age and sex information, eliminate duplicates, and finally, save the output in a relational structure.
 		"""
 	input:
 		rename = arguments.rename_file,
@@ -194,7 +208,7 @@ rule reformat_fleury:
 rule reformat_einstein:
 	message:
 		"""
-		Combine data from Einstein
+		Given the input data from the Hospital Israelita Albert Einstein, we combine multiple files, create unique hashes for each row, manipulate and clean column variables, apply 'if' statements for specific cases, incorporate age and sex information, eliminate duplicates, and finally, save the output in a relational structure.
 		"""
 	input:
 		rename = arguments.rename_file,
@@ -218,7 +232,7 @@ rule reformat_einstein:
 rule agegroups:
 	message:
 		"""
-		Add column with age groups
+		Use 'combined.tsv', the resultant metadata file after all laboratory reformats, as an input. Then, we employ the 'groupbyrange' script to introduce a new column for age groups. This script uses the age range definitions provided in the 'config/demo_bins.txt' file. The parameters set within this script allow us to define the new column name and thresholds. The output is a new, combined file that includes the added age groups.
 		"""
 	input:
 		metadata =  rules.files.input.combined1,
@@ -245,7 +259,7 @@ rule agegroups:
 # rule geomatch:
 # 	message:
 # 		"""
-# 		Match location names with geographic shapefile polygons
+# 		Using as input file Match location names with geographic shapefile polygons
 # 		"""
 # 	input:
 # 		input_file = rules.agegroups.output.matrix,
