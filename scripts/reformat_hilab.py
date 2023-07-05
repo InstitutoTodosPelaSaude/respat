@@ -1,6 +1,6 @@
 ## -*- coding: utf-8 -*-
 
-## Created by: Bragatte MAS
+## Created by: Bragatte
 ## Email: marcelo.bragatte@itps.org.br
 ## Release date: 2023-04-10
 ## Last update: 2023-07-04
