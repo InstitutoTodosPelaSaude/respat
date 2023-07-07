@@ -293,7 +293,7 @@ rule agegroups:
 rule geocols:
 	message:
 		"""
-		Add extra geographic columns
+		Using the output matrix from the 'agegroups' rule, we augment it by incorporating additional geographic columns. These columns are specified in the 'arguments.geography' input. Our focus targets are 'country', 'region', and 'state_code', located respectively at the 5th, 6th, and 8th positions. We introduce these new elements into the 'state' index column. To perform this 'add' operation, we employ the 'reformat_dataframe.py' script, indicating 'columns' as the operational mode. Consequently, we generate an updated combined file, which is subsequently stored as a refreshed 'combined_cache', primed for the next stage of processing.
 		"""
 	input:
 		file = rules.agegroups.output.matrix,
@@ -319,6 +319,10 @@ rule geocols:
 
 
 rule test_results_go:
+	message:
+		"""
+		Processes matrices of test results, catering to a variety of samples and geographic locations. To fine-tune this processing in accordance with specific samples and locations, we utilize the 'set_index_results' function. This function carefully configures critical parameters such as target variables, indexes, supplemental columns, a suite of filters, and additional column information. These parameters, working in synergy, facilitate the generation and customization of distinct test result matrices, thereby streamlining our analysis.
+		"""
 	input:
 		expand("results/{geo}/matrix_{sample}_{geo}_posneg_panel.tsv", sample=SAMPLES, geo=LOCATIONS),
 
@@ -341,6 +345,11 @@ def set_index_results(spl, loc):
 	return([yvar, index, extra_cols, filter1, filter2, filter3, add_col, test_col, index2])
 
 rule test_results:
+	message:
+		"""
+		Takes respiratory pathogen data and transforms it into multiple, detailed test results matrices, according to the sample type and geographical location. This is achieved by leveraging the parameters defined by the 'test_results_go' rule, effectively tailoring the data handling process. 
+		The operations encompass sorting and filtering the data, adding extra columns and specifying the date range, which results in matrices of all tests, total positive and negative results, panel tests, and nucleic acid tests. The Python scripts 'rows2matrix.py' and 'collapser.py' handle the data transformation, while the 'sed' command adjusts the column naming to fit the analytical requirements.
+		"""
 	message:
 		"""
 		Compile data of respiratory pathogens
@@ -430,6 +439,10 @@ rule test_results:
 
 
 rule combine_posneg_go:
+	message:
+		"""
+		The combine_posneg_go rule triggers output names for the combine_posneg rule which aggregates and merges all full, panel, and nucleic tests results data for each geographic location, and summarizes it on a weekly basis.
+		"""
 	input:
 		expand("results/{geo}", geo=LOCATIONS),
 		expand("results/{geo}/combined_matrix_{geo}_posneg_full.tsv", geo=LOCATIONS),
@@ -438,7 +451,7 @@ rule combine_posneg_go:
 rule combine_posneg:
 	message:
 		"""
-		Combine positive and negative test results
+		Streamline and aggregate various test result datasets on a weekly basis. Utilizing the multi_merger.py script, diverse test results are harmonized into single files per location, with empty entries replaced by zeroes. These files are organized by geographic location, pathogen, and test result. The aggregator.py script further processes these datasets, providing a time-aggregated summary on a weekly basis. The end product is a set of six distinct weekly files for each geographic location, encompassing full, panel, and nucleic test results. The time frame for aggregation can be adjusted from weekly to monthly, as required, by changing the unit parameter.
 		"""
 	params:
 		path = "results/{geo}",
@@ -505,7 +518,7 @@ rule combine_posneg:
 rule posneg_allpat:
 	message:
 		"""
-		Combine counts of positive and negative tests for all pathogens
+		Combines counts of positive and negative tests across all pathogens. Using the collapser.py script, it processes the weekly aggregated full test results data on a country level. It excludes specific pathogen details during this operation, focusing instead on the test results and the corresponding country data. The final output, allpat_matrix, represents a consolidated view of total testing activities and their outcomes.
 		"""
 	input:
 		input = "results/country/combined_matrix_country_posneg_full_weeks.tsv"
@@ -532,6 +545,10 @@ rule posneg_allpat:
 
 
 rule total_tests_go:
+	message:
+		"""
+		Create logical groups of output files for total_test rule, the index_totals dictionary defines the data handling setup for different geographical levels - 'country', 'region', and 'state'. The index_totals dictionary defines the data handling setup for different geographical levels - 'country', 'region', and 'state'. The set_index_totals(loc) function derives a distinct set of parameters—index, unique_id, and extra_cols—from the index_totals dictionary for each geographic location. These parameters are essential for indexing and uniquely identifying data, as well as for preserving necessary additional data columns.
+		"""
 	input:
 		expand("results/{geo}/combined_matrix_{geo}_posneg_full_weeks.tsv", geo=LOCATIONS),
 		expand("results/{geo}/combined_matrix_{geo}_totaltests_full_weeks.tsv", geo=LOCATIONS),
@@ -552,7 +569,7 @@ def set_index_totals(loc):
 rule total_tests:
 	message:
 		"""
-		Get total tests performed per pathogen
+		Calculates the total tests performed per pathogen for each geographical level. Using location-specific parameters extracted by the 'set_index_totals' function, it processes both 'nucleic' and 'full' test data weekly. The function filters out non-test results, and the time unit for aggregation can be adjusted if needed. The rule generates two sets of output: the total number of 'nucleic' and 'full' tests for each location, contributing to the larger data analysis pipeline.
 		"""
 	input:
 		file1 = "results/{geo}/combined_matrix_{geo}_posneg_nucleic_weeks.tsv",
@@ -594,6 +611,11 @@ rule total_tests:
 
 
 rule posrate_go:
+## create the description form this rule in format of paragraph consider other previous examples from the code
+	message: 
+		"""
+
+		"""
 	input:
 		expand("results/{geo}/combined_matrix_{geo}_posrate_full_weeks.tsv", geo=LOCATIONS)
 
@@ -652,6 +674,10 @@ rule posrate:
 
 
 rule demog_go:
+	message:
+		"""
+
+		"""
 	input:
 		expand("results/demography/matrix_{sample}_agegroups.tsv", sample=SAMPLES),
 
@@ -805,6 +831,10 @@ rule ttpd: #total_tests_panel_demog
 
 
 rule demogposrate_go:
+	message:
+		"""
+
+		"""
 	input:
 		expand("results/demography/matrix_agegroups_weeks_{sample}_posneg.tsv", sample=SAMPLES),
 
