@@ -607,14 +607,12 @@ rule total_tests:
 			--filter \"{params.filters}\" \
 			--output {output.output2}
 		"""
-		
 
 
 rule posrate_go:
-## create the description form this rule in format of paragraph consider other previous examples from the code
 	message: 
 		"""
-
+		Generates required file paths for the computation of positive test rates. It leverages the expand function to produce a series of files, each tailored to a specific geographic location. Employs a dictionary, indexes, which pairs geographic areas to their corresponding identifiers.
 		"""
 	input:
 		expand("results/{geo}/combined_matrix_{geo}_posrate_full_weeks.tsv", geo=LOCATIONS)
@@ -632,7 +630,7 @@ def getIndex(loc):
 rule posrate:
 	message:
 		"""
-		Get test positive rates
+		Calculates test positivity rates from 'combine_posneg' (numerator) and 'total_tests' (denominator), applying distinct indices and filters. The Python scripts use parameters such as data index, positive-result filter, and a minimum threshold. 'matrix_operations.py' then processes the test data, delivering weekly positivity rates per test type.
 		"""
 	input:
 		file1 = rules.combine_posneg.output.merged_nucleic_weeks, # numerator, nucleic only
@@ -670,13 +668,10 @@ rule posrate:
 		"""
 
 
-
-
-
 rule demog_go:
 	message:
 		"""
-
+		Generates file paths for demographic analysis over different sample types, facilitated by 'expand'. It utilizes a 'tests' dictionary mapping pathogens to their test result identifiers. The 'set_groups' function enhances this by setting a dependent variable ('yvar'), an identifier column ('id_col'), specific conditions ('filter'), and additional columns ('add_col') — all custom-defined per pathogen, allowing precise demographic analysis.
 		"""
 	input:
 		expand("results/demography/matrix_{sample}_agegroups.tsv", sample=SAMPLES),
@@ -708,7 +703,7 @@ def set_groups(spl):
 rule demog:
 	message:
 		"""
-		Aggregate ages per age group and sex
+		Compiles age and gender demographic data for each sample type, using 'set_groups' to assign test-specific parameters. The 'xvar' identifies 'age_group' as the independent variable; 'format' sets the data type as integer; 'start_date' and 'end_date' define the data range. These parameters, used in 'rows2matrix.py', shape the metadata into a matrix, further refined to the given date range. The output: a tailored demographic matrix with the unique identifier renamed to 'test_result'.
 		"""
 	input:
 		metadata = rules.geocols.output.matrix,
@@ -740,10 +735,8 @@ rule demog:
 			
 		sed -i '' 's/{params.unique_id}/test_result/' {output.age_matrix}
 		"""
-		# Linux
-		#sed -i 's/{params.unique_id}/test_result/' {output.age_matrix}
-
-
+		## Linux
+		## sed -i 's/{params.unique_id}/test_result/' {output.age_matrix}
 
 
 rule combine_demog:
