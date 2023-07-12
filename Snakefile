@@ -132,7 +132,6 @@ rule reformat_dasa:
 		"""
 
 
-
 rule reformat_db:
 	message:
 		"""
@@ -432,10 +431,8 @@ rule test_results:
 			--output {output.posneg_nucleic}
 		"""
 
-
 		# Linux
 		#sed -i 's/{params.unique_id}/test_result/' {output.age_matrix}
-
 
 
 rule combine_posneg_go:
@@ -510,9 +507,7 @@ rule combine_posneg:
 			--format {params.format} \
 			--output {output.merged_nucleic_weeks}
 		"""
-
 # 		cp results/country/combined_matrix_country_posneg.tsv figures/barplot
-
 
 
 rule posneg_allpat:
@@ -540,8 +535,6 @@ rule posneg_allpat:
 			--format {params.format} \
 			--output {output.allpat_matrix}
 		"""
-
-
 
 
 rule total_tests_go:
@@ -742,7 +735,7 @@ rule demog:
 rule combine_demog:
 	message:
 		"""
-		Combine demographic results
+		Combines demographic results across different pathogen samples. Parameters specify the data directory 'path_demog', a regex pattern to match required files, a filler value for missing data, a filter to exclude non-tested results, and a sorting preference by 'epiweek'. These parameters feed into the 'multi_merger.py' script, producing a combined demographic matrix that is then copied into the 'figures/pyramid' directory.
 		"""
 	params:
 		path_demog = "results/demography",
@@ -765,12 +758,10 @@ rule combine_demog:
 		cp results/demography/combined_matrix_agegroup.tsv figures/pyramid
 		"""
 
-
-
 rule ttpd: #total_tests_panel_demog
 	message:
 		"""
-		Total tests for panels demog flow
+		Computes total tests for demographic flow panels. It takes in a combined age group matrix as input and sets parameters for index, unique ID, columns to ignore, sorting preferences, and a filter for four specific pathogens with positive results. These parameters are used in the 'collapser.py' script twice with varying indices, generating weekly and overall positivity results. The script 'matrix_operations.py' then calculates the frequency of positive cases, producing three output files—weekly positives, overall positives, and positivity frequency. This rule enables in-depth demographic analysis for a panel of pathogens.
 		"""
 	input:
 		combi_ages = rules.combine_demog.output.merged, #combined_matrix_agegroup.tsv 
@@ -822,11 +813,10 @@ rule ttpd: #total_tests_panel_demog
 		"""
 
 
-
 rule demogposrate_go:
 	message:
 		"""
-
+		Generates required file paths for the computation of positive test rates. It leverages the expand function to produce a series of files, each tailored to a specific pathogens and age_groups. Employs a dictionary, indexes, which pairs test results by age and pathogen to their corresponding identifiers.
 		"""
 	input:
 		expand("results/demography/matrix_agegroups_weeks_{sample}_posneg.tsv", sample=SAMPLES),
@@ -840,7 +830,7 @@ def set_groups2(spl):
 rule posrate_agegroup:
 	message:
 		"""
-		Positive rate for all pathogens, by age group
+		Calculates the positivity rate for all pathogens by age group. The 'params' section defines parameters such as 'xvar' for the independent variable, 'format' for the data format, 'unique_id' for the identifier column, and 'min_denominator' for the minimum limit. 'Rows2matrix.py' script transforms raw data into weekly matrices per pathogen. 'Collapser.py' collapses these matrices into total test results. Finally, 'matrix_operations.py' computes positivity rates, based on the parameters from 'set_groups2' function. Outputs include weekly matrices, total tests, and positivity rates per pathogen.
 		"""
 	input:
 		metadata = rules.geocols.output.matrix,
@@ -887,8 +877,6 @@ rule posrate_agegroup:
 		"""
 
 
-
-
 rule copy_files:
 	message:
 		"""
@@ -911,9 +899,7 @@ rule copy_files:
 		cp results/demography/matrix_agegroups_weeks_VSR_posrate.tsv figures/python/heatmap
 
 	"""
-
 		# cp results/demography/combined_matrix_agegroup_100k.tsv figures/pyramid
-
 
 
 #rule xxx:
@@ -937,8 +923,7 @@ rule copy_files:
 #			--date-column {params.} \
 #			--output {output.}
 #		"""
-#
-#
+
 
 rule remove_figs:
 	message: "Removing figures"
