@@ -309,32 +309,47 @@ if __name__ == '__main__':
                             # print(dfT.head(2)) ## all labs empty without cache
 
                             print('\n# Fixing data points...')
-                            for lab_id, columns in dict_corrections.items():
-                                print('\t- Fixing data from: ' + lab_id)
-                                for column, values in columns.items():
-                                    # print('\t- ' + column + ' (' + column + ' → ' + str(values) + ')')
-                                    df[column] = df[column].apply(lambda x: fix_data_points(lab_id, column, x))
-                                    #df[column] = df[column].replace(values, inplace=True) #vectorization fix_data_points?
+                            # for lab_id, columns in dict_corrections.items():
+                            #     print('\t- Fixing data from: ' + lab_id)
+                            #     for column, values in columns.items():
+                            #         # print('\t- ' + column + ' (' + column + ' → ' + str(values) + ')')
+                            #         df[column] = df[column].apply(lambda x: fix_data_points(lab_id, column, x))
+                            #         #df[column] = df[column].replace(values, inplace=True) #vectorization fix_data_points?
+                            
+                            dict_corrections_full = {**dict_corrections['SABIN'], **dict_corrections['any']}
+                            df = df.replace(dict_corrections_full) 
 
                             #print(df.head(2)) # only reformat
                             #print(dfT.head(2)) # all labs empty without cache
 
                             ## add age from birthdate, if age is missing
-                            if 'birthdate' in df.columns.tolist():
-                                for idx, row in df.iterrows():
-                                    birth = df.loc[idx, 'birthdate']
-                                    test = df.loc[idx, 'date_testing']
-                                    if birth not in [np.nan, '', None]:
-                                        birth = pd.to_datetime(birth)
-                                        test = pd.to_datetime(test)                             ## add to correct dtypes for calculations
-                                        age = (test - birth) / np.timedelta64(1, 'Y')
-                                        df.loc[idx, 'age'] = np.round(age, 1)                  ## this gives decimals
-                                        #df.loc[idx, 'age'] = int(age)
-                                    #print(f'Processing tests {idx + 1} of {len(df)}')            ## print processed lines 
+                            # if 'birthdate' in df.columns.tolist():
+                            #     for idx, row in df.iterrows():
+                            #         birth = df.loc[idx, 'birthdate']
+                            #         test = df.loc[idx, 'date_testing']
+                            #         if birth not in [np.nan, '', None]:
+                            #             birth = pd.to_datetime(birth)
+                            #             test = pd.to_datetime(test)                             ## add to correct dtypes for calculations
+                            #             age = (test - birth) / np.timedelta64(1, 'Y')
+                            #             df.loc[idx, 'age'] = np.round(age, 1)                  ## this gives decimals
+                            #             #df.loc[idx, 'age'] = int(age)
+                            #         #print(f'Processing tests {idx + 1} of {len(df)}')            ## print processed lines 
 
-                                    ## Change the data type of the 'age' column to integer
-                                    df['age'] = pd.to_numeric(df['age'], downcast='integer',errors='coerce').fillna(-1).astype(int)
-                                    df['age'] = df['age'].apply(int)
+                            #         ## Change the data type of the 'age' column to integer
+                            #         df['age'] = pd.to_numeric(df['age'], downcast='integer',errors='coerce').fillna(-1).astype(int)
+                            #         df['age'] = df['age'].apply(int)
+
+                            # Replace BITHDATE null values (np.nan, None, '') with 1800-01-01
+                            df['birthdate'] = df['birthdate'].replace([np.nan, None, ''], '1700-01-01')
+                            # Replace DATE_TESTING null values (np.nan, None, '') with 2200-01-01
+                            df['date_testing'] = df['date_testing'].replace([np.nan, None, ''], '2300-01-01')
+
+                            # Calculate AGE from BIRTHDATE and DATE_TESTING
+                            df['age'] = (pd.to_datetime(df['date_testing']) - pd.to_datetime(df['birthdate'])) / np.timedelta64(1, 'Y')
+                            df['age'] = df['age'].apply(lambda x: np.round(x, 1)) # round to 1 decimal
+                            df['age'] = df['age'].apply(lambda x: int(x))
+                            # Remove AGE values < 0 and > 150
+                            df['age'] = df['age'].apply(lambda x: x if x >= 0 and x <= 150 else -1)
 
 
                             ## fix sex information
@@ -412,11 +427,17 @@ if __name__ == '__main__':
         'COVS_test_result',
         'ENTERO_test_result',
         'BAC_test_result'
-        ]
+    ]
 
     for col in dfT.columns.tolist():
         if col not in key_cols:
             dfT = dfT.drop(columns=[col])
+
+    # Include missing Columns
+    for col in key_cols:
+        if col not in dfT.columns.tolist():
+            print('Adding missing column: %s' % col)
+            dfT[col] = ''
 
     dfT = dfT[key_cols]
     # print(dfT.columns.tolist())
@@ -453,11 +474,6 @@ if __name__ == '__main__':
     #     load_table
     # end = time.time()
     # print("Execution time for load_table: ", end - start)
-
-    start = time.time()
-    load_table
-    end = time.time()
-    print("Execution time for load_table: ", end - start)
 
     ## output combined dataframe
     dfT.to_csv(output, sep='\t', index=False)
