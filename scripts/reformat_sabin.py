@@ -240,51 +240,43 @@ if __name__ == '__main__':
 
             ## starting reformatting process
 
-            pathogens = [
-                'SC2',
-                'FLUA',
-                'FLUB', 
-                'VSR', 
-                'META', 
-                'RINO',
-                'PARA', 
-                'ADENO', 
-                'BOCA', 
-                'COVS', 
-                'ENTERO', 
-                'BAC'
-            ]
+            PATHOGENS_PARAMETERS = {
+                'SC2': {'NALVO', 'PCRSALIV', 'COVIDECO', 'TMR19RES1', 'NALVOSSA',
+                        'NALVOCTL', 'RDRPALVOCTL', 'RDRPALVO', 'RDRPCI', 'NALVOCI',
+                        'NALVOCQ'},
+                'FLUA':{},
+                'FLUB':{},
+                'VSR':{},
+                'META':{},
+                'RINO':{},
+                'PARA':{'PARA1','PARA2','PARA3','PARA4'},
+                'ADENO':{},
+                'BOCA':{},
+                'COVS':{},
+                'ENTERO':{},
+                'BAC':{}
+            }
 
-            for p in pathogens:
-                if p != 'SC2':
-                    dfL[p + '_test_result'] = 'NT' # 'Not tested'
+            # python scripts/reformat_sabin.py --datadir data --rename data/rename_columns.xlsx --correction data/fix_values.xlsx --output combined_hla_test.tsv
 
+            for pathogen, parameter_list in PATHOGENS_PARAMETERS.items():
+                test_result = pathogen + '_test_result'
+                dfL[test_result] = dfL.apply(
+                    lambda x: 'NT' if x['Parametro'] not in parameter_list else x['Resultado'], 
+                    axis=1
+                )
             dfN = dfL
 
         else:
-            #print('\t\tFile = ' + file)
             print('\t\tWARNING! Unknown file format. Check for inconsistencies.')
-            #exit()
+        
         return dfN
-    # print("Done reformating")
 
     def rename_columns(id, df):
-        # print(df.columns.tolist())
-        # print(dict_rename[id])
         if id in dict_rename:
             df = df.rename(columns=dict_rename[id])
-            # print(df.columns.tolist())
         return df
-    # print("Done rename")
-
-    ## fix data points create dict from dict
-    def fix_data_points(id, col_name, value):
-        new_value = value
-        # print(value)
-        if value in dict_corrections[id][col_name]:
-            new_value = dict_corrections[id][col_name][value]
-            # print(str("test = ") + new_value)
-        return new_value
+    
     # print("Load dictionary for fix_values")
 
     ## open data files
@@ -310,8 +302,8 @@ if __name__ == '__main__':
                             df.insert(0, 'lab_id', id)
                             df = rename_columns(id, df)
                             dfT = dfT.reset_index(drop=True)
-                            df = df.reset_index(drop=True)
-
+                            df = df.reset_index(drop=True)  
+                            
                             print('\n# Fixing data points...')
                             dict_corrections_full = {**dict_corrections['SABIN'], **dict_corrections['any']}
                             df = df.replace(dict_corrections_full) 
