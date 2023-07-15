@@ -56,6 +56,7 @@ def load_table(file):
         
     return df
 
+
 def get_epiweeks(date):
     """Replace the date for its epidemiological week
 
@@ -75,6 +76,7 @@ def get_epiweeks(date):
         epiweek = ''
     return epiweek
 
+
 def generate_id(value):
     """Returns a hash for a given value
 
@@ -86,10 +88,10 @@ def generate_id(value):
     """ 
     return hashlib.sha1(str(value).encode('utf-8')).hexdigest()
 
-def deduplicate(dfL, dfN, id_columns, test_name='<TEST_NAME>'):
+
+def deduplicate(dfL, dfN, id_columns, cache_file, dfT, test_name='<TEST_NAME>'):
     """
     Remove duplicates from a dataframe based on a list of columns.
-    WARNING: This function uses Global Variables.
 
     Args:
         dfL (pandas DataFrame): Dataframe to be deduplicated
@@ -99,7 +101,9 @@ def deduplicate(dfL, dfN, id_columns, test_name='<TEST_NAME>'):
 
     Returns:
         tuple of DataFrames: Dataframe containing deduplicated data and dataframe containing previously processed data
-    """    
+    """
+
+    print('\n\t\t * Deduplicating %s data...' % test_name)
 
     ## generate sample id
     dfL['unique_id'] = dfL[id_columns].astype(str).sum(axis=1)  ## combine values in rows as a long string
@@ -125,6 +129,7 @@ def deduplicate(dfL, dfN, id_columns, test_name='<TEST_NAME>'):
         print('\n\t\t\t - Processing %s new samples (%s)...' % (str(new_samples), test_name))
 
     return dfL, dfN
+
 
 def fix_datatable(dfL,file=None):
     """
@@ -166,9 +171,7 @@ def fix_datatable(dfL,file=None):
     if 'OS' not in dfL.columns.tolist():
         print('\t\tWARNING! Unknown file format. Check for inconsistencies.')
         return dfN
-
-    test_name = "covid"
-
+    
     ## define columns dtypes to reduce the use of memory
     dfL["OS"] = dfL["OS"].astype('str')
     dfL["Código Posto"] = dfL["Código Posto"].astype('int16')
@@ -196,7 +199,8 @@ def fix_datatable(dfL,file=None):
             if x not in PARAMETERS_21_TESTS 
             else "test_21"
     )
-    
+
+    test_name = 'test_21' if 'test_21' in dfL['test_kit'].tolist() else 'covid'
     dfL.fillna('', inplace=True)
     
     id_columns = [
@@ -217,6 +221,7 @@ def fix_datatable(dfL,file=None):
     ## adding missing columns
     if 'DataNascimento' not in dfL.columns.tolist():
         dfL['birthdate'] = ''
+
     dfL['Ct_FluA'] = ''
     dfL['Ct_FluB'] = ''
     dfL['Ct_VSR'] = ''
@@ -228,7 +233,11 @@ def fix_datatable(dfL,file=None):
     dfL['geneS_detection'] = ''
 
     ## assign id and deduplicate
-    dfL, dfN = deduplicate(dfL, dfN, id_columns, test_name)
+    dfL, dfN = deduplicate(
+        dfL, dfN, id_columns, 
+        cache_file, dfT, 
+        test_name=test_name
+    )
 
     if dfL.empty:
         return dfN
@@ -260,6 +269,7 @@ def fix_datatable(dfL,file=None):
     
     dfN = dfL
     return dfN
+
 
 def rename_columns(dict_rename, df):
     """Rename columns based on a dictionary of rules.
@@ -296,6 +306,8 @@ if __name__ == '__main__':
 
     ## load cache file
     if cache_file not in [np.nan, '', None]:
+        print(f'\t\t - Loading cache file... {cache_file}')
+
         dfT = load_table(cache_file)
         dfT.fillna('', inplace=True)
     else:
