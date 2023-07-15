@@ -196,11 +196,16 @@ if __name__ == '__main__':
             dfL.insert(1, 'test_kit', '')
 
             # Test Kit Covid
-            dfL["test_kit"] = df["Parametro"].apply(lambda x: "covid_antigen" if x == "COVIDECO" else "covid_pcr") # separate by rows in column test_kit
-            
             # Test Kit 21 -> Painel Molecular
-            dfL["test_kit"] = dfL["test_kit"].apply(lambda x: "test_21" if x in PARAMETERS_21_TESTS else x)
-
+            dfL["test_kit"] = df["Parametro"].apply(
+                lambda x: 
+                    "covid_antigen" 
+                    if x == "COVIDECO" 
+                    else "covid_pcr" 
+                    if x not in PARAMETERS_21_TESTS 
+                    else "test_21"
+            ) # separate by rows in column test_kit
+            
             dfL.fillna('', inplace=True)
 
             id_columns = [
@@ -211,7 +216,7 @@ if __name__ == '__main__':
                 'Sexo',
                 'Descricao',
                 'Resultado',
-                ] 
+            ] 
 
             for column in id_columns:
                 if column not in dfL.columns.tolist():
@@ -256,8 +261,6 @@ if __name__ == '__main__':
                 'ENTERO':{},
                 'BAC':{}
             }
-
-            # python scripts/reformat_sabin.py --datadir data --rename data/rename_columns.xlsx --correction data/fix_values.xlsx --output combined_hla_test.tsv
 
             for pathogen, parameter_list in PATHOGENS_PARAMETERS.items():
                 test_result = pathogen + '_test_result'
