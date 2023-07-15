@@ -44,16 +44,6 @@ if __name__ == '__main__':
     cache_file = args.cache
     output = args.output
 
-## local run
-    # # path = "/Users/**/**/"
-    # path = "/Users/*/respat/"
-    # input_folder = path + 'data/'
-    # rename_file = input_folder + 'rename_columns.xlsx'
-    # correction_file = input_folder + 'fix_values.xlsx'
-    # cache_file = input_folder + 'combined_cache.tsv'
-    # output = input_folder + today + '_combined_sabin_test.tsv'
-
-
     def load_table(file):
         df = ''
         if str(file).split('.')[-1] == 'tsv':
@@ -80,14 +70,12 @@ if __name__ == '__main__':
         dfT.fillna('', inplace=True)
     else:
         dfT = pd.DataFrame()
-    # print("Done load cache")
 
     ## load renaming patterns
     dfR = load_table(rename_file)
     dfR.fillna('', inplace=True)
 
     dict_rename = {}
-    # dict_corrections = {}
     for idx, row in dfR.iterrows():
         id = dfR.loc[idx, 'lab_id']
         if id not in dict_rename:
@@ -96,14 +84,12 @@ if __name__ == '__main__':
         new_colname = dfR.loc[idx, 'new_name']
         rename_entry = {old_colname: new_colname}
         dict_rename[id].update(rename_entry)
-    # print("Done create dictionary corrections")
-
 
     ## load value corrections
     dfC = load_table(correction_file)
     dfC.fillna('', inplace=True)
     dfC = dfC[dfC['lab_id'].isin(["SABIN", "any"])] ##filter to correct data into fix_values SABIN
-    # print("Done load corrections")
+
 
     dict_corrections = {}
     all_ids = list(set(dfC['lab_id'].tolist()))
@@ -126,8 +112,6 @@ if __name__ == '__main__':
                     dict_corrections[id][colname] = {}
                 data_entry = {old_data: new_data}
                 dict_corrections[id][colname].update(data_entry)
-    # print("Load rename_columns")
-
 
     def generate_id(column_id):
         id = hashlib.sha1(str(column_id).encode('utf-8')).hexdigest()
@@ -164,19 +148,36 @@ if __name__ == '__main__':
 
 
     ## Fix datatables
-    print('\nFixing datatables...')
     def fix_datatable(dfL,file):
+        PARAMETERS_21_TESTS = {
+            'PARA1',
+            'PARA2',
+            'PARA3',
+            'PARA4',
+            'BORDETELLAP',
+            'VSINCICIAL',
+            'CPNEUMONIAE',
+            'ADEN',
+            'CORON',
+            'CORHKU',
+            'CORNL',
+            'CORC',
+            'HUMANMET',
+            'HUMANRH',
+            'INFLUEH',
+            'INFLUEN',
+            'INFLUENZ',
+            'INFLUEB',
+            'MYCOPAIN',
+            'PAINSARS',
+            'RSPAIN',
+        }
+
         dfN = dfL
-        # print(dfL.columns.tolist())
-        # print(''.join(dfL.columns.tolist()))
-        # if lab == 'SABIN':
         if 'OS' in dfL.columns.tolist(): # and '' in dfL['Codigo'].tolist(): #column with unique row data
             test_name = "covid"
 
-            # print('\t\tDados covid test antigen >> Correct format. Proceeding...')
-            
             ## define columns dtypes to reduce the use of memory
-            # print(dfL.dtypes)
             dfL["OS"] = dfL["OS"].astype('str')
             dfL["Código Posto"] = dfL["Código Posto"].astype('int16')
             dfL["Estado"] = dfL["Estado"].astype('str')
@@ -193,7 +194,13 @@ if __name__ == '__main__':
             ## add sample_id and test_kit
             dfL.insert(1, 'sample_id', '')
             dfL.insert(1, 'test_kit', '')
+
+            # Test Kit Covid
             dfL["test_kit"] = df["Parametro"].apply(lambda x: "covid_antigen" if x == "COVIDECO" else "covid_pcr") # separate by rows in column test_kit
+            
+            # Test Kit 21 -> Painel Molecular
+            dfL["test_kit"] = dfL["test_kit"].apply(lambda x: "test_21" if x in PARAMETERS_21_TESTS else x)
+
             dfL.fillna('', inplace=True)
 
             id_columns = [
@@ -301,43 +308,13 @@ if __name__ == '__main__':
                                 continue
 
                             df.insert(0, 'lab_id', id)
-                            df = rename_columns(id, df) ## fix data points
+                            df = rename_columns(id, df)
                             dfT = dfT.reset_index(drop=True)
                             df = df.reset_index(drop=True)
 
-                            # print(df.head(2)) ## only reformat
-                            # print(dfT.head(2)) ## all labs empty without cache
-
                             print('\n# Fixing data points...')
-                            # for lab_id, columns in dict_corrections.items():
-                            #     print('\t- Fixing data from: ' + lab_id)
-                            #     for column, values in columns.items():
-                            #         # print('\t- ' + column + ' (' + column + ' → ' + str(values) + ')')
-                            #         df[column] = df[column].apply(lambda x: fix_data_points(lab_id, column, x))
-                            #         #df[column] = df[column].replace(values, inplace=True) #vectorization fix_data_points?
-                            
                             dict_corrections_full = {**dict_corrections['SABIN'], **dict_corrections['any']}
                             df = df.replace(dict_corrections_full) 
-
-                            #print(df.head(2)) # only reformat
-                            #print(dfT.head(2)) # all labs empty without cache
-
-                            ## add age from birthdate, if age is missing
-                            # if 'birthdate' in df.columns.tolist():
-                            #     for idx, row in df.iterrows():
-                            #         birth = df.loc[idx, 'birthdate']
-                            #         test = df.loc[idx, 'date_testing']
-                            #         if birth not in [np.nan, '', None]:
-                            #             birth = pd.to_datetime(birth)
-                            #             test = pd.to_datetime(test)                             ## add to correct dtypes for calculations
-                            #             age = (test - birth) / np.timedelta64(1, 'Y')
-                            #             df.loc[idx, 'age'] = np.round(age, 1)                  ## this gives decimals
-                            #             #df.loc[idx, 'age'] = int(age)
-                            #         #print(f'Processing tests {idx + 1} of {len(df)}')            ## print processed lines 
-
-                            #         ## Change the data type of the 'age' column to integer
-                            #         df['age'] = pd.to_numeric(df['age'], downcast='integer',errors='coerce').fillna(-1).astype(int)
-                            #         df['age'] = df['age'].apply(int)
 
                             # Replace BITHDATE null values (np.nan, None, '') with 1800-01-01
                             df['birthdate'] = df['birthdate'].replace([np.nan, None, ''], '1700-01-01')
@@ -354,12 +331,7 @@ if __name__ == '__main__':
 
                             ## fix sex information
                             df['sex'] = df['sex'].apply(lambda x: x[0] if x != '' else x)
-
                             
-                            # checking duplicates if empty == no duplicates
-                            # print(df.columns[df.columns.duplicated(keep=False)])
-                            # print(dfT.columns[dfT.columns.duplicated(keep=False)])
-
                             frames = [dfT, df]
                             df2 = pd.concat(frames).reset_index(drop=True)
                             dfT = df2
@@ -389,10 +361,6 @@ if __name__ == '__main__':
 
     dfT['epiweek'] = dfT['date_testing'].apply(lambda x: get_epiweeks(x))
 
-    ## old place where add `age from birthdate, if age is missing`
-
-
-    ## reset index
     dfT = dfT.reset_index(drop=True)
     key_cols = [
         'lab_id',
@@ -433,15 +401,13 @@ if __name__ == '__main__':
         if col not in key_cols:
             dfT = dfT.drop(columns=[col])
 
-    # Include missing Columns
     for col in key_cols:
         if col not in dfT.columns.tolist():
             print('Adding missing column: %s' % col)
             dfT[col] = ''
 
     dfT = dfT[key_cols]
-    # print(dfT.columns.tolist())
-
+    
     def date2str(value):
         try:
             value = value.strftime('%Y-%m-%d')
