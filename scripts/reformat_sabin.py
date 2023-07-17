@@ -244,21 +244,47 @@ def fix_datatable(dfL,file=None):
 
 
     PATHOGENS_PARAMETERS = {
-        'SC2': {'NALVO', 'PCRSALIV', 'COVIDECO', 'TMR19RES1', 'NALVOSSA',
-                'NALVOCTL', 'RDRPALVOCTL', 'RDRPALVO', 'RDRPCI', 'NALVOCI',
-                'NALVOCQ'},
-        'FLUA':{},
-        'FLUB':{},
-        'VSR':{},
+        'SC2': {
+            # All the parameters from the COVID-exclusive SABIN file
+            'NALVO', 'PCRSALIV', 'COVIDECO', 'TMR19RES1', 'NALVOSSA',
+            'NALVOCTL', 'RDRPALVOCTL', 'RDRPALVO', 'RDRPCI', 'NALVOCI',
+            'NALVOCQ',
+            
+            'CORON', # CORONAVÍRUS 229E (?)
+        },
+        'FLUA':{
+            'INFLUEH', # INFLUENZA A (H3N2)
+            'INFLUEN', # INFLUENZA A (H1N1)
+            'INFLUENZ' # INFLUENZA A (H1N1 - 2009)
+        },
+        'FLUB':{
+            'INFLUEB' # INFLUENZA B
+        },
+        'VSR':{
+            'VSINCICIAL' # VÍRUS SINCICIAL RESPIRATÓRIO
+        },
         'META':{},
         'RINO':{},
         'PARA':{'PARA1','PARA2','PARA3','PARA4'},
-        'ADENO':{},
+        'ADENO':{
+            'ADEN', # ADENOVIRUS
+        },
         'BOCA':{},
         'COVS':{},
         'ENTERO':{},
         'BAC':{}
     }
+
+    'BORDETELLAP',
+    'CPNEUMONIAE',
+    'CORHKU',
+    'CORNL',
+    'CORC',
+    'HUMANMET',
+    'HUMANRH',
+    'MYCOPAIN',
+    'PAINSARS',
+    'RSPAIN',
 
     for pathogen, parameter_list in PATHOGENS_PARAMETERS.items():
         test_result = pathogen + '_test_result'
