@@ -250,7 +250,7 @@ def fix_datatable(dfL,file=None):
             'NALVOCTL', 'RDRPALVOCTL', 'RDRPALVO', 'RDRPCI', 'NALVOCI',
             'NALVOCQ',
             
-            'CORON', # CORONAVÍRUS 229E (?)
+            'PAINSARS', # SARS-COV2
         },
         'FLUA':{
             'INFLUEH', # INFLUENZA A (H3N2)
@@ -263,28 +263,34 @@ def fix_datatable(dfL,file=None):
         'VSR':{
             'VSINCICIAL' # VÍRUS SINCICIAL RESPIRATÓRIO
         },
-        'META':{},
-        'RINO':{},
-        'PARA':{'PARA1','PARA2','PARA3','PARA4'},
+        'META':{
+            'HUMANMET',  # METAPNEUMOVÍRUS HUMANO
+        },
+        'RINO':{
+            'HUMANRH',   # RHINOVÍRUS HUMANO
+        },
+        'PARA':{
+            'PARA1','PARA2','PARA3','PARA4'
+        },
         'ADENO':{
             'ADEN', # ADENOVIRUS
         },
+        'COVS':{
+            'CORON',       # CORONAVÍRUS 229E (?)
+            'CORHKU',      # CORONAVÍRUS HKU1
+            'CORNL',       # CORONAVÍRUS NL63
+            'CORC',        # CORONAVÍRUS OC43
+        },
+        'BAC':{
+            'CPNEUMONIAE', # CLAMYDOPHILA PNEUMONIA
+            'MYCOPAIN',    # MYCOPLASMA PNEUMONIAE
+            'BORDETELLAP', # BORDETELLA PERTUSSIS
+            'RSPAIN',      # BORDETELLA PARAPEERTUSSIS (IS1001)
+        },
         'BOCA':{},
-        'COVS':{},
         'ENTERO':{},
-        'BAC':{}
     }
-
-    'BORDETELLAP',
-    'CPNEUMONIAE',
-    'CORHKU',
-    'CORNL',
-    'CORC',
-    'HUMANMET',
-    'HUMANRH',
-    'MYCOPAIN',
-    'PAINSARS',
-    'RSPAIN',
+    
 
     for pathogen, parameter_list in PATHOGENS_PARAMETERS.items():
         test_result = pathogen + '_test_result'
