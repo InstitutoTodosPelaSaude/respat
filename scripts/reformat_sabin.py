@@ -45,8 +45,13 @@ def load_table(file):
         separator = ','
         df = pd.read_csv(file, encoding='utf-8', sep=separator, dtype='str')
     elif str(file).split('.')[-1] in ['xls', 'xlsx']:
-        df = pd.read_excel(file, index_col=None, header=0, sheet_name=0, dtype='str')
-        df.fillna('', inplace=True)
+        df_dict = pd.read_excel(file, index_col=None, header=0, sheet_name=None, dtype='str')
+        
+        df = pd.DataFrame()
+        for sheet in df_dict.keys():
+            df = df.append(df_dict[sheet].assign(ExcelSheet=sheet))
+
+        return df
     elif str(file).split('.')[-1] == 'parquet':
         df = pd.read_parquet(file, engine='auto')
         df.fillna('', inplace=True)
@@ -243,6 +248,15 @@ def fix_datatable(dfL,file=None):
         return dfN
 
 
+    # PCRESPSL
+    # 'PCRESPSL'
+    
+    # PCRVRESP
+    # 'PCRVRESP'
+
+    # RESPIRA
+    # 'RESPIRA', 'RESPIRA1', 'RESPIRA2', 'RESPIRA3','RESPIRA4'
+    
     PATHOGENS_PARAMETERS = {
         'SC2': {
             # All the parameters from the COVID-exclusive SABIN file
@@ -250,45 +264,109 @@ def fix_datatable(dfL,file=None):
             'NALVOCTL', 'RDRPALVOCTL', 'RDRPALVO', 'RDRPCI', 'NALVOCI',
             'NALVOCQ',
             
+            # PAINCOVI
             'PAINSARS', # SARS-COV2
+
+            # PCRESPSL & PCRVRESP
+            'GENES',       # SARS-COV2 # 
+            'GENERDRP',    # SARS-COV2 # ==> Juntos dão o resultado do teste
+            'GENEN'        # SARS-COV2 #
+            'PCRVRESPBM',  # SARS-COV2 # ==> Verificar se é o mesmo que o GENES+GENERDRP+GENEN
         },
         'FLUA':{
+            # PAINCOVI
             'INFLUEH', # INFLUENZA A (H3N2)
             'INFLUEN', # INFLUENZA A (H1N1)
-            'INFLUENZ' # INFLUENZA A (H1N1 - 2009)
+            'INFLUENZ', # INFLUENZA A (H1N1 - 2009)
+
+            # RESPIRA
+            'INFLUA','H1N1R', 'H1PDM09', 'H3'
+
+            # PCRESPSL & PCRVRESP 
+            'PCRVRESPBM2', # INFLUEZA A
         },
         'FLUB':{
-            'INFLUEB' # INFLUENZA B
+            # PAINCOVI
+            'INFLUEB', # INFLUENZA B
+
+            # RESPIRA
+            'INFLUB',
+
+            # PCRESPSL & PCRVRESP
+            'PCRVRESPBM3', # INFLUEZA B
         },
         'VSR':{
-            'VSINCICIAL' # VÍRUS SINCICIAL RESPIRATÓRIO
+            # PAINCOVI
+            'VSINCICIAL',
+
+            # RESPIRA
+            'RSVA', 'RSVB',
+
+            # PCRESPSL & PCRVRESP
+            'PCRVRESPBM4',
         },
         'META':{
+            # PAINCOVI
             'HUMANMET',  # METAPNEUMOVÍRUS HUMANO
+
+            # RESPIRA
+            'MPVR',
         },
         'RINO':{
+            # PAINCOVI
             'HUMANRH',   # RHINOVÍRUS HUMANO
+            
+            # RESPIRA
+            'HRV',
         },
         'PARA':{
-            'PARA1','PARA2','PARA3','PARA4'
+            # PAINCOVI
+            'PARA1','PARA2','PARA3','PARA4',
+
+            # RESPIRA   
+            'HPIV1', 'HPIV2', 'HPIV3', 'HPIV4' 
         },
         'ADENO':{
+            # PAINCOVI
             'ADEN', # ADENOVIRUS
+
+            # RESPIRA
+            'ADEV',
         },
         'COVS':{
+            # PAINCOVI
             'CORON',       # CORONAVÍRUS 229E (?)
             'CORHKU',      # CORONAVÍRUS HKU1
             'CORNL',       # CORONAVÍRUS NL63
             'CORC',        # CORONAVÍRUS OC43
+
+            # RESPIRA
+            'NL63', 'OC43', 'COR229E',
         },
         'BAC':{
+            # PAINCOVI
             'CPNEUMONIAE', # CLAMYDOPHILA PNEUMONIA
             'MYCOPAIN',    # MYCOPLASMA PNEUMONIAE
             'BORDETELLAP', # BORDETELLA PERTUSSIS
             'RSPAIN',      # BORDETELLA PARAPEERTUSSIS (IS1001)
+
+            # RESPIRA
+            'BPP',	# Bordetella parapertussis
+            'BP',	# Bordetella pertussis
+            'CP',	# Chlamydophila pneumoniae
+            'MP',	# Mycoplasma pneumoniae
+            'HI',	# Haemophilus influenza
+            'LP',	# Legionella pneumophila
+            'SP',	# Streptococcus pneumoniae
         },
-        'BOCA':{},
-        'ENTERO':{},
+        'BOCA':{
+            # RESPIRA
+            'HBOV',
+        },
+        'ENTERO':{
+            # RESPIRA
+            'HEVR'
+        },
     }
     
 
