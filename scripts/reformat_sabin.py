@@ -201,11 +201,10 @@ def fix_datatable(dfL,file=None):
             "covid_antigen" 
             if x == "COVIDECO" 
             else "covid_pcr" 
-            if x not in PARAMETERS_21_TESTS 
-            else "test_21"
+            # [WIP] - A DETERMINAR
     )
 
-    test_name = 'test_21' if 'test_21' in dfL['test_kit'].tolist() else 'covid'
+    # test_name = 'test_21' if 'test_21' in dfL['test_kit'].tolist() else 'covid'
     dfL.fillna('', inplace=True)
     
     id_columns = [
@@ -240,23 +239,33 @@ def fix_datatable(dfL,file=None):
     ## assign id and deduplicate
     dfL, dfN = deduplicate(
         dfL, dfN, id_columns, 
-        cache_file, dfT, 
-        test_name=test_name
+        cache_file, dfT
     )
 
     if dfL.empty:
         return dfN
 
+    # Removing unnecessary parameters
+    dfL = (
+        dfL
 
-    # PCRESPSL
-    # 'PCRESPSL'
-    
-    # PCRVRESP
-    # 'PCRVRESP'
+        # PCRESPSL
+        # Remove parameters 'PCRESPSL' and 'PCRVRESP'
+        .query("Parametro not in ('PCRESPSL', 'PCRVRESP')")
+        
+        # RESPIRA
+        # Remove parameters RESPIRA1, RESPIRA2, RESPIRA3, RESPIRA4
+        .query("Parametro not in ('RESPIRA1', 'RESPIRA2', 'RESPIRA3', 'RESPIRA4')")
+    )
 
-    # RESPIRA
-    # 'RESPIRA', 'RESPIRA1', 'RESPIRA2', 'RESPIRA3','RESPIRA4'
-    
+    # Fixing Result column on RESPIRA records
+    # Negative if Resultado == '0'
+    # Positive if Resultado has the name of the pathogen
+    dfL['Resultado'] = dfL['Resultado'].mask(
+        dfL['ExcelSheet'] == 'RESPIRA', 
+        dfL['Resultado'].apply(lambda x: 'Pos' if x != '0' else 'Neg') 
+    )
+
     PATHOGENS_PARAMETERS = {
         'SC2': {
             # All the parameters from the COVID-exclusive SABIN file
