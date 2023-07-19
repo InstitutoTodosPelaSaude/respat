@@ -406,6 +406,45 @@ def rename_columns(dict_rename, df):
     return df
 
 
+def aggregate_results(df, test_id_columns, test_result_columns):
+
+    # Thest results are either 'Pos', 'Neg', or 'NT'
+    # 'NT': test was not performed
+    # 'Pos': test was performed and the result was positive
+    # 'Neg': test was performed and the result was negative
+
+    # Aggregate the test results from a single test into a single row
+    # The result is 'Pos' if any of the tests was positive
+    # The result is 'Neg' if none of the tests was positive and at least one was negative
+    # The result is 'NT' if all of the tests were not performed
+
+    df_test_results = (
+        df
+        [test_id_columns + test_result_columns]
+        .copy()
+        .groupby(test_id_columns)
+        .agg(
+            {
+                test_result_column: lambda x: (
+                    'Pos' if 'Pos' in x.values 
+                    else 'Neg' if 'Neg' in x.values 
+                    else 'NT'
+                )
+                for test_result_column in test_result_columns
+            }
+        )
+    )
+
+    # Join the aggregated test results back with the original dataframe
+    df = (
+        df
+        .drop(columns=test_result_columns)
+        .merge(df_test_results, on=test_id_columns, how='left')
+    ) 
+
+    return df
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description="Performs diverse data processing tasks for specific SABIN lab cases. It seamlessly loads and combines data from multiple sources and formats into a unified dataframe. It applies renaming and correction rules to columns, generates unique identifiers, and eliminates duplicates based on prior data processing. Age information is derived from birth dates, and sex information is adjusted accordingly. The resulting dataframe is sorted by date and saved as a TSV file. Duplicate rows are also identified and saved separately for further analysis.",
@@ -511,13 +550,34 @@ if __name__ == '__main__':
                 df = rename_columns(dict_rename[id], df)
                 dfT = dfT.reset_index(drop=True)
                 df = df.reset_index(drop=True)  
-                
                 print('\n# Fixing data points...')
 
                 # Joining the generic corrections with the lab-specific ones
                 dict_corrections_full = {**dict_corrections['SABIN'], **dict_corrections['any']}
                 df = df.replace(dict_corrections_full) 
 
+                
+                df = aggregate_results(
+                    df, 
+                    [
+                        'test_id'
+                    ], 
+                    [
+                        'FLUB_test_result',
+                        'FLUA_test_result',
+                        'VSR_test_result',
+                        'SC2_test_result',
+                        'META_test_result',
+                        'RINO_test_result',
+                        'PARA_test_result',
+                        'ADENO_test_result',
+                        'BOCA_test_result',
+                        'COVS_test_result',
+                        'ENTERO_test_result',
+                        'BAC_test_result',
+                    ]
+                )
+                
 
                 # Calculate AGE from BIRTHDATE and DATE_TESTING
                 # Replacing null values with 1700-01-01 and 2300-01-01 to avoid errors
