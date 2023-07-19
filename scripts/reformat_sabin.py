@@ -253,9 +253,14 @@ def fix_datatable(dfL,file=None):
         # Remove parameters 'PCRESPSL' and 'PCRVRESP'
         .query("Parametro not in ('PCRESPSL', 'PCRVRESP')")
         
+        # PCRESPSL & PCRVRESP
+        # These parametes are summarized by the 'PCRVRESPBM' parameter
+        .query("Parametro not in ('GENES', 'GENERDRP', 'GENEN')")
+
         # RESPIRA
         # Remove parameters RESPIRA1, RESPIRA2, RESPIRA3, RESPIRA4
         .query("Parametro not in ('RESPIRA1', 'RESPIRA2', 'RESPIRA3', 'RESPIRA4')")
+
     )
 
     # Fixing Result column on RESPIRA records
@@ -277,10 +282,7 @@ def fix_datatable(dfL,file=None):
             'PAINSARS', # SARS-COV2
 
             # PCRESPSL & PCRVRESP
-            'GENES',       # SARS-COV2 # 
-            'GENERDRP',    # SARS-COV2 # ==> Juntos dão o resultado do teste
-            'GENEN'        # SARS-COV2 #
-            'PCRVRESPBM',  # SARS-COV2 # ==> Verificar se é o mesmo que o GENES+GENERDRP+GENEN
+            'PCRVRESPBM',  # SARS-COV2 # ==>  GENES+GENERDRP+GENEN
         },
         'FLUA':{
             # PAINCOVI
