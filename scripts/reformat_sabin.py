@@ -66,7 +66,7 @@ def load_table(file):
 
 
 def get_epiweeks(date):
-    """Replace the date for its epidemiological week
+    """Replace the date by its epidemiological week
 
     Args:
         date (datetime): date to be replaced
@@ -99,11 +99,11 @@ def generate_id(value):
 
 def fix_datatable(df):
     """
-    Fixes dataframe errors. Adds pathogen _test_result columns, test_kit columns, and deduplicates entries.
+    Fixes dataframe errors. 
+    Adds pathogen _test_result columns, test_kit column, and performs othe fixes.
 
     Args:
-        dfL (pandas dataframe): dataframe to be fixed
-        file (str, optional): file path. Defaults to None.
+        df (pandas dataframe): dataframe to be fixed
 
     Returns:
         pandas dataframe: fixed dataframe
@@ -345,16 +345,24 @@ def fix_datatable(df):
 
 
 def aggregate_results(df, test_id_columns, test_result_columns):
+    """
+    Aggregates the test results from a single test into a single row.
+    Using the specified test_id_columns as the grouping columns. 
+    
+    The test results in the test_result_columns should be either 'Pos', 'Neg', or 'NT'.
 
-    # Thest results are either 'Pos', 'Neg', or 'NT'
-    # 'NT': test was not performed
-    # 'Pos': test was performed and the result was positive
-    # 'Neg': test was performed and the result was negative
+    The final result is 'Pos' if any of the tests was positive.
+    'Neg' if none of the tests was positive and at least one was negative. 
+    'NT' if all of the tests were not performed.
 
-    # Aggregate the test results from a single test into a single row
-    # The result is 'Pos' if any of the tests was positive
-    # The result is 'Neg' if none of the tests was positive and at least one was negative
-    # The result is 'NT' if all of the tests were not performed
+    Args:
+        df (pandas DataFrame): dataframe to be fixed
+        test_id_columns (list of str): list of columns to be used as grouping columns
+        test_result_columns (list of str): list of columns to be aggregated
+
+    Returns:
+        pandas DataFrame: dataframe with aggregated results
+    """
 
     df_test_results = (
         df
