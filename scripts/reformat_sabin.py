@@ -183,21 +183,6 @@ def fix_datatable(df):
 
     # test_name = 'test_21' if 'test_21' in dfL['test_kit'].tolist() else 'covid'
     df.fillna('', inplace=True)
-    
-    id_columns = [
-        'OS',
-        'Estado',
-        'Municipio',
-        'DataAtendimento',
-        'Sexo',
-        'Descricao',
-        'Resultado',
-    ] 
-
-    for column in id_columns:
-        if column not in df.columns.tolist():
-            df[column] = ''
-            print('\t\t\t - No \'%s\' column found. Please check for inconsistencies. Meanwhile, an empty \'%s\' column was added.' % (column, column))
 
     ## adding missing columns
     if 'DataNascimento' not in df.columns.tolist():
@@ -213,9 +198,6 @@ def fix_datatable(df):
     df['Ct_ORF1ab'] = ''
     df['geneS_detection'] = ''
 
-    # Assigning test_id
-    df['unique_id'] = df[id_columns].astype(str).sum(axis=1)  ## combine values in rows as a long string
-    df['sample_id'] = df['unique_id'].apply(lambda x: generate_id(x)[:16])  ## generate alphanumeric sample id with 16 characters
 
     # Removing unnecessary parameters
     df = (
@@ -231,7 +213,7 @@ def fix_datatable(df):
 
         # RESPIRA
         # Remove parameters RESPIRA1, RESPIRA2, RESPIRA3, RESPIRA4
-        .query("Parametro not in ('RESPIRA1', 'RESPIRA2', 'RESPIRA3', 'RESPIRA4')")
+        .query("Parametro not in ('RESPIRA', 'RESPIRA1', 'RESPIRA2', 'RESPIRA3', 'RESPIRA4')")
 
     )
 
@@ -519,7 +501,11 @@ if __name__ == '__main__':
                 logger.info(f"Loaded {df.shape[0]} rows and {df.shape[1]} columns")
 
                 # Remove duplicates
-                df = df.drop_duplicates(subset=['OS', 'DataAtendimento', 'Parametro', 'Resultado'], keep='last')
+                df = df.drop_duplicates(
+                    subset=['OS', 'DataAtendimento', 'Parametro', 'Resultado'], 
+                    keep='last'
+                )
+
                 logger.info(f"Removed duplicates. New shape: {df.shape[0]} rows and {df.shape[1]} columns")
 
                 logger.info(f"Starting to fix DataFrame - {filename}")
@@ -547,10 +533,28 @@ if __name__ == '__main__':
                 logger.info(f"New shape: {df.shape[0]} rows and {df.shape[1]} columns")
                 logger.info(f"Starting to aggregate results - {filename}")
 
+                id_columns = [
+                    'test_id',
+                    'state',
+                    'location',
+                    'date_testing',
+                    'sex',
+                    'test_kit',
+                ]
+
+                for column in id_columns:
+                    if column not in df.columns.tolist():
+                        df[column] = ''
+                        logger.warning(f"No '{column}' column found. Please check for inconsistencies. Meanwhile, an empty '{column}' column was added.")
+
+                # Assigning test_id
+                df['unique_id'] = df[id_columns].astype(str).sum(axis=1)  ## combine values in rows as a long string
+                df['sample_id'] = df['unique_id'].apply(lambda x: generate_id(x)[:16])  ## generate alphanumeric sample id with 16 characters
+
                 df = aggregate_results(
                     df, 
                     [
-                        'test_id'
+                        'test_id', 'test_kit'
                     ], 
                     [
                         'FLUB_test_result',
