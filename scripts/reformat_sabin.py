@@ -245,7 +245,7 @@ def fix_datatable(df):
             'INFLUENZ', # INFLUENZA A (H1N1 - 2009)
 
             # RESPIRA
-            'INFLUA','H1N1R', 'H1PDM09', 'H3'
+            'INFLUA','H1N1R', 'H1PDM09', 'H3',
 
             # PCRESPSL & PCRVRESP 
             'PCRVRESPBM2', # INFLUEZA A
@@ -330,7 +330,7 @@ def fix_datatable(df):
         },
         'ENTERO':{
             # RESPIRA
-            'HEVR'
+            'HEVR',
         },
     }
 
