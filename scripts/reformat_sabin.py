@@ -203,6 +203,11 @@ def fix_datatable(df):
     df = (
         df
 
+        # SARS-COV2
+        # Remove parameters 'RDRPCI', 'NALVOCI', 'NALVOCQ', 'NALVOCTL', 'RDRPALVOCTL'
+        # These parameters are used in internal control
+        .query("Parametro not in ('RDRPCI', 'NALVOCI', 'NALVOCQ', 'NALVOCTL', 'RDRPALVOCTL')")
+
         # PCRESPSL
         # Remove parameters 'PCRESPSL' and 'PCRVRESP'
         .query("Parametro not in ('PCRESPSL', 'PCRVRESP')")
@@ -229,8 +234,7 @@ def fix_datatable(df):
         'SC2': {
             # All the parameters from the COVID-exclusive SABIN file
             'NALVO', 'PCRSALIV', 'COVIDECO', 'TMR19RES1', 'NALVOSSA',
-            'NALVOCTL', 'RDRPALVOCTL', 'RDRPALVO', 'RDRPCI', 'NALVOCI',
-            'NALVOCQ',
+            'RDRPALVO', 
             
             # PAINCOVI
             'PAINSARS', # SARS-COV2
