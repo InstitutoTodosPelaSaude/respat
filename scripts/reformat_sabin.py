@@ -24,8 +24,6 @@ pd.set_option('display.max_columns', 500)
 pd.options.mode.chained_assignment = None
 
 
-
-
 today = time.strftime('%Y-%m-%d', time.gmtime()) ## for snakefile
 
 def load_table(file):
@@ -514,7 +512,7 @@ if __name__ == '__main__':
 
                 # Remove duplicates
                 df = df.drop_duplicates(
-                    subset=['OS', 'DataAtendimento', 'Parametro', 'Resultado'], 
+                    subset=['OS', 'DataAtendimento', 'Parametro', 'Resultado', 'Descricao'], 
                     keep='last'
                 )
 
@@ -539,7 +537,7 @@ if __name__ == '__main__':
 
                 # Joining the generic corrections with the lab-specific ones
                 dict_corrections_full = {**dict_corrections['SABIN'], **dict_corrections['any']}
-                df = df.replace(dict_corrections_full) 
+                df = df.replace(dict_corrections_full)
 
                 logger.info(f"Finished fixing values - {filename}")
                 logger.info(f"New shape: {df.shape[0]} rows and {df.shape[1]} columns")
