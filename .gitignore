@@ -1,3 +1,10 @@
 
 .DS_Store
 *.json
+
+
+data/*/*.xls
+data/*/*.xlsx
+data/*/*.csv
+data/*/*.tsv
+data/*/*.parquet
