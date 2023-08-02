@@ -14,6 +14,7 @@ import argparse
 from epiweeks import Week
 
 import warnings
+import logging
 
 from collections import defaultdict
 
@@ -82,8 +83,255 @@ def load_table(file):
 
     return df
 
+def fix_datatable(df):
+    PATHOGENS = {
+        "FLUA": ["Influenza A"],
+        "FLUB": ["Influenza B"],
+        "VSR": ["Vírus Sincicial Respiratório"],
+        "SC2": ["COVID"],
+        "META": [],
+        "PARA": [],
+        "ADENO": [],
+        "COVS": [],
+        "RINO": [],
+        "ENTERO": [],
+        "BOCA": [],
+        "BAC": [],
+    }
+
+    # generate sample id
+    df.insert(1, "sample_id", "")
+    df.fillna("", inplace=True)
+
+    # dfN = dfL
+    dfN = (
+        pd.DataFrame()
+    )  # create empty dataframe, and populate it with reformatted data from original lab dataframe
+
+    #
+    # [WIP] Retrocompatibilidade com dados anteriores
+    #
+    # date_cols = ["DH_COLETA", "DT_COLETA"]
+    # date = "DT_LIBERACAO"
+    # for col in date_cols:
+    #     if col in df.columns.tolist():
+    #         date = col
+
+    # main_id_column = "NU_ACCESSION"
+    # if "NU_ACCESSION" not in df.columns.tolist():
+    #     main_id_column = "ACCESSION"
+
+    id_columns = ["ACCESSION", "EXAME", "DETALHE_EXAME", "IDADE", "SEXO", "DH_COLETA", "MUNICÍPIO", "ESTADO"]
+
+    for column in id_columns:
+        if column not in df.columns.tolist():
+            df[column] = ""
+            print(
+                "\t\t\t - No '%s' column found. Please check for inconsistencies. Meanwhile, an empty '%s' column was added."
+                % (column, column)
+            )
+
+    # assign id and deduplicate
+    df, dfN = deduplicate(df, dfN, id_columns)
+
+    if df.empty:
+        return dfN
+
+    df_pivot = (
+        df
+        .query("PATOGENO not in ('DENGUE', 'VARIOLA SIMIA')")
+        .assign(
+            DETALHE_EXAME=lambda df: df["DETALHE_EXAME"].fillna("S/ DETALHE"),
+        )
+        .assign(
+            RESULTADO=lambda df: df["RESULTADO"]
+            .str.lower()
+            .str.strip()
+            .map(
+                {
+                    "não detectado": "Neg",
+                    "detectado": "Pos",
+                }
+            )
+        )
+        .assign(
+            # DIVIDINDO INFLUENZA EM A E B
+            PATOGENO=lambda df: df.apply(
+                lambda row: "INFLUENZA B"
+                if "INFLUENZA B" in row["DETALHE_EXAME"]
+                else "INFLUENZA A"
+                if "INF A" in row["DETALHE_EXAME"] or "INFLUENZA" in row["DETALHE_EXAME"]
+                else row["PATOGENO"],
+                axis=1,
+            )
+        )
+        .pivot_table(
+            index=id_columns+["sample_id"],
+            columns="PATOGENO",
+            values="RESULTADO",
+            aggfunc="first",
+            fill_value="NT"
+        )
+        .reset_index()
+    )
+
+
+    # CREATE test_kit COLUMN
+    test_kit_dict = {
+        "PCR PAINEL DE PATOGENOS RESPIRATORIO":"painel_4",
+
+        "PAINEL MOLECULAR PARA PNEUMONIA":"painel_3",
+        "PCR MULTIPLEX ZIKA, DENGUE E CHIKUNG":"painel_3",
+        "PCR PARA INFLUENZA A/B E VRS":"painel_3",
+        "ZZPAINEL MOLECULAR PARA PNEUMONIA":"painel_3",
+
+        "PESQUISA RÁPIDA PARA INFLUENZA A E B":"painel_2",
+        "TESTE RÁPIDO PARA DENGUE IGM E NS1":"painel_2",
+        "SOROLOGIA PARA DENGUE":"painel_2",
+
+
+        'EXCLUSIVO EMPRESAS PCR COVID-19': 'covid_pcr',
+        'OPERAÇÃO AEROPORTO ANTÍGENO COVID-19': 'covid_antigen',
+        'OPERAÇÃO AEROPORTO PCR COVID-19': 'covid_pcr',
+        'PCR COVID19 EXPRESS': 'covid_pcr',
+        'PCR EM TEMPO REAL PARA DETECÇÃO DE C': 'covid_pcr',
+        'TESTE MOLECULAR COVID-19, AMPLIFICAÇ': 'covid_pcr',
+        'TESTE MOLECULAR COVID-19, AMPLIFICAÇÃO I': 'covid_pcr',
+        'TESTE RÁPIDO-ANTÍGENO COVID-19 (SARS': 'covid_antigen',
+        'TESTE RÁPIDO-ANTÍGENO COVID-19 (SARS COV': 'covid_antigen',
+        'TX PCR COVID19': 'covid_pcr',
+        'ZZOPERAÇÃO AEROPORTO ANTÍGENO COVID-19': 'covid_antigen',
+        'ZZOPERAÇÃO AEROPORTO PCR COVID-19': 'covid_pcr',
+        'ZZPCR PAINEL DE PATOGENOS RESPIRATORIO': 'covid_pcr',
+        'ZZTESTE MOLECULAR COVID-19, AMPLIFICAÇ': 'covid_pcr',
+        'ZZTESTE RÁPIDO-ANTÍGENO COVID-19 (SARS': 'covid_antigen',
+    }
+    # Otherways, assign test_1
+    test_kit_dict = defaultdict(lambda: "painel_1", test_kit_dict)
+
+    df_pivot = (
+        df_pivot
+        .assign(
+            test_kit=lambda df: 
+            df["EXAME"].map(test_kit_dict),
+        )
+        .drop(columns=["EXAME", "DETALHE_EXAME"])
+
+        # RENAME COLUMNS
+        .rename(
+            columns = {
+                "INFLUENZA A": "FLUA_test_result",
+                "INFLUENZA B": "FLUB_test_result",
+                "VIRUS SINCICIAL RESPIRATÓRIO": "VSR_test_result",
+                "COVID": "SC2_test_result",
+
+                "ACCESSION": "test_id",
+
+                "DH_COLETA": "date_testing",
+                "ESTADO":"state",
+                "MUNICÍPIO":"location",
+                "IDADE": "age",
+                "SEXO": "sex"
+            }
+        )
+    )
+    
+    # ADDING MISSING COLUMNS
+    # df["birthdate"] = ""
+    df_pivot["Ct_FluA"] = ""
+    df_pivot["Ct_FluB"] = ""
+    df_pivot["Ct_VSR"] = ""
+    df_pivot["Ct_RDRP"] = ""
+    df_pivot["Ct_geneE"] = ""
+    df_pivot["Ct_ORF1ab"] = ""
+    df_pivot["Ct_geneN"] = ""
+    df_pivot["Ct_geneS"] = ""
+    df_pivot["geneS_detection"] = ""
+
+    # adding missing pathogen columns
+    for pathogen in PATHOGENS.keys():
+        if pathogen+"_test_result" not in df_pivot.columns.tolist():
+            df_pivot[pathogen+"_test_result"] = "NT"
+
+    print(df_pivot.head())
+
+    dfN = dfN.append(df_pivot, ignore_index=True)
+
+    return dfN
+
+
+def aggregate_results(df, test_id_columns, test_result_columns, other_agg_rules={}, return_aggregated_df=False):
+    """
+    Aggregates the test results from a single test into a single row.
+    Using the specified test_id_columns as the grouping columns. 
+    
+    The test results in the test_result_columns should be either 'Pos', 'Neg', or 'NT'.
+
+    The final result is 'Pos' if any of the tests was positive.
+    'Neg' if none of the tests was positive and at least one was negative. 
+    'NT' if all of the tests were not performed.
+
+    Args:
+        df (pandas DataFrame): dataframe to be fixed
+        test_id_columns (list of str): list of columns to be used as grouping columns
+        test_result_columns (list of str): list of columns to be aggregated
+        other_agg_rules (dict): dictionary of other aggregation rules in the pandas format
+        return_aggregated_df (bool): whether to return the aggregated dataframe or to join the results back to the original dataframe
+
+    Returns:
+        pandas DataFrame: dataframe with aggregated results
+    """
+
+    df_test_results = (
+        df
+        [test_id_columns + test_result_columns + list(other_agg_rules.keys())]
+        .copy()
+        .groupby(test_id_columns)
+        .agg(
+            {
+                **{
+                    test_result_column: lambda x: (
+                        'Pos' if 'Pos' in x.values 
+                        else 'Neg' if 'Neg' in x.values 
+                        else 'NT'
+                    )
+                    for test_result_column in test_result_columns
+                },
+                **other_agg_rules
+            }
+        )
+        .reset_index()
+    )
+
+    if return_aggregated_df:
+        return df_test_results
+
+    # Join the aggregated test results back with the original dataframe
+    df = (
+        df
+        .drop(columns=test_result_columns)
+        .drop(columns=list(other_agg_rules.keys()))
+        .merge(df_test_results, on=test_id_columns, how='inner')
+    ) 
+
+    return df
+
+
 
 if __name__ == "__main__":
+    FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    formatter = logging.Formatter(FORMAT)
+
+    logger = logging.getLogger("EINSTEIN ETL")
+    # add handler to stdout
+    handler = logging.StreamHandler()
+    # Logger all levels
+    handler.setLevel(logging.DEBUG)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+
+
     parser = argparse.ArgumentParser(
         description="Performs diverse data processing tasks for specific HIAE cases. It seamlessly loads and combines data from multiple sources and formats into a unified dataframe. It applies renaming and correction rules to columns, generates unique identifiers, and eliminates duplicates based on prior data processing. Age information is derived from birth dates, and sex information is adjusted accordingly. The resulting dataframe is sorted by date and saved as a TSV file. Duplicate rows are also identified and saved separately for further analysis.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -119,6 +367,13 @@ if __name__ == "__main__":
     correction_file = args.correction
     cache_file = args.cache
     output = args.output
+
+    logger.info(f"Starting EINSTEIN ETL")
+    logger.info(f"Input folder: {input_folder}")
+    logger.info(f"Rename file: {rename_file}")
+    logger.info(f"Correction file: {correction_file}")
+    logger.info(f"Cache file: {cache_file}")
+    logger.info(f"Output file: {output}")
 
     # load cache file
     if cache_file not in [np.nan, "", None]:
@@ -214,168 +469,6 @@ if __name__ == "__main__":
             print("\n\t\t\t - Processing %s new samples..." % (str(new_samples)))
         return dfL, dfN
 
-    # Fix datatables
-    print("\nFixing datatables...")
-
-    def fix_datatable(df):
-        PATHOGENS = {
-            "FLUA": ["Influenza A"],
-            "FLUB": ["Influenza B"],
-            "VSR": ["Vírus Sincicial Respiratório"],
-            "SC2": ["COVID"],
-            "META": [],
-            "PARA": [],
-            "ADENO": [],
-            "COVS": [],
-            "RINO": [],
-            "ENTERO": [],
-            "BOCA": [],
-            "BAC": [],
-        }
-
-        # generate sample id
-        df.insert(1, "sample_id", "")
-        df.fillna("", inplace=True)
-
-        # dfN = dfL
-        dfN = (
-            pd.DataFrame()
-        )  # create empty dataframe, and populate it with reformatted data from original lab dataframe
-
-        #
-        # [WIP] Retrocompatibilidade com dados anteriores
-        #
-        # date_cols = ["DH_COLETA", "DT_COLETA"]
-        # date = "DT_LIBERACAO"
-        # for col in date_cols:
-        #     if col in df.columns.tolist():
-        #         date = col
-
-        # main_id_column = "NU_ACCESSION"
-        # if "NU_ACCESSION" not in df.columns.tolist():
-        #     main_id_column = "ACCESSION"
-
-        id_columns = ["ACCESSION", "EXAME", "DETALHE_EXAME", "IDADE", "SEXO", "DH_COLETA", "MUNICÍPIO", "ESTADO"]
-
-        for column in id_columns:
-            if column not in df.columns.tolist():
-                df[column] = ""
-                print(
-                    "\t\t\t - No '%s' column found. Please check for inconsistencies. Meanwhile, an empty '%s' column was added."
-                    % (column, column)
-                )
-
-        # assign id and deduplicate
-        df, dfN = deduplicate(df, dfN, id_columns)
-
-        if df.empty:
-            return dfN
-
-        df_pivot = (
-            df
-            .query("PATOGENO not in ('DENGUE', 'VARIOLA SIMIA')")
-            .assign(
-                DETALHE_EXAME=lambda df: df["DETALHE_EXAME"].fillna("S/ DETALHE"),
-            )
-            .assign(
-                RESULTADO=lambda df: df["RESULTADO"]
-                .str.lower()
-                .str.strip()
-                .map(
-                    {
-                        "não detectado": "Neg",
-                        "detectado": "Pos",
-                    }
-                )
-            )
-            .assign(
-                # DIVIDINDO INFLUENZA EM A E B
-                PATOGENO=lambda df: df.apply(
-                    lambda row: "INFLUENZA B"
-                    if "INFLUENZA B" in row["DETALHE_EXAME"]
-                    else "INFLUENZA A"
-                    if "INF A" in row["DETALHE_EXAME"] or "INFLUENZA" in row["DETALHE_EXAME"]
-                    else row["PATOGENO"],
-                    axis=1,
-                )
-            )
-            .pivot_table(
-                index=id_columns+["sample_id"],
-                columns="PATOGENO",
-                values="RESULTADO",
-                aggfunc="first",
-                fill_value="NT"
-            )
-            .reset_index()
-        )
-
-
-        # CREATE test_kit COLUMN
-        test_kit_dict = {
-            "PCR PAINEL DE PATOGENOS RESPIRATORIO":"test_4",
-
-            "PAINEL MOLECULAR PARA PNEUMONIA":"test_3",
-            "PCR MULTIPLEX ZIKA, DENGUE E CHIKUNG":"test_3",
-            "PCR PARA INFLUENZA A/B E VRS":"test_3",
-            "ZZPAINEL MOLECULAR PARA PNEUMONIA":"test_3",
-
-            "PESQUISA RÁPIDA PARA INFLUENZA A E B":"test_2",
-            "TESTE RÁPIDO PARA DENGUE IGM E NS1":"test_2",
-            "SOROLOGIA PARA DENGUE":"test_2",
-        }
-        # Otherways, assign test_1
-        test_kit_dict = defaultdict(lambda: "test_1", test_kit_dict)
-
-        df_pivot = (
-            df_pivot
-            .assign(
-                test_kit=lambda df: 
-                df["EXAME"].map(test_kit_dict),
-            )
-            .drop(columns=["EXAME", "DETALHE_EXAME"])
-
-            # RENAME COLUMNS
-            .rename(
-                columns = {
-                    "INFLUENZA A": "FLUA_test_result",
-                    "INFLUENZA B": "FLUB_test_result",
-                    "VIRUS SINCICIAL RESPIRATÓRIO": "VSR_test_result",
-                    "COVID": "SC2_test_result",
-
-                    "ACCESSION": "test_id",
-
-                    "DH_COLETA": "date_testing",
-                    "ESTADO":"state",
-                    "MUNICÍPIO":"location",
-                    "IDADE": "age",
-                    "SEXO": "sex"
-                }
-            )
-        )
-        
-        # ADDING MISSING COLUMNS
-        # df["birthdate"] = ""
-        df_pivot["Ct_FluA"] = ""
-        df_pivot["Ct_FluB"] = ""
-        df_pivot["Ct_VSR"] = ""
-        df_pivot["Ct_RDRP"] = ""
-        df_pivot["Ct_geneE"] = ""
-        df_pivot["Ct_ORF1ab"] = ""
-        df_pivot["Ct_geneN"] = ""
-        df_pivot["Ct_geneS"] = ""
-        df_pivot["geneS_detection"] = ""
-
-        # adding missing pathogen columns
-        for pathogen in PATHOGENS.keys():
-            if pathogen+"_test_result" not in df_pivot.columns.tolist():
-                df_pivot[pathogen+"_test_result"] = "NT"
-
-        print(df_pivot.head())
-
-        dfN = dfN.append(df_pivot, ignore_index=True)
-
-        return dfN
-
     def rename_columns(id, df):
         if id in dict_rename:
             df = df.rename(columns=dict_rename[id])
@@ -388,27 +481,74 @@ if __name__ == "__main__":
             sub_folder = sub_folder + "/"
 
             if not os.path.isdir(input_folder + sub_folder):
-                continue
-        
-            print("\n# Processing datatables from: " + id)
+                logger.error(f"Folder {input_folder + sub_folder} not found.")
+                break
+            
+            logger.info(f"Processing DataFrame from: {id}")
+
             for filename in sorted(os.listdir(input_folder + sub_folder)):
 
                 if not filename.endswith((".csv", ".tsv", ".xls", ".xlsx")):
                     continue
-
-                if filename[0] in ["~", "_"]:
+                if filename.startswith( ('~', '_') ):
                     continue
 
-                print("\n\t- File: " + filename)
+                logger.info(f"Loading data from: {input_folder + sub_folder + filename}")
+
                 df = load_table(input_folder + sub_folder + filename)
                 # df.fillna("", inplace=True)
                 df.reset_index(drop=True)
 
-                df = fix_datatable(df)  # reformat datatable
+                logger.info(f"Loaded {df.shape[0]} rows and {df.shape[1]} columns")
 
-                # [WIP] AGGREGATE RESULTS FROM MULTI PATHOGEN TESTS
+                # Remove duplicates
+                df = df.drop_duplicates(
+                    subset=["ACCESSION", "EXAME", 'DETALHE_EXAME'], 
+                    keep="last"
+                )
+
+                logger.info(f"Removed duplicates. New shape: {df.shape[0]} rows and {df.shape[1]} columns")
+
+                logger.info(f"Starting to fix DataFrame - {filename}")
+                df = fix_datatable(df)
+                logger.info(f"Finished fixing DataFrame - {filename}")
+                logger.info(f"New shape: {df.shape[0]} rows and {df.shape[1]} columns")
 
                 if df.empty:
+                    logger.warning(f"Empty DataFrame after fixing - {filename}. Check for inconsistencies.")
+                    continue
+
+                logger.info(f"Starting to aggregate results - {filename}")
+                df = aggregate_results(
+                    df, 
+                    [
+                        'test_id', 'test_kit'
+                    ], 
+                    [
+                        'FLUB_test_result',
+                        'FLUA_test_result',
+                        'VSR_test_result',
+                        'SC2_test_result',
+                        'META_test_result',
+                        'RINO_test_result',
+                        'PARA_test_result',
+                        'ADENO_test_result',
+                        'BOCA_test_result',
+                        'COVS_test_result',
+                        'ENTERO_test_result',
+                        'BAC_test_result',
+                    ],
+                    {
+                        col: 'max'
+                        for col in ['date_testing', 'age', 'sex', 'location', 'state', 'sample_id']
+                    },
+                    return_aggregated_df=True
+                )
+                logger.info(f"Finished aggregating results - {filename}")
+                logger.info(f"New shape: {df.shape[0]} rows and {df.shape[1]} columns")
+
+                if df.empty:
+                    logger.warning(f"Empty DataFrame after fixing - {filename}. Check for inconsistencies.")
                     continue
 
                 df.insert(0, "lab_id", id)
@@ -420,7 +560,8 @@ if __name__ == "__main__":
                 frames = [dfT, df]
                 df2 = pd.concat(frames).reset_index(drop=True)
                 dfT = df2
-                # dfT.to_csv(output, sep='\t', index=False)
+
+                logger.info(f"Finished processing file: {filename}")
 
     dfT = dfT.reset_index(drop=True)
     dfT.fillna("", inplace=True)
@@ -520,7 +661,7 @@ if __name__ == "__main__":
 
     for col in key_cols:
         if col not in dfT.columns.tolist():
-            print(f"Column {col} not found in the table. Adding it with empty values.")
+            logger.warning(f"Column {col} not found in the table. Adding it with empty values.")
             dfT[col] = ''
 
     # keep only key columns, and find null dates
@@ -542,10 +683,8 @@ if __name__ == "__main__":
         dfD = dfT[mask]
         output2 = input_folder + "duplicates.tsv"
         dfD.to_csv(output2, sep="\t", index=False)
-        print(
-            "\nWARNING!\nFile with %s duplicate entries saved in:\n%s"
-            % (str(duplicates), output2)
-        )
+
+        logger.warning(f"Found {duplicates} duplicate entries in the table. Please check the file {output2}.")
 
     # drop duplicates
     dfT = dfT.drop_duplicates(keep="last")
@@ -555,7 +694,6 @@ if __name__ == "__main__":
 
     # output combined dataframe
     dfT.to_csv(output, sep="\t", index=False)
-    print("\nData successfully aggregated and saved in:\n%s\n" % output)
-
+    logger.info(f"Data successfully aggregated and saved in: {output}")
 
 # python scripts/reformat_einstein.py --datadir data --rename data/rename_columns.xlsx --correction data/fix_values.xlsx --output combined_test_einstein.tsv
