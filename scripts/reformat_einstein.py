@@ -158,7 +158,7 @@ def fix_datatable(df):
             # DIVIDINDO INFLUENZA EM A E B
             PATOGENO=lambda df: df.apply(
                 lambda row: "INFLUENZA B"
-                if "INFLUENZA B" in row["DETALHE_EXAME"]
+                if (" B" in row["DETALHE_EXAME"] and "INFLU" in row["DETALHE_EXAME"])
                 else "INFLUENZA A"
                 if "INF A" in row["DETALHE_EXAME"] or "INFLUENZA" in row["DETALHE_EXAME"]
                 else row["PATOGENO"],
