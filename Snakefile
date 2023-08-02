@@ -65,7 +65,7 @@ rule arguments:
 		index_column = "division_exposure",
 
 		start_date = "2021-11-01",
-		end_date = "2023-06-24" ## update last epidemiological week here
+		end_date = "2023-07-29" ## update last epidemiological week here
 
 arguments = rules.arguments.params
 
@@ -906,6 +906,8 @@ rule copy_files:
 		"""
 	shell:
 		"""
+		cp results/combined.tsv data/combined_cache.tsv
+
 		cp results/demography/combined_matrix_agegroup.tsv figures/python/pyramid
 
 		cp results/country/combined_matrix_country_posneg_full_weeks.tsv figures/python/barplot
