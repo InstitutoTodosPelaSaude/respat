@@ -83,6 +83,7 @@ def load_table(file):
 
     return df
 
+
 def fix_datatable(df):
     PATHOGENS = {
         "FLUA": ["Influenza A"],
@@ -186,8 +187,8 @@ def fix_datatable(df):
         "ZZPAINEL MOLECULAR PARA PNEUMONIA":"painel_3",
 
         "PESQUISA RÁPIDA PARA INFLUENZA A E B":"painel_2",
-        "TESTE RÁPIDO PARA DENGUE IGM E NS1":"painel_2",
-        "SOROLOGIA PARA DENGUE":"painel_2",
+        "TESTE RÁPIDO PARA DENGUE IGM E NS1":"antibody",
+        "SOROLOGIA PARA DENGUE":"antibody",
 
 
         'EXCLUSIVO EMPRESAS PCR COVID-19': 'covid_pcr',
@@ -205,6 +206,7 @@ def fix_datatable(df):
         'ZZPCR PAINEL DE PATOGENOS RESPIRATORIO': 'covid_pcr',
         'ZZTESTE MOLECULAR COVID-19, AMPLIFICAÇ': 'covid_pcr',
         'ZZTESTE RÁPIDO-ANTÍGENO COVID-19 (SARS': 'covid_antigen',
+        'HMSC - TESTE MOLECULAR ISOTÉRMICO COVID-': 'covid_pcr',
     }
     # Otherways, assign test_1
     test_kit_dict = defaultdict(lambda: "painel_1", test_kit_dict)
@@ -315,7 +317,6 @@ def aggregate_results(df, test_id_columns, test_result_columns, other_agg_rules=
     ) 
 
     return df
-
 
 
 if __name__ == "__main__":
