@@ -8,3 +8,8 @@ data/*/*.xlsx
 data/*/*.csv
 data/*/*.tsv
 data/*/*.parquet
+
+results/*.tsv
+
+
+.snakemake

@@ -48,11 +48,18 @@ def load_table(file):
     elif str(file).split('.')[-1] in ['xls', 'xlsx']:
         df_dict = pd.read_excel(file, index_col=None, header=0, sheet_name=None, dtype='str')
         
-        df = pd.DataFrame()
+        dfs = []
         for sheet in df_dict.keys():
-            df = df.append(df_dict[sheet].assign(ExcelSheet=sheet))
+            if sheet.startswith("EXAMES"):
+                continue
 
-        return df
+            dfs.append(
+                df_dict[sheet]
+                .assign(ExcelSheet=sheet)
+            )
+
+        return pd.concat(dfs)
+    
     elif str(file).split('.')[-1] == 'parquet':
         df = pd.read_parquet(file, engine='auto')
         df.fillna('', inplace=True)
@@ -116,13 +123,13 @@ def fix_datatable(df):
     df["Código Posto"] = df["Código Posto"].astype('int16')
     df["Estado"] = df["Estado"].astype('str')
     df["Municipio"] = df["Municipio"].astype('str')
-    df["DataAtendimento"] = pd.to_datetime(df["DataAtendimento"])
-    df["DataNascimento"] = pd.to_datetime(df["DataNascimento"])
+    df["DataAtendimento"] = pd.to_datetime(df["DataAtendimento"], format='mixed')
+    df["DataNascimento"] = pd.to_datetime(df["DataNascimento"], format='mixed')
     df["Sexo"] = df["Sexo"].astype('str')
     df["Descricao"] = df["Descricao"].astype('str')
     df["Parametro"] = df["Parametro"].astype('str')
     df["Resultado"] = df["Resultado"].astype('str')
-    df["DataAssinatura"] = pd.to_datetime(df["DataAssinatura"])
+    df["DataAssinatura"] = pd.to_datetime(df["DataAssinatura"], format='mixed')
 
     ## add sample_id and test_kit
     df.insert(1, 'sample_id', '')
