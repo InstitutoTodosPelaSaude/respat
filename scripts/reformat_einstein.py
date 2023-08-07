@@ -61,17 +61,18 @@ def load_table(file):
     elif str(file).split(".")[-1] in ["xls", "xlsx"]:
         df_dict = pd.read_excel(file, index_col=None, header=0, sheet_name=None, dtype='str')
         
-        df = pd.DataFrame()
+        dfs = []
         for sheet in df_dict.keys():
             if sheet.startswith("EXAMES"):
                 continue
 
-            df = df.append(
+            dfs.append(
                 df_dict[sheet]
                 .assign(ExcelSheet=sheet)
             )
 
-        return df
+        return pd.concat(dfs)
+    
     elif str(file).split(".")[-1] == "parquet":
         df = pd.read_parquet(file, engine="auto")
         df.fillna("", inplace=True)
@@ -257,7 +258,8 @@ def fix_datatable(df):
 
     print(df_pivot.head())
 
-    dfN = dfN.append(df_pivot, ignore_index=True)
+    # dfN = dfN.append(df_pivot, ignore_index=True)
+    dfN = pd.concat([dfN, df_pivot])
 
     return dfN
 
@@ -587,7 +589,7 @@ if __name__ == "__main__":
 
     # reformat dates and convert to datetime format
     dfT["date_testing"] = pd.to_datetime(
-        dfT["date_testing"], dayfirst=True
+        dfT["date_testing"], dayfirst=True, format='mixed', errors='ignore'
     )  # , format='%Y-%m-%d', errors='ignore'
 
     # create epiweek column
