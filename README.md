@@ -28,7 +28,7 @@ Uma vez instalados `conda` e `mamba`, acesse o diretório `config`, e execute os
 
 ```bash
  mamba create -n diag
- mamba env update -n diag --file mon.yaml
+ mamba env update -n diag --file diag.yaml
  ```
 
 Por fim, ative o ambiente `diag`:
