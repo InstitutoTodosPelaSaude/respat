@@ -22,6 +22,22 @@ pd.options.mode.chained_assignment = None
 
 today = time.strftime('%Y-%m-%d', time.gmtime())
 
+def load_table(file, separator=None):
+    df = ''
+    if str(file).split('.')[-1] == 'tsv':
+        separator = '\t' if separator is None else separator
+        df = pd.read_csv(file, encoding='latin-1', sep=separator, dtype='str')
+    elif str(file).split('.')[-1] == 'csv':
+        separator = ',' if separator is None else separator
+        df = pd.read_csv(file, encoding='latin-1', sep=separator, dtype='str')
+    elif str(file).split('.')[-1] in ['xls', 'xlsx']:
+        df = pd.read_excel(file, index_col=None, header=0, sheet_name=0, dtype='str')
+        df.fillna('', inplace=True)
+    else:
+        print('Wrong file format. Compatible file formats: TSV, CSV, XLS, XLSX')
+        exit()
+    return df
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description="Performs diverse data processing tasks for specific Fleury lab cases. It seamlessly loads and combines data from multiple sources and formats into a unified dataframe. It applies renaming and correction rules to columns, generates unique identifiers, and eliminates duplicates based on prior data processing. Age information is derived from birth dates, and sex information is adjusted accordingly. The resulting dataframe is sorted by date and saved as a TSV file. Duplicate rows are also identified and saved separately for further analysis.",
@@ -48,22 +64,6 @@ if __name__ == '__main__':
     # correction_file = input_folder + 'fix_values.xlsx'
     # cache_file = '' # path + 'data/cache.tsv'#input_folder + '2022-08-02_combined_data_dasa.tsv'
     # output = input_folder + today + '_combined_data_fleury.tsv'
-
-    def load_table(file):
-        df = ''
-        if str(file).split('.')[-1] == 'tsv':
-            separator = '\t'
-            df = pd.read_csv(file, encoding='latin-1', sep=separator, dtype='str')
-        elif str(file).split('.')[-1] == 'csv':
-            separator = ','
-            df = pd.read_csv(file, encoding='latin-1', sep=separator, dtype='str')
-        elif str(file).split('.')[-1] in ['xls', 'xlsx']:
-            df = pd.read_excel(file, index_col=None, header=0, sheet_name=0, dtype='str')
-            df.fillna('', inplace=True)
-        else:
-            print('Wrong file format. Compatible file formats: TSV, CSV, XLS, XLSX')
-            exit()
-        return df
 
     # load cache file
     if cache_file not in [np.nan, '', None]:
@@ -343,26 +343,27 @@ if __name__ == '__main__':
                     for filename in sorted(os.listdir(input_folder + element)):
                         if filename.split('.')[-1] in ['tsv', 'csv', 'xls', 'xlsx'] and filename[0] not in ['~', '_']:
                             print('\n\t- File: ' + filename)
-                            df = load_table(input_folder + element + filename)
-                            df.fillna('', inplace=True)
-                            df.reset_index(drop=True)
+                            df = load_table(input_folder + element + filename, separator='\t')
+                            # df.fillna('', inplace=True)
+                            # df.reset_index(drop=True)
 
-                            df = fix_datatable(df, pathogens) # reformat datatable
+                            # df = fix_datatable(df, pathogens) # reformat datatable
 
-                            if df.empty:
-                                continue
+                            # if df.empty:
+                            #     continue
 
-                            df.insert(0, 'lab_id', id)
-                            df = rename_columns(id, df) # fix data points
+                            # df.insert(0, 'lab_id', id)
+                            # df = rename_columns(id, df) # fix data points
 
-                            dfT = dfT.reset_index(drop=True)
-                            df = df.reset_index(drop=True)
+                            # dfT = dfT.reset_index(drop=True)
+                            # df = df.reset_index(drop=True)
 
-                            frames = [dfT, df]
-                            df2 = pd.concat(frames).reset_index(drop=True)
-                            dfT = df2
+                            # frames = [dfT, df]
+                            # df2 = pd.concat(frames).reset_index(drop=True)
+                            # dfT = df2
                             # dfT.to_csv(output, sep='\t', index=False)
 
+    exit(0)
 
     dfT = dfT.reset_index(drop=True)
     dfT.fillna('', inplace=True)
