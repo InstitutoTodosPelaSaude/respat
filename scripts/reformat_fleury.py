@@ -99,11 +99,17 @@ def fix_datatable(df):
             "Vírus Influenza A (Sazonal)",
             "Vï¿½rus Influenza A (Sazonal)",
             "Vírus respiratórios - Influenzavirus A",
+
+            # Artificially added
+            "Influenza A",
         ],
         "FLUB": [
             "Covidflursvgx - Influenza B",
             "Virusmol, Influenza B",
             "Vírus respiratórios - Influenzavirus B",
+
+            # Artificially added
+            "Influenza B",
         ],
         "VSR": [
             "Covidflursvgx - Vírus Sincicial Respiratório",
@@ -258,13 +264,12 @@ def fix_datatable(df):
     df["RESULTADO"] = df["RESULTADO"].fillna("NT")
     df["RESULTADO"] = df["RESULTADO"].replace("P O S I T I V O", "POSITIVO")
     df["RESULTADO"] = df["RESULTADO"].str.strip()
-    df["RESULTADO"].unique()
 
     # Correção dos exames de INFLUENZA A e B
     # INFLUENZA A e B - Positivo, INFLUENZA A - Positivo, INFLUENZA B - Positivo
     df["RESULTADO"] = df.apply(
         lambda row: "POSITIVO"
-        if (row["RESULTADO"].startswith("INFLUENZA A e B"))
+        if (row["RESULTADO"].startswith("INFLUENZA A E B"))
         or (
             row["PATOGENO"] == "Influenza A"
             and row["RESULTADO"].startswith("INFLUENZA A")
@@ -273,6 +278,16 @@ def fix_datatable(df):
             row["PATOGENO"] == "Influenza B"
             and row["RESULTADO"].startswith("INFLUENZA B")
         )
+        else "NEGATIVO"
+        if (
+            row["PATOGENO"] == "Influenza A"
+            and row["RESULTADO"].startswith("INFLUENZA B")
+        )
+        or (
+            row["PATOGENO"] == "Influenza B"
+            and row["RESULTADO"].startswith("INFLUENZA A")
+        )
+
         else row["RESULTADO"],
         axis=1,
     )
