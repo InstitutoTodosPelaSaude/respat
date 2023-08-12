@@ -155,187 +155,243 @@ if __name__ == '__main__':
     # Fix datatables
     print('\nFixing datatables...')
 
-    pathogens = {'FLUA': ['Covidflursvgx - Influenza A', 'Virusmol, Influenza A', 'Virusmol, Influenza A/H1', 'Virusmol, Influenza A/H1-2009', 'Virusmol, Influenza A/H3', 'Vírus Influenza A (Sazonal)', 'Vï¿½rus Influenza A (Sazonal)', 'Vírus respiratórios - Influenzavirus A'],
-                 'FLUB': ['Covidflursvgx - Influenza B', 'Virusmol, Influenza B', 'Vírus respiratórios - Influenzavirus B'],
-                 'VSR': ['Covidflursvgx - Vírus Sincicial Respiratório', 'Covidflursvgx - Vï¿½rus Sincicial Respiratï¿½rio', 'Virusmol, Vírus Sincicial Respiratório', 'Virusmol, Vï¿½rus Sincicial Respiratï¿½rio', 'Vï¿½rus Sincial Respiratï¿½rio', 'Vírus Sincial Respiratório', 'Vírus respiratório - Sincicial', 'Vï¿½rus respiratï¿½rio - Sincicial', 'Vírus respiratórios - Vírus Sincicial Respira'],
-                 'SC2': ['Covid 19, Antígeno, teste rápido', 'Covid 19, Antï¿½geno, teste rï¿½pido', 'Covid 19, Detecção por PCR', 'Covid 19, Detecï¿½ï¿½o por PCR', 'Covidflursvgx - SARS-CoV-2', 'Virusmol, SARS-CoV-2'],
-                 'META': ['Virusmol, Metapneumovírus Humano', 'Virusmol, Metapneumovï¿½rus Humano'],
-                 'PARA': ['Virusmol, Parainfluenza 1', 'Virusmol, Parainfluenza 2', 'Virusmol, Parainfluenza 3', 'Virusmol, Parainfluenza 4', 'Vírus respiratórios - Parainfluenzavirus 1', 'Vírus respiratórios - Parainfluenzavirus 2', 'Vírus respiratórios - Parainfluenzavirus 3', 'Vírus respiratórios - Parainfluenzavirus 4'],
-                 'ADENO': ['Virusmol, Adenovírus', 'Virusmol, Adenovï¿½rus', 'Vírus respiratórios - Adenovírus'],
-                 'COVS': ['Virusmol, Coronavírus 229E', 'Virusmol, Coronavï¿½rus 229E', 'Virusmol, Coronavírus HKU1', 'Virusmol, Coronavï¿½rus HKU1', 'Virusmol, Coronavírus NL63', 'Virusmol, Coronavï¿½rus NL63', 'Virusmol, Coronavírus OC43', 'Virusmol, Coronavï¿½rus OC43'],
-                 'RINO': ['Virusmol, Rinovï¿½rus/Enterovï¿½rus', 'Virusmol, Rinovírus/Enterovírus'],
-                 'ENTERO': [],
-                 'BOCA': [],
-                 'BAC': ['Virusmol, Bordetella parapertussis', 'Virusmol, Bordetella pertussis', 'Virusmol, Chlamydophila pneumoniae', 'Virusmol, Mycoplasma pneumoniae']}
+    def aggregate_results(df, test_id_columns, test_result_columns):
+        """
+        Aggregates the test results from a single test into a single row.
+        Using the specified test_id_columns as the grouping columns.
 
-    def fix_datatable(dfL, pathogens):
+        The test results in the test_result_columns should be either 'Pos', 'Neg', or 'NT'.
+
+        The final result is 'Pos' if any of the tests was positive.
+        'Neg' if none of the tests was positive and at least one was negative.
+        'NT' if all of the tests were not performed.
+
+        Args:
+            df (pandas DataFrame): dataframe to be fixed
+            test_id_columns (list of str): list of columns to be used as grouping columns
+            test_result_columns (list of str): list of columns to be aggregated
+
+        Returns:
+            pandas DataFrame: dataframe with aggregated results
+        """
+
+        df_test_results = (
+            df[test_id_columns + test_result_columns]
+            .copy()
+
+            # Mapping the test results to 1, 0, -1
+            # and using the max to aggregate to improve performance
+            .assign(
+                **{
+                    test_result_column: df[test_result_column].map( {"Pos": 1, "Neg":0 , "NT": -1} )
+                    for test_result_column in test_result_columns
+                }
+            )
+            .groupby(test_id_columns)
+            .agg(
+                {
+                    # test_result_column: at_least_one_positive
+                    test_result_column: 'max'
+                    for test_result_column in test_result_columns
+                }
+            )
+
+        )
+
+        # Join the aggregated test results back with the original dataframe
+        df = df.drop(columns=test_result_columns).merge(
+            df_test_results, on=test_id_columns, how="inner"
+        )
+
+        # map back the test results
+        df = df.assign(
+            **{
+                test_result_column: df[test_result_column].map( {1: "Pos", 0: "Neg", -1: "NT"} )
+                for test_result_column in test_result_columns
+            }
+        )
+
+        return df
+
+    def fix_datatable(df):
         # ignore = ['Influenza A e B - teste rápido', 'Virusmol, Rinovírus/Enterovírus', '']
+        PATHOGEN_NORMALIZATION_DICT = {
+            'FLUA': ['Covidflursvgx - Influenza A', 'Virusmol, Influenza A', 'Virusmol, Influenza A/H1', 'Virusmol, Influenza A/H1-2009', 'Virusmol, Influenza A/H3', 'Vírus Influenza A (Sazonal)', 'Vï¿½rus Influenza A (Sazonal)', 'Vírus respiratórios - Influenzavirus A'],
+            'FLUB': ['Covidflursvgx - Influenza B', 'Virusmol, Influenza B', 'Vírus respiratórios - Influenzavirus B'],
+            'VSR': ['Covidflursvgx - Vírus Sincicial Respiratório', 'Covidflursvgx - Vï¿½rus Sincicial Respiratï¿½rio', 'Virusmol, Vírus Sincicial Respiratório', 'Virusmol, Vï¿½rus Sincicial Respiratï¿½rio', 'Vï¿½rus Sincial Respiratï¿½rio', 'Vírus Sincial Respiratório', 'Vírus respiratório - Sincicial', 'Vï¿½rus respiratï¿½rio - Sincicial', 'Vírus respiratórios - Vírus Sincicial Respira'],
+            'SC2': ['Covid 19, Antígeno, teste rápido', 'Covid 19, Antï¿½geno, teste rï¿½pido', 'Covid 19, Detecção por PCR', 'Covid 19, Detecï¿½ï¿½o por PCR', 'Covidflursvgx - SARS-CoV-2', 'Virusmol, SARS-CoV-2'],
+            'META': ['Virusmol, Metapneumovírus Humano', 'Virusmol, Metapneumovï¿½rus Humano'],
+            'PARA': ['Virusmol, Parainfluenza 1', 'Virusmol, Parainfluenza 2', 'Virusmol, Parainfluenza 3', 'Virusmol, Parainfluenza 4', 'Vírus respiratórios - Parainfluenzavirus 1', 'Vírus respiratórios - Parainfluenzavirus 2', 'Vírus respiratórios - Parainfluenzavirus 3', 'Vírus respiratórios - Parainfluenzavirus 4'],
+            'ADENO': ['Virusmol, Adenovírus', 'Virusmol, Adenovï¿½rus', 'Vírus respiratórios - Adenovírus'],
+            'COVS': ['Virusmol, Coronavírus 229E', 'Virusmol, Coronavï¿½rus 229E', 'Virusmol, Coronavírus HKU1', 'Virusmol, Coronavï¿½rus HKU1', 'Virusmol, Coronavírus NL63', 'Virusmol, Coronavï¿½rus NL63', 'Virusmol, Coronavírus OC43', 'Virusmol, Coronavï¿½rus OC43'],
+            'RINO': ['Virusmol, Rinovï¿½rus/Enterovï¿½rus', 'Virusmol, Rinovírus/Enterovírus'],
+            'ENTERO': [],
+            'BOCA': [],
+            'BAC': ['Virusmol, Bordetella parapertussis', 'Virusmol, Bordetella pertussis', 'Virusmol, Chlamydophila pneumoniae', 'Virusmol, Mycoplasma pneumoniae']
+        }
+
+        df = (
+            df
+            .dropna(subset=["CODIGO REQUISICAO", "DATA COLETA", "IDADE"])
+            .reset_index(drop=True)
+        )
 
         # remove useless lines from panel tests AGRESPVIR
-        ignore = ['Vï¿½rus respiratï¿½rios - detecï¿½ï¿½o', 'INCONCLUSIVO', '']
-        dfL = dfL[~dfL['PATOGENO'].isin(ignore)]
-        dfL = dfL[~dfL['RESULTADO'].isin(ignore)]
+        ignore = {'Vï¿½rus respiratï¿½rios - detecï¿½ï¿½o', 'INCONCLUSIVO', ''}
+        df = df[~df['PATOGENO'].isin(ignore)]
+        df = df[~df['RESULTADO'].isin(ignore)]
 
         # generate sample id
-        dfL.insert(1, 'sample_id', '')
-        dfL.fillna('', inplace=True)
+        df.insert(1, 'sample_id', '')
+        # df.fillna('', inplace=True)
 
         # dfN = dfL
         dfN = pd.DataFrame()  # create empty dataframe, and populate it with reformatted data from original lab dataframe
         id_columns = ['CODIGO REQUISICAO', 'PACIENTE', 'IDADE', 'SEXO', 'DATA COLETA', 'MUNICIPIO', 'ESTADO']
 
         for column in id_columns:
-            if column not in dfL.columns.tolist():
-                dfL[column] = ''
+            if column not in df.columns.tolist():
+                df[column] = ''
                 print(
                     '\t\t\t - No \'%s\' column found. Please check for inconsistencies. Meanwhile, an empty \'%s\' column was added.' % (column, column))
 
         # missing columns
         # adding missing columns
-        dfL['birthdate'] = ''
-        dfL['Ct_FluA'] = ''
-        dfL['Ct_FluB'] = ''
-        dfL['Ct_VSR'] = ''
-        dfL['Ct_RDRP'] = ''
-        dfL['Ct_geneE'] = ''
-        dfL['Ct_ORF1ab'] = ''
-        dfL['Ct_geneN'] = ''
-        dfL['Ct_geneS'] = ''
-        dfL['geneS_detection'] = ''
+        df['birthdate'] = ''
+        df['Ct_FluA'] = ''
+        df['Ct_FluB'] = ''
+        df['Ct_VSR'] = ''
+        df['Ct_RDRP'] = ''
+        df['Ct_geneE'] = ''
+        df['Ct_ORF1ab'] = ''
+        df['Ct_geneN'] = ''
+        df['Ct_geneS'] = ''
+        df['geneS_detection'] = ''
 
         # assign id and deduplicate
-        dfL, dfN = deduplicate(dfL, dfN, id_columns)
+        df, dfN = deduplicate(df, dfN, id_columns)
 
-        if dfL.empty:
+        if df.empty:
             return dfN
 
-        # starting lab specific reformatting
 
-        alltypes = [] # DELETE!!!!
-        positives = ['DETECTADO (POSITIVO)', 'Influenza A - POSITIVO', 'Influenza B - POSITIVO', 'P O S I T I V O', 'POSITIVO'] # many ways to report positive results
+        # Fixing AGE column
+        # Examples: NaN, None, 3A2M, 1M2D
 
-        for i, (code, dfR) in enumerate(dfL.groupby('CODIGO REQUISICAO')):
-            data = {} # one data row for each request
-            target_pathogen = {}
-            for p, t in pathogens.items(): # set all tests as 'NT' first, to than changed it to Pos or Neg as appropriate
-                data[p + '_test_result'] = 'NT'
-                for g in t:
-                    target_pathogen[g] = p
+        fix_age_fleury = (
+            lambda age: -1
+            if age in (None, np.nan)
+            else int(age.split("A")[0])
+            if "A" in age
+            else 0
+            if "D" in age
+            else 0
+        )
 
-            exam = list(set(dfR['EXAME'].tolist()))[0] # exam name
-            if exam not in alltypes:
-                alltypes.append(exam)
+        df = df.assign( 
+            IDADE = df['IDADE'].apply(fix_age_fleury)
+        )
 
-            # iterate over different test types
-            if exam in ['2019NCOV', 'AGCOVIDNS', 'COVID19GX', 'COVID19POCT', 'COVID19SALI','INFLUENZAPCR', 'AGSINCURG', 'VRSAG']: # single tests
-                single_tests = {'2019NCOV': 'covid_pcr', 'AGCOVIDNS': 'covid_antigen', 'COVID19POCT': 'covid_pcr',
-                                'COVID19SALI': 'covid_pcr', 'COVID19GX': 'covid_pcr', 'INFLUENZAPCR': 'flu_pcr',
-                                'AGSINCURG': 'vsr_antigen', 'VRSAG': 'vsr_antigen'}
+        # Fixing Gender information
+        df['SEXO'] = df['SEXO'].apply(lambda x: x[0] if x != '' else x)
 
-                dfR.insert(1, 'test_kit', single_tests[exam])
-                dfR['pathogen'] = dfR['PATOGENO'].apply(lambda x: target_pathogen[x])
-                pathogen = list(set(dfR['pathogen'].tolist()))[0]
+        # Handling Influenza A e B - teste rápido
+        # Breaking into two rows
+        df = (
+            df
+            .assign(
+                PATOGENO=df["PATOGENO"].mask(
+                    df["PATOGENO"].fillna("").str.startswith("Influenza A e B"),
+                    "Influenza A;Influenza B",
+                )
+            )
+            .assign(PATOGENO=lambda df: df["PATOGENO"].str.split(";"))
+            .explode("PATOGENO")
+        )
 
-                # assign test result
-                test_result = list(set(dfR['RESULTADO'].tolist()))[0]
-                if test_result in positives:
-                    result = 'Pos'
-                    data[pathogen + '_test_result'] = result
-                else: # target not detected
-                    result = 'Neg'
-                    data[pathogen + '_test_result'] = result
+        # Fixing result column
+        # UPPERCASE
+        df['RESULTADO'] = df['RESULTADO'].str.upper()
+        df['RESULTADO'] = df['RESULTADO'].fillna('NT')
+        df['RESULTADO'] = df['RESULTADO'].replace('P O S I T I V O', 'POSITIVO')
+        df['RESULTADO'] = df['RESULTADO'].str.strip()
+        df['RESULTADO'].unique()
 
+        # Correção dos exames de INFLUENZA A e B
+        # INFLUENZA A e B - Positivo, INFLUENZA A - Positivo, INFLUENZA B - Positivo
+        df['RESULTADO'] = df.apply(
+            lambda row: 'POSITIVO' if
+                (
+                    row['RESULTADO'].startswith('INFLUENZA A e B') 
+                ) or
+                (
+                    row['PATOGENO'] == 'Influenza A' and row['RESULTADO'].startswith('INFLUENZA A')
+                ) or
+                (
+                    row['PATOGENO'] == 'Influenza B' and row['RESULTADO'].startswith('INFLUENZA B')
+                )
+                else row['RESULTADO']
+            , axis=1
+        )
 
-            elif exam in ['AGINFLU']: # Influenza viral panel
-                dfR.insert(1, 'test_kit', 'flu_antigen')
-                dfR = pd.concat([dfR]*2)
-                dfR = dfR.reset_index(drop=True)
-                dfR.loc[0, 'PATOGENO'] = 'FLUA'
-                dfR.loc[1, 'PATOGENO'] = 'FLUB'
-                dfR = dfR.rename(columns={'PATOGENO': 'pathogen'})
-
-                if 'Influenza A e B - POSITIVO' in list(set(dfR['RESULTADO'].tolist())): # both are positive
-                    dfR.loc[0, 'RESULTADO'] = 'Influenza A - POSITIVO'
-                    dfR.loc[1, 'RESULTADO'] = 'Influenza B - POSITIVO'
-                elif 'Influenza A - POSITIVO' in list(set(dfR['RESULTADO'].tolist())): # A positive, B negative
-                    dfR.loc[0, 'RESULTADO'] = 'Influenza A - POSITIVO'
-                    dfR.loc[1, 'RESULTADO'] = 'NEGATIVO'
-                elif 'Influenza B - POSITIVO' in list(set(dfR['RESULTADO'].tolist())): # B positive, A negative
-                    dfR.loc[0, 'RESULTADO'] = 'NEGATIVO'
-                    dfR.loc[1, 'RESULTADO'] = 'Influenza B - POSITIVO'
-
-                # assign test result
-                for pathogen, dfG in dfR.groupby('pathogen'):
-                    test_result = list(set(dfG['RESULTADO'].tolist()))[0]
-
-                    if test_result in positives:
-                        result = 'Pos'
-                        data[pathogen + '_test_result'] = result
-                    else:  # target not detected
-                        result = 'Neg'
-                        data[pathogen + '_test_result'] = result
+        df['RESULTADO'] = df['RESULTADO'].apply(
+            lambda x: 'Neg' if 'NEGATIVO' in x else 'Pos' if 'POSITIVO' in x else 'NT'
+        )
 
 
-            elif exam in ['COVIDFLURSVGX']: # viral panel with 4 targets
-                dfR.insert(1, 'test_kit', 'test_4')
-                dfR['pathogen'] = dfR['PATOGENO'].apply(lambda x: target_pathogen[x])
+        # Creating result column for each pathogen
+        for pathogen, parameter_list in PATHOGEN_NORMALIZATION_DICT.items():
+            test_result = pathogen + "_test_result"
 
-                for pathogen, dfG in dfR.groupby('pathogen'):
-                    test_result = list(set(dfG['RESULTADO'].tolist()))[0]
-
-                    if test_result in positives:
-                        result = 'Pos'
-                        data[pathogen + '_test_result'] = result
-                    else:  # target not detected
-                        result = 'Neg'
-                        data[pathogen + '_test_result'] = result
+            df[test_result] = df["RESULTADO"].where(
+                df["PATOGENO"].isin(parameter_list), "NT"
+            )
 
 
-            elif exam in ['AGRESPVIR']:  # viral panel with 7 targets
-                pass # this block still needs to be developed
+        # Creating test_kit column
+        EXAMS_COVID_PCR = {
+            "2019NCOV",
+            "COVID19GX",
+            "COVID19SALI",
+            "COVID19POCT",
+            "2019NCOV",
+            "COVID19GX",
+            "COVID19SALI",
+        }
+        EXAMS_COVID_ANTIGEN = {"AGCOVIDNS"}
+        EXAMS_VSR_ANTIGEN = {"AGSINCURG", "VRSAG"}
+        EXAMS_FLU_ANTIGEN = {"AGINFLU"}
+        EXAMS_FLU_PCR = {"INFLUENZAPCR"}
+        EXAMS_TEST_4 = {"COVIDFLURSVGX"}
+        EXAMS_TEST_21 = {"VIRUSMOL"}
 
+        df["test_kit"] = df["EXAME"].apply(
+            lambda x: 
+            "flu_antigen"
+            if x in EXAMS_FLU_ANTIGEN
+            else "vsr_antigen"
+            if x in EXAMS_VSR_ANTIGEN
+            else "flu_pcr"
+            if x in EXAMS_FLU_PCR
+            else "test_4"
+            if x in EXAMS_TEST_4
+            else "test_21"
+            if x in EXAMS_TEST_21
+            else "covid_pcr"
+            if x in EXAMS_COVID_PCR
+            else "covid_antigen"
+            if x in EXAMS_COVID_ANTIGEN
+            else "unknown"
+        )
 
-            elif exam in ['VIRUSMOL']:  # panel 20 pathogens
-                dfR.insert(1, 'test_kit', 'test_21')
-                dfR['pathogen'] = dfR['PATOGENO'].apply(lambda x: target_pathogen[x])
-
-                # assign test result
-                for pathogen, dfG in dfR.groupby('pathogen'):
-                    test_results = dfG['RESULTADO'].tolist()
-
-                    positive = ''
-                    for res in test_results:
-                        if positive == '':
-                            if res in positives:
-                                result = 'Pos'
-                                data[pathogen + '_test_result'] = result
-                                positive = 'yes'
-                            else:  # target not detected
-                                result = 'Neg'
-                                data[pathogen + '_test_result'] = result
-            else:
-                pass
-
-            # add remaining columns into data dict
-            unique_cols = list(set(dfR.columns.tolist()))
-
-            for col in unique_cols:
-                data[col] = dfR[col].tolist()[0]
-
-            dfN = dfN.append(data, ignore_index=True)
+        df = df.drop(columns=['PATOGENO', 'EXAME', 'RESULTADO'])
 
         return dfN
-
-
-    def rename_columns(id, df):
-        if id in dict_rename:
-            df = df.rename(columns=dict_rename[id])
-        return df
 
     # open data files
     for element in os.listdir(input_folder):
         if not element.startswith('_'):
-            if element == 'FLEURY': # check if folder is the correct one
+            if element == 'FLEURY':
                 id = element
                 element = element + '/'
                 if os.path.isdir(input_folder + element) == True:
@@ -344,44 +400,46 @@ if __name__ == '__main__':
                         if filename.split('.')[-1] in ['tsv', 'csv', 'xls', 'xlsx'] and filename[0] not in ['~', '_']:
                             print('\n\t- File: ' + filename)
                             df = load_table(input_folder + element + filename, separator='\t')
-                            # df.fillna('', inplace=True)
-                            # df.reset_index(drop=True)
 
-                            # df = fix_datatable(df, pathogens) # reformat datatable
+                            df = fix_datatable(df)
+                            if df.empty:
+                                continue
 
-                            # if df.empty:
-                            #     continue
+                            df.insert(0, 'lab_id', id)
+                            df = df.rename(columns=dict_rename)
 
-                            # df.insert(0, 'lab_id', id)
-                            # df = rename_columns(id, df) # fix data points
+                            df = aggregate_results(
+                                df, 
+                                [
+                                    'test_id', 'test_kit'
+                                ], 
+                                [
+                                    'FLUB_test_result',
+                                    'FLUA_test_result',
+                                    'VSR_test_result',
+                                    'SC2_test_result',
+                                    'META_test_result',
+                                    'RINO_test_result',
+                                    'PARA_test_result',
+                                    'ADENO_test_result',
+                                    'BOCA_test_result',
+                                    'COVS_test_result',
+                                    'ENTERO_test_result',
+                                    'BAC_test_result',
+                                ]
+                            )
 
-                            # dfT = dfT.reset_index(drop=True)
-                            # df = df.reset_index(drop=True)
+                            dfT = dfT.reset_index(drop=True)
+                            df = df.reset_index(drop=True)
 
-                            # frames = [dfT, df]
-                            # df2 = pd.concat(frames).reset_index(drop=True)
-                            # dfT = df2
+                            frames = [dfT, df]
+                            df2 = pd.concat(frames).reset_index(drop=True)
+                            dfT = df2
+
                             # dfT.to_csv(output, sep='\t', index=False)
-
-    exit(0)
 
     dfT = dfT.reset_index(drop=True)
     dfT.fillna('', inplace=True)
-
-    # fix data points
-    def fix_data_points(id, col_name, value):
-        new_value = value
-        if value in dict_corrections[id][col_name]:
-            new_value = dict_corrections[id][col_name][value]
-        return new_value
-
-    # print(dfT.head())
-    print('\n# Fixing data points...')
-    for lab_id, columns in dict_corrections.items():
-        print('\t- Fixing data from: ' + lab_id)
-        for column, values in columns.items():
-            # print('\t- ' + column + ' (' + column + ' → ' + str(values) + ')')
-            dfT[column] = dfT[column].apply(lambda x: fix_data_points(lab_id, column, x))
 
     # reformat dates and convert to datetime format
     dfT['date_testing'] = pd.to_datetime(dfT['date_testing'], dayfirst=True) # , format='%Y-%m-%d', errors='ignore'
@@ -410,14 +468,6 @@ if __name__ == '__main__':
                 birth = pd.to_datetime(birth)
                 age = (test - birth) / np.timedelta64(1, 'Y')
                 dfT.loc[idx, 'age'] = np.round(age, 1)
-
-    # fix age
-    dfT['age'] = dfT['age'].apply(lambda x: '0' if 'D' in x and 'A' not in x else x)
-    dfT['age'] = dfT['age'].apply(lambda x: x.split('A')[0] if 'A' in x else x)
-
-    # fix sex information
-    dfT['sex'] = dfT['sex'].apply(lambda x: x[0] if x != '' else x)
-
 
     # reset index
     dfT = dfT.reset_index(drop=True)
@@ -456,7 +506,7 @@ if __name__ == '__main__':
         'COVS_test_result',
         'ENTERO_test_result',
         'BAC_test_result',
-        ]
+    ]
 
     for col in dfT.columns.tolist():
         if col not in key_cols:
