@@ -65,7 +65,7 @@ rule arguments:
 		index_column = "division_exposure",
 
 		start_date = "2021-11-01",
-		end_date = "2023-06-24" ## update last epidemiological week here
+		end_date = "2023-07-29" ## update last epidemiological week here
 
 arguments = rules.arguments.params
 
@@ -227,6 +227,28 @@ rule reformat_einstein:
 			--output {output.matrix}
 		"""
 
+# rule reformat_hilab:
+# 	message:
+# 		"""
+# 		Given the input data from the Hilab laboratory, we combine multiple files, create unique hashes for each row, manipulate and clean column variables, apply 'if' statements for specific cases, incorporate age and sex information, eliminate duplicates, and finally, save the output in a relational structure.
+# 		"""
+# 	input:
+# 		rename = arguments.rename_file,
+# 		correction = arguments.correction_file,
+# 		cache = rules.reformat_einstein.output.matrix # last lab
+# 	params:
+# 		datadir = arguments.datadir
+# 	output:
+# 		matrix = rules.files.input.combined1, # new combined1_lab or temp("results/combined_hilab.tsv")
+# 	shell:
+# 		"""
+# 		python scripts/reformat_einstein.py \
+# 			--datadir {params.datadir} \
+# 			--rename {input.rename} \
+# 			--correction {input.correction} \
+# 			--cache {input.cache} \
+# 			--output {output.matrix}
+# 		"""
 
 rule agegroups:
 	message:
@@ -884,6 +906,8 @@ rule copy_files:
 		"""
 	shell:
 		"""
+		cp results/combined.tsv data/combined_cache.tsv
+
 		cp results/demography/combined_matrix_agegroup.tsv figures/python/pyramid
 
 		cp results/country/combined_matrix_country_posneg_full_weeks.tsv figures/python/barplot
