@@ -27,307 +27,310 @@ pd.options.mode.chained_assignment = None
 today = time.strftime('%Y-%m-%d', time.gmtime()) ## for snakefile
 
 def fix_datatable(df):
-        dfN = df
-        # print(dfL.columns.tolist())
-        # print(''.join(dfL.columns.tolist()))
-        # if lab == 'HLAGyn':
-        
-        df['Idade'] = df['Idade'].where(df['Idade'] != '', '-1').astype(int)
-        df = df.query('Idade >= 0 and Idade <= 120').reset_index(drop=True)
+    dfN = df
+    # print(dfL.columns.tolist())
+    # print(''.join(dfL.columns.tolist()))
+    # if lab == 'HLAGyn':
 
-        df['Sexo'] = df['Sexo'].str.upper().map({"FEMININO": "F", "MASCULINO": "M"}).fillna("I")
+    # Drop duplicates on 'Pedido'
+    df = df.drop_duplicates(subset=['Pedido'], keep='last')
     
-        if 'H1N1' in ''.join(df.columns.tolist()) or 'Influenza' in ''.join(df.columns.tolist()): ## column with unique row data
-            test_name = "Painel viral HLAGyn"
+    df['Idade'] = df['Idade'].where(df['Idade'] != '', '-1').astype(int)
+    df = df.query('Idade >= 0 and Idade <= 120').reset_index(drop=True)
 
-            # print('\t\tDados resp_vir >> Correct format. Proceeding...' % test_name)
-            # add sample_id and test_kit
-            df.insert(1, 'sample_id', '')
-            df.fillna('', inplace=True)
+    df['Sexo'] = df['Sexo'].str.upper().map({"FEMININO": "F", "MASCULINO": "M"}).fillna("I")
 
-            id_columns = [
-                'Pedido',
-                'Idade',
-                'Sexo',
-                'Data Coleta',
-                'Cidade',
-                'UF',
+    if 'H1N1' in ''.join(df.columns.tolist()) or 'Influenza' in ''.join(df.columns.tolist()): ## column with unique row data
+        test_name = "Painel viral HLAGyn"
+
+        # print('\t\tDados resp_vir >> Correct format. Proceeding...' % test_name)
+        # add sample_id and test_kit
+        df.insert(1, 'sample_id', '')
+        df.fillna('', inplace=True)
+
+        id_columns = [
+            'Pedido',
+            'Idade',
+            'Sexo',
+            'Data Coleta',
+            'Cidade',
+            'UF',
+            ]
+
+        test_columns = []
+        if 'Parainfluenza' in ''.join(df.columns.tolist()):
+            test_columns = [
+                'VIRUS_Influenza A',
+                'VIRUS_Influenza H1N1',
+                'VIRUS_Influenza H3',
+                'VIRUS_Influenza B',
+                'VIRUS_Metapneumovírus',
+                'VIRUS_Sincicial A',
+                'VIRUS_Sincicial B',
+                'VIRUS_Rinovírus',
+                'VIRUS_Parainfluenza 1',
+                'VIRUS_Parainfluenza 2',
+                'VIRUS_Parainfluenza 3',
+                'VIRUS_Parainfluenza 4',
+                'VIRUS_Adenovirus',
+                'VIRUS_Bocavirus',
+                'VIRUS_CoV-229E',
+                'VIRUS_CoV-HKU',
+                'VIRUS_CoV-NL63',
+                'VIRUS_CoV-OC43',
+                'VIRUS_SARS_Like',
+                'VIRUS_SARS-CoV-2',
+                'VIRUS_Enterovírus',
+                'BACTE_Bordetella pertussis',
+                'BACTE_Bordetella parapertussis',
+                'BACTE_Mycoplasma pneumoniae',
                 ]
-
-            test_columns = []
-            if 'Parainfluenza' in ''.join(df.columns.tolist()):
-                test_columns = [
-                    'VIRUS_Influenza A',
-                    'VIRUS_Influenza H1N1',
-                    'VIRUS_Influenza H3',
-                    'VIRUS_Influenza B',
-                    'VIRUS_Metapneumovírus',
-                    'VIRUS_Sincicial A',
-                    'VIRUS_Sincicial B',
-                    'VIRUS_Rinovírus',
-                    'VIRUS_Parainfluenza 1',
-                    'VIRUS_Parainfluenza 2',
-                    'VIRUS_Parainfluenza 3',
-                    'VIRUS_Parainfluenza 4',
-                    'VIRUS_Adenovirus',
-                    'VIRUS_Bocavirus',
-                    'VIRUS_CoV-229E',
-                    'VIRUS_CoV-HKU',
-                    'VIRUS_CoV-NL63',
-                    'VIRUS_CoV-OC43',
-                    'VIRUS_SARS_Like',
-                    'VIRUS_SARS-CoV-2',
-                    'VIRUS_Enterovírus',
-                    'BACTE_Bordetella pertussis',
-                    'BACTE_Bordetella parapertussis',
-                    'BACTE_Mycoplasma pneumoniae',
-                    ]
-                df.insert(1, 'test_kit', 'test_24')
-            elif 'PH4' in ''.join(df.columns.tolist()):
-                test_columns = [
-                    'VIRUS_IA',
-                    'VIRUS_H1N1',
-                    'VIRUS_AH3',
-                    'VIRUS_B',
-                    'VIRUS_MH',
-                    'VIRUS_SA',
-                    'VIRUS_SB',
-                    'VIRUS_RH',
-                    'VIRUS_PH',
-                    'VIRUS_PH2',
-                    'VIRUS_PH3',
-                    'VIRUS_PH4',
-                    'VIRUS_ADE',
-                    'VIRUS_BOC',
-                    'VIRUS_229E',
-                    'VIRUS_HKU',
-                    'VIRUS_NL63',
-                    'VIRUS_OC43',
-                    'VIRUS_SARS',
-                    'VIRUS_COV2',
-                    'VIRUS_EV',
-                    'BACTE_BP',
-                    'BACTE_BPAR',
-                    'BACTE_MP',
-                    ]
-                df.insert(1, 'test_kit', 'test_24')
-            elif 'SARS-CoV-2' in ''.join(df.columns.tolist()):
-                test_columns = [
-                    'Vírus Influenza A',
-                    'Vírus Influenza B',
-                    'Vírus Sincicial Respiratório A/B',
-                    'Coronavírus SARS-CoV-2',
-                    ]
-                df.insert(1, 'test_kit', 'test_4')
-            else:
-                print('WARNING! Unknown file format. Check for inconsistencies.')
-
-            for column in id_columns + test_columns:
-                if column not in df.columns.tolist():
-                    df[column] = ''
-                    print('\t\t\t - No \'%s\' column found. Please check for inconsistencies. Meanwhile, an empty \'%s\' column was added.' % (column, column))
-
-
-            ## assign id and deduplicate
-            df, dfN = deduplicate(df, dfN, id_columns, test_name)
-            # print('3')
-            # print(dfL.head())
-
-            if df.empty:
-                # print('# Returning an empty dataframe')
-                return dfN
-
-
-            # starting reformatting process
-            pathogens = {
-                'SC2': [
-                    'VIRUS_SARS_Like',
-                    'VIRUS_SARS-CoV-2',
-                    'Coronavírus SARS-CoV-2',
-                    'VIRUS_SARS',
-                    'VIRUS_COV2',
-                    ],
-                'FLUA': [
-                    'VIRUS_Influenza A',
-                    'VIRUS_Influenza H1N1',
-                    'VIRUS_Influenza H3',
-                    'Vírus Influenza A',
-                    'VIRUS_IA',
-                    'VIRUS_H1N1',
-                    'VIRUS_AH3',
-                    ],
-                'FLUB': [
-                    'VIRUS_Influenza B',
-                    'Vírus Influenza B',
-                    'VIRUS_B',
-                    ],
-                'VSR': [
-                    'VIRUS_Sincicial A',
-                    'VIRUS_Sincicial B',
-                    'Vírus Sincicial Respiratório A/B',
-                    'VIRUS_SA','VIRUS_SB',
-                    ],
-                'META': [
-                    'VIRUS_Metapneumovírus',
-                    'VIRUS_MH',
-                    ],
-                'RINO': [
-                    'VIRUS_Rinovírus',
-                    'VIRUS_RH',
-                    ],
-                'PARA': [
-                    'VIRUS_Parainfluenza 1',
-                    'VIRUS_Parainfluenza 2',
-                    'VIRUS_Parainfluenza 3',
-                    'VIRUS_Parainfluenza 4',
-                    'VIRUS_PH',
-                    'VIRUS_PH2',
-                    'VIRUS_PH3',
-                    'VIRUS_PH4',
-                    ],
-                'ADENO': [
-                    'VIRUS_Adenovirus',
-                    'VIRUS_ADE',
-                    ], 
-                'BOCA': [
-                    'VIRUS_Bocavirus',
-                    'VIRUS_BOC',
-                    ],
-                'COVS': [
-                    'VIRUS_CoV-229E',
-                    'VIRUS_CoV-HKU',
-                    'VIRUS_CoV-NL63',
-                    'VIRUS_CoV-OC43',
-                    'VIRUS_229E',
-                    'VIRUS_HKU',
-                    'VIRUS_NL63',
-                    'VIRUS_OC43',
-                    ],
-                'ENTERO': [
-                    'VIRUS_Enterovírus',
-                    'VIRUS_EV',
-                    ],
-                'BAC': [
-                    'BACTE_Bordetella pertussis',
-                    'BACTE_Bordetella parapertussis',
-                    'BACTE_Mycoplasma pneumoniae',
-                    'BACTE_BP',
-                    'BACTE_BPAR',
-                    'BACTE_MP',
-                    ]
-                }
-
-            # adding missing columns
-            if 'Dt. Nascimento' not in df.columns.tolist():
-                df['birthdate'] = ''
-            df['Ct_FluA'] = ''
-            df['Ct_FluB'] = ''
-            df['Ct_VSR'] = ''
-            df['Ct_RDRP'] = ''
-            df['Ct_geneS'] = ''
-            df['Ct_geneN'] = ''
-            df['Ct_ORF1ab'] = ''
-            df['Ct_geneE'] = ''
-            df['patient_id'] = ''
-
-
-            # Detectado, Não Detectado -> Neg, Pos
-            df = df.replace({'Detectado': -10, 'Não Detectado': -20})
-            for pathogen, pathogen_columns in pathogens.items():
-                test_result = pathogen + '_test_result'
-
-                # All test_columns that are in pathogen_columns
-                pathogen_df_columns = list(set(test_columns).intersection(pathogen_columns))
-                if pathogen_df_columns == []:
-                    df[test_result] = 'NT'
-                    continue
-
-                df[test_result] = df[pathogen_df_columns].max(axis=1)
-
-            # Replace -10 and -20 with Pos and Neg
-            df = df.replace({-10: 'Pos', -20: 'Neg'}) 
-
-            return df          
-
-        elif 'CT_N' in df.columns.tolist():
-            # print('\t\tDados covid >> Correct format. Proceeding...')
-            test_name = "covid_pcr"
-
-            id_columns = [
-                'Pedido',
-                'Idade',
-                'Sexo',
-                'Data Coleta',
-                'Cidade',
-                'UF',
-                'CT_I',
-                'CT_N',
-                'CT_ORF1AB',
+            df.insert(1, 'test_kit', 'test_24')
+        elif 'PH4' in ''.join(df.columns.tolist()):
+            test_columns = [
+                'VIRUS_IA',
+                'VIRUS_H1N1',
+                'VIRUS_AH3',
+                'VIRUS_B',
+                'VIRUS_MH',
+                'VIRUS_SA',
+                'VIRUS_SB',
+                'VIRUS_RH',
+                'VIRUS_PH',
+                'VIRUS_PH2',
+                'VIRUS_PH3',
+                'VIRUS_PH4',
+                'VIRUS_ADE',
+                'VIRUS_BOC',
+                'VIRUS_229E',
+                'VIRUS_HKU',
+                'VIRUS_NL63',
+                'VIRUS_OC43',
+                'VIRUS_SARS',
+                'VIRUS_COV2',
+                'VIRUS_EV',
+                'BACTE_BP',
+                'BACTE_BPAR',
+                'BACTE_MP',
                 ]
-
-            for column in id_columns:
-                if column not in df.columns.tolist():
-                    df[column] = ''
-                    print('\t\t\t - No \'%s\' column found. Please check for inconsistencies. Meanwhile, an empty \'%s\' column was added.' % (column, column))
-
-            ## generate sample id
-            df.insert(1, 'sample_id', '')
-            df.insert(1, 'test_kit', 'covid_pcr')
-            df.fillna('', inplace=True)
-
-
-            ## assign id and deduplicate
-            df, dfN = deduplicate(df, dfN, id_columns, test_name)
-            #print(dfL.head())
-
-
-            if df.empty:
-                #print('# Returning an empty dataframe')
-                return dfN
-
-            # starting lab specific reformatting
-            pathogens = {
-                'SC2': [], 
-                'FLUA': [],
-                'FLUB': [], 
-                'VSR': [], 
-                'META': [], 
-                'RINO': [],
-                'PARA': [], 
-                'ADENO': [], 
-                'BOCA': [], 
-                'COVS': [], 
-                'ENTERO': [], 
-                'BAC': [],
-                }
-
-            for p, t in pathogens.items():
-                if p != 'SC2':
-                    df[p + '_test_result'] = 'NT' #'Not tested'
-
-            ## adding missing columns
-            if 'Dt. Nascimento' not in df.columns.tolist():
-                df['birthdate'] = ''
-            df['Ct_FluA'] = ''
-            df['Ct_FluB'] = ''
-            df['Ct_VSR'] = ''
-            df['Ct_RDRP'] = ''
-            df['Ct_geneS'] = ''
-            df['Ct_geneN'] = ''
-            df['Ct_geneE'] = ''
-
-            ## fix decimal values
-            df['CT_N'] = df['CT_N'].str.replace(',', '.')
-            df['CT_ORF1AB'] = df['CT_ORF1AB'].str.replace(',', '.')
-
-            # [WIP] Inconcolusivos
-            df['Resultado'] = df['Resultado'].apply(lambda x: 'Pos' if x.startswith('Detectado') else 'Neg' )
-            return df
+            df.insert(1, 'test_kit', 'test_24')
+        elif 'SARS-CoV-2' in ''.join(df.columns.tolist()):
+            test_columns = [
+                'Vírus Influenza A',
+                'Vírus Influenza B',
+                'Vírus Sincicial Respiratório A/B',
+                'Coronavírus SARS-CoV-2',
+                ]
+            df.insert(1, 'test_kit', 'test_4')
         else:
-            # print('\t\tFile = ' + file)
-            print('\t\tWARNING! Unknown file format. Check for inconsistencies.')
-            # exit()
-        return dfN
+            print('WARNING! Unknown file format. Check for inconsistencies.')
+
+        for column in id_columns + test_columns:
+            if column not in df.columns.tolist():
+                df[column] = ''
+                print('\t\t\t - No \'%s\' column found. Please check for inconsistencies. Meanwhile, an empty \'%s\' column was added.' % (column, column))
+
+
+        ## assign id and deduplicate
+        df, dfN = deduplicate(df, dfN, id_columns, test_name)
+        # print('3')
+        # print(dfL.head())
+
+        if df.empty:
+            # print('# Returning an empty dataframe')
+            return dfN
+
+
+        # starting reformatting process
+        pathogens = {
+            'SC2': [
+                'VIRUS_SARS_Like',
+                'VIRUS_SARS-CoV-2',
+                'Coronavírus SARS-CoV-2',
+                'VIRUS_SARS',
+                'VIRUS_COV2',
+                ],
+            'FLUA': [
+                'VIRUS_Influenza A',
+                'VIRUS_Influenza H1N1',
+                'VIRUS_Influenza H3',
+                'Vírus Influenza A',
+                'VIRUS_IA',
+                'VIRUS_H1N1',
+                'VIRUS_AH3',
+                ],
+            'FLUB': [
+                'VIRUS_Influenza B',
+                'Vírus Influenza B',
+                'VIRUS_B',
+                ],
+            'VSR': [
+                'VIRUS_Sincicial A',
+                'VIRUS_Sincicial B',
+                'Vírus Sincicial Respiratório A/B',
+                'VIRUS_SA','VIRUS_SB',
+                ],
+            'META': [
+                'VIRUS_Metapneumovírus',
+                'VIRUS_MH',
+                ],
+            'RINO': [
+                'VIRUS_Rinovírus',
+                'VIRUS_RH',
+                ],
+            'PARA': [
+                'VIRUS_Parainfluenza 1',
+                'VIRUS_Parainfluenza 2',
+                'VIRUS_Parainfluenza 3',
+                'VIRUS_Parainfluenza 4',
+                'VIRUS_PH',
+                'VIRUS_PH2',
+                'VIRUS_PH3',
+                'VIRUS_PH4',
+                ],
+            'ADENO': [
+                'VIRUS_Adenovirus',
+                'VIRUS_ADE',
+                ], 
+            'BOCA': [
+                'VIRUS_Bocavirus',
+                'VIRUS_BOC',
+                ],
+            'COVS': [
+                'VIRUS_CoV-229E',
+                'VIRUS_CoV-HKU',
+                'VIRUS_CoV-NL63',
+                'VIRUS_CoV-OC43',
+                'VIRUS_229E',
+                'VIRUS_HKU',
+                'VIRUS_NL63',
+                'VIRUS_OC43',
+                ],
+            'ENTERO': [
+                'VIRUS_Enterovírus',
+                'VIRUS_EV',
+                ],
+            'BAC': [
+                'BACTE_Bordetella pertussis',
+                'BACTE_Bordetella parapertussis',
+                'BACTE_Mycoplasma pneumoniae',
+                'BACTE_BP',
+                'BACTE_BPAR',
+                'BACTE_MP',
+                ]
+            }
+
+        # adding missing columns
+        if 'Dt. Nascimento' not in df.columns.tolist():
+            df['birthdate'] = ''
+        df['Ct_FluA'] = ''
+        df['Ct_FluB'] = ''
+        df['Ct_VSR'] = ''
+        df['Ct_RDRP'] = ''
+        df['Ct_geneS'] = ''
+        df['Ct_geneN'] = ''
+        df['Ct_ORF1ab'] = ''
+        df['Ct_geneE'] = ''
+        df['patient_id'] = ''
+
+
+        # Detectado, Não Detectado -> Neg, Pos
+        df = df.replace({'Detectado': -10, 'Não Detectado': -20})
+        for pathogen, pathogen_columns in pathogens.items():
+            test_result = pathogen + '_test_result'
+
+            # All test_columns that are in pathogen_columns
+            pathogen_df_columns = list(set(test_columns).intersection(pathogen_columns))
+            if pathogen_df_columns == []:
+                df[test_result] = 'NT'
+                continue
+
+            df[test_result] = df[pathogen_df_columns].max(axis=1)
+
+        # Replace -10 and -20 with Pos and Neg
+        df = df.replace({-10: 'Pos', -20: 'Neg'}) 
+
+        return df          
+
+    elif 'CT_N' in df.columns.tolist():
+        # print('\t\tDados covid >> Correct format. Proceeding...')
+        test_name = "covid_pcr"
+
+        id_columns = [
+            'Pedido',
+            'Idade',
+            'Sexo',
+            'Data Coleta',
+            'Cidade',
+            'UF',
+            'CT_I',
+            'CT_N',
+            'CT_ORF1AB',
+            ]
+
+        for column in id_columns:
+            if column not in df.columns.tolist():
+                df[column] = ''
+                print('\t\t\t - No \'%s\' column found. Please check for inconsistencies. Meanwhile, an empty \'%s\' column was added.' % (column, column))
+
+        ## generate sample id
+        df.insert(1, 'sample_id', '')
+        df.insert(1, 'test_kit', 'covid_pcr')
+        df.fillna('', inplace=True)
+
+
+        ## assign id and deduplicate
+        df, dfN = deduplicate(df, dfN, id_columns, test_name)
+        #print(dfL.head())
+
+
+        if df.empty:
+            #print('# Returning an empty dataframe')
+            return dfN
+
+        # starting lab specific reformatting
+        pathogens = {
+            'SC2': [], 
+            'FLUA': [],
+            'FLUB': [], 
+            'VSR': [], 
+            'META': [], 
+            'RINO': [],
+            'PARA': [], 
+            'ADENO': [], 
+            'BOCA': [], 
+            'COVS': [], 
+            'ENTERO': [], 
+            'BAC': [],
+            }
+
+        for p, t in pathogens.items():
+            if p != 'SC2':
+                df[p + '_test_result'] = 'NT' #'Not tested'
+
+        ## adding missing columns
+        if 'Dt. Nascimento' not in df.columns.tolist():
+            df['birthdate'] = ''
+        df['Ct_FluA'] = ''
+        df['Ct_FluB'] = ''
+        df['Ct_VSR'] = ''
+        df['Ct_RDRP'] = ''
+        df['Ct_geneS'] = ''
+        df['Ct_geneN'] = ''
+        df['Ct_geneE'] = ''
+
+        ## fix decimal values
+        df['CT_N'] = df['CT_N'].str.replace(',', '.')
+        df['CT_ORF1AB'] = df['CT_ORF1AB'].str.replace(',', '.')
+
+        # [WIP] Inconcolusivos
+        df['Resultado'] = df['Resultado'].apply(lambda x: 'Pos' if x.startswith('Detectado') else 'Neg' )
+        return df
+    else:
+        # print('\t\tFile = ' + file)
+        print('\t\tWARNING! Unknown file format. Check for inconsistencies.')
+        # exit()
+    return dfN
     # print("Done reformating")
 
 
@@ -536,10 +539,13 @@ if __name__ == '__main__':
                                 df['date_testing'] = pd.to_datetime(df['date_testing'], errors='coerce').fillna('2100-01-01')
                                 
                                 # Calculate age where it is -1
-                                df['age'] = df['birthdate'].where(
+                                df['age'] = df['age'].where(
                                     df['age'] > 0, 
                                     ((df['birthdate'] - df['date_testing'])/np.timedelta64(1, 'Y')).round(1).astype(int)
                                 )
+
+                                # Remove AGE values < 0 and > 150 -> absurd values created by the replacement of null values
+                                df['age'] = df['age'].apply(lambda x: x if x >= 0 and x <= 150 else -1) 
 
                             frames = [dfT, df]
                             df2 = pd.concat(frames).reset_index(drop=True)
