@@ -15,6 +15,7 @@ import argparse
 from epiweeks import Week
 from tqdm.auto import tqdm
 
+import logging
 
 
 import warnings
@@ -335,6 +336,17 @@ def fix_datatable(df):
 
 
 if __name__ == '__main__':
+    FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    logger = logging.getLogger("SABIN ETL")
+    # add handler to stdout
+    handler = logging.StreamHandler()
+    # Logger all levels
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(FORMAT)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+
     parser = argparse.ArgumentParser(
         description="Performs diverse data processing tasks for specific HLAGyn lab cases. It seamlessly loads and combines data from multiple sources and formats into a unified dataframe. It applies renaming and correction rules to columns, generates unique identifiers, and eliminates duplicates based on prior data processing. Age information is derived from birth dates, and sex information is adjusted accordingly. The resulting dataframe is sorted by date and saved as a TSV file. Duplicate rows are also identified and saved separately for further analysis.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -352,6 +364,13 @@ if __name__ == '__main__':
     correction_file = args.correction
     cache_file = args.cache
     output = args.output
+
+    logger.info(f"Starting SABIN ETL")
+    logger.info(f"Input folder: {input_folder}")
+    logger.info(f"Rename file: {rename_file}")
+    logger.info(f"Correction file: {correction_file}")
+    logger.info(f"Cache file: {cache_file}")
+    logger.info(f"Output file: {output}")
 
 # local run
     # # path = "/Users/**/**/"
@@ -385,11 +404,14 @@ if __name__ == '__main__':
 
     ## load cache file
     if cache_file not in [np.nan, '', None]:
+        logger.info(f"Loading cache file: {cache_file}")
+
         dfT = load_table(cache_file)
         dfT.fillna('', inplace=True)
     else:
+        logger.info(f"No cache file provided. Starting from scratch.")
+
         dfT = pd.DataFrame()
-    ## print("Done load cache")
 
     ## load renaming patterns
     dfR = load_table(rename_file)
@@ -497,59 +519,77 @@ if __name__ == '__main__':
     # print("Load dictionary for fix_values")
 
     ## open data files
-    for element in os.listdir(input_folder):
-        if not element.startswith('_'):
-            if element == 'HLAGyn': ## check if folder is the correct one
-                id = element
-                element = element + '/'
-                if os.path.isdir(input_folder + element) == True:
-                    print('\n# Processing datatables from: ' + id)
-                    for filename in sorted(os.listdir(input_folder + element)):
-                        if filename.split('.')[-1] in ['tsv', 'csv', 'xls', 'xlsx', 'parquet'] and filename[0] not in ['~', '_']:
-                            print('\n\t- File: ' + filename)
-                            df = load_table(input_folder + element + filename)
-                            df.fillna('', inplace=True)
-                            df.reset_index(drop=True)
+    for sub_folder in os.listdir(input_folder):
+        if sub_folder == 'HLAGyn': ## check if folder is the correct one
+            id = sub_folder
+            sub_folder = sub_folder + '/'
 
-                            df = fix_datatable(df) ## reformat datatable
-                            if df.empty:
-                                # print('##### Nothing to be done')
-                                continue
+            if not os.path.isdir(input_folder + sub_folder):
+                logger.error(f"Folder {input_folder + sub_folder} not found.")
+                break
+            
+            logger.info(f"Processing DataFrame from: {id}")
+            for filename in sorted(os.listdir(input_folder + sub_folder)):
+                
+                if not filename.endswith(('tsv', 'csv', 'xls', 'xlsx', 'parquet')):
+                    continue
 
-                            df.insert(0, 'lab_id', id)
-                            df = rename_columns(id, df) ## fix data points
-                            dfT = dfT.reset_index(drop=True)
-                            df = df.reset_index(drop=True)
+                if filename[0] in ['~', '_']:
+                    continue
 
-                            # print(df.head(2)) # only reformat
-                            # print(dfT.head(2)) # all labs empty without cache
+                logger.info(f"Loading data from: {input_folder + sub_folder + filename}")
+                df = load_table(input_folder + sub_folder + filename)
+                df.fillna('', inplace=True)
+                df.reset_index(drop=True)
 
-                            print('\n# Fixing data points...')
-                            dict_corrections_full = {
-                                #**dict_corrections['HLAGyn'] 
-                                **dict_corrections['any']
-                            }
-                            df = df.replace(dict_corrections_full)
-                            
-                            ## add age from birthdate, if age is missing
-                            if 'birthdate' in df.columns.tolist():
-                                
-                                # cast to datetime where is not np.nan, '' or None
-                                df['birthdate'] = pd.to_datetime(df['birthdate'], errors='coerce').fillna('1800-01-01')
-                                df['date_testing'] = pd.to_datetime(df['date_testing'], errors='coerce').fillna('2100-01-01')
-                                
-                                # Calculate age where it is -1
-                                df['age'] = df['age'].where(
-                                    df['age'] > 0, 
-                                    ((df['birthdate'] - df['date_testing'])/np.timedelta64(1, 'Y')).round(1).astype(int)
-                                )
+                logger.info(f"Loaded {df.shape[0]} rows and {df.shape[1]} columns")
 
-                                # Remove AGE values < 0 and > 150 -> absurd values created by the replacement of null values
-                                df['age'] = df['age'].apply(lambda x: x if x >= 0 and x <= 150 else -1) 
+                logger.info(f"Starting to fix DataFrame - {filename}")
+                df = fix_datatable(df)
+                logger.info(f"Finished fixing DataFrame - {filename}")
+                logger.info(f"New shape: {df.shape[0]} rows and {df.shape[1]} columns")
 
-                            frames = [dfT, df]
-                            df2 = pd.concat(frames).reset_index(drop=True)
-                            dfT = df2
+                if df.empty:
+                    logger.warning(f"Empty DataFrame after fixing - {filename}. Check for inconsistencies.")
+                    continue
+
+                df.insert(0, 'lab_id', id)
+                df = rename_columns(id, df) ## fix data points
+                dfT = dfT.reset_index(drop=True)
+                df = df.reset_index(drop=True)
+
+                # print(df.head(2)) # only reformat
+                # print(dfT.head(2)) # all labs empty without cache
+
+                logger.info(f"Starting to fix values - {filename}")
+                dict_corrections_full = {
+                    #**dict_corrections['HLAGyn'] 
+                    **dict_corrections['any']
+                }
+                df = df.replace(dict_corrections_full)
+                
+                ## add age from birthdate, if age is missing
+                if 'birthdate' in df.columns.tolist():
+                    # cast to datetime where is not np.nan, '' or None
+                    df['birthdate'] = pd.to_datetime(df['birthdate'], errors='coerce').fillna('1800-01-01')
+                    df['date_testing'] = pd.to_datetime(df['date_testing'], errors='coerce').fillna('2100-01-01')
+                    
+                    # Calculate age where it is -1
+                    df['age'] = df['age'].where(
+                        df['age'] > 0, 
+                        ((df['birthdate'] - df['date_testing'])/np.timedelta64(1, 'Y')).round(1).astype(int)
+                    )
+
+                    # Remove AGE values < 0 and > 150 -> absurd values created by the replacement of null values
+                    df['age'] = df['age'].apply(lambda x: x if x >= 0 and x <= 150 else -1) 
+
+                logger.info(f"Finished fixing values - {filename}")
+                logger.info(f"New shape: {df.shape[0]} rows and {df.shape[1]} columns")
+                logger.info(f"Starting to aggregate results - {filename}")
+
+                frames = [dfT, df]
+                df2 = pd.concat(frames).reset_index(drop=True)
+                dfT = df2
 
     dfT = dfT.reset_index(drop=True)
     dfT.fillna('', inplace=True)
@@ -654,6 +694,11 @@ if __name__ == '__main__':
         if col not in key_cols:
             dfT = dfT.drop(columns=[col])
 
+    for col in key_cols:
+        if col not in dfT.columns.tolist():
+            logger.warning(f"Column {col} not found in the table. Adding it with empty values.")
+            dfT[col] = ''
+
     dfT = dfT[key_cols]
 
     def date2str(value):
@@ -674,7 +719,7 @@ if __name__ == '__main__':
         dfD = dfT[mask]
         output2 = input_folder + 'duplicates.tsv'
         dfD.to_csv(output2, sep='\t', index=False)
-        print('\nWARNING!\nFile with %s duplicate entries saved in:\n%s' % (str(duplicates), output2))
+        logger.warning(f"File with {duplicates} duplicate entries saved in: {output2}")
 
     ## drop duplicates
     dfT = dfT.drop_duplicates(keep='last')
@@ -682,20 +727,6 @@ if __name__ == '__main__':
     ## sorting by date
     dfT = dfT.sort_values(by=['lab_id', 'test_id', 'date_testing'])
 
-
-    ## time controller for optimization of functions `def`
-    ## example with tqdm for def
-    # start = time.time()
-    # for load_table in tqdm(range(1), desc='Execution Time'):
-    #     load_table
-    # end = time.time()
-    # print("Execution time for load_table: ", end - start)
-
-    start = time.time()
-    load_table
-    end = time.time()
-    print("Execution time for load_table: ", end - start)
-
     # output combined dataframe
     dfT.to_csv(output, sep='\t', index=False)
-    print('\nData successfully aggregated and saved in:\n%s\n' % output)
+    logger.info(f"Data successfully aggregated and saved in: {output}")
