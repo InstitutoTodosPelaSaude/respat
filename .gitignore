@@ -9,6 +9,12 @@ data/*/*.csv
 data/*/*.tsv
 data/*/*.parquet
 
+data/*/*/*.xls
+data/*/*/*.xlsx
+data/*/*/*.csv
+data/*/*/*.tsv
+data/*/*/*.parquet
+
 results/*.tsv
 
 
