@@ -165,23 +165,23 @@ if __name__ == '__main__':
 
     ## Fix datatables - especific
     print('\nFixing datatables...')
-    def fix_datatable(dfL,file):
+    def fix_datatable(dfL):
         dfN = dfL
         # print(dfL.columns.tolist())
         # print(''.join(dfL.columns.tolist()))
-        if 'Código da Capsula' in dfL.columns.tolist(): # and '' in dfL['Codigo'].tolist(): #column with unique row data
+        if 'Código Da Cápsula' in dfL.columns.tolist(): # and '' in dfL['Codigo'].tolist(): #column with unique row data
             test_name = "Hilab exams"
 
             print('\t\tDados test HILAB >> Correct format. Proceeding...')
             
             ## define columns dtypes to reduce the use of memory
-            dfL["Código da Capsula"] = dfL["Código da Capsula"].astype('str')
-            dfL["Região do Brasil"] = dfL["Região do Brasil"].astype('str')
+            dfL["Código Da Cápsula"] = dfL["Código Da Cápsula"].astype('str')
+            dfL["Região Do Brasil"] = dfL["Região Do Brasil"].astype('str')
             dfL["Estado"] = dfL["Estado"].astype('str')
             dfL["Cidade"] = dfL["Cidade"].astype('str')
-            dfL["Data do Exame"] = pd.to_datetime(dfL["Data do Exame"])
+            dfL["Data Do Exame"] = pd.to_datetime(dfL["Data Do Exame"], format='mixed')
             dfL["Sexo"] = dfL["Sexo"].astype('str')
-            dfL["Idade"] = dfL["Idade"].astype('int8')
+            dfL["Idade"] = dfL["Idade"].replace('', '-1').astype('int8')
             dfL["Exame"] = dfL["Exame"].astype('str')
             dfL["Resultado"] = dfL["Resultado"].astype('str')
 
@@ -213,11 +213,11 @@ if __name__ == '__main__':
             #     'result',
             #     ]
             id_columns = [
-                'Código da Capsula',
-                'Região do Brasil',
+                'Código Da Cápsula',
+                'Região Do Brasil',
                 'Estado',
                 'Cidade',
-                'Data do Exame',
+                'Data Do Exame',
                 'Exame',
                 'Resultado',
                 ]
@@ -279,24 +279,6 @@ if __name__ == '__main__':
 
                 dfL.loc[mask, p + '_test_result'] = dfL.loc[mask].apply(assign_test_result, axis=1)
                 dfL.loc[~mask, p + '_test_result'] = 'NT'
-
-            # for p, t in tqdm(pathogens.items()):
-            #     if p != 'SC2':
-            #         dfL[p + '_test_result'] = 'NT' # 'Not tested' 
-
-            # for p, t in pathogens.items():
-            #     if p == 'SC2':
-            #         dfL[p + 'test_result'] = assign_test_result
-            #     if p == 'FLUA':
-            #         dfL[p + 'test_result'] = assign_test_result
-            #     if p == 'FLUB':
-            #         dfL[p + 'test_result'] = assign_test_result
-
-                # if p != 'SC2':
-                #     dfL[p + '_test_result'] = 'NT' #'Not tested'
-                # else:
-                #     dfL[p + '_test_result'] = 'NT' #'Not tested'
-
         else:
             #print('\t\tFile = ' + file)
             print('\t\tWARNING! Unknown file format. Check for inconsistencies.')
@@ -337,7 +319,7 @@ if __name__ == '__main__':
 
                             # print('- ' + str(len(dfT['sample_id'].tolist())) + ' samples (pre)')
 
-                            df = fix_datatable(df, filename) # reformat datatable
+                            df = fix_datatable(df) # reformat datatable
                             if df.empty:
                                 # print('##### Nothing to be done')
                                 continue
@@ -387,7 +369,7 @@ if __name__ == '__main__':
     # print('Done fix tables')
 
 ## reformat dates and get ages
-    dfT['date_testing'] = pd.to_datetime(dfT['date_testing']) #, dayfirst=True # , format='%Y-%m-%d', errors='ignore'
+    dfT['date_testing'] = pd.to_datetime(dfT['date_testing'], dayfirst=True, format='%d/%m%/%Y')
 
 ## create epiweek column
     def get_epiweeks(date):
@@ -403,23 +385,6 @@ if __name__ == '__main__':
         return epiweek
 
     dfT['epiweek'] = dfT['date_testing'].apply(lambda x: get_epiweeks(x))
-
-    # ## add age from birthdate, if age is missing
-    # if 'birthdate' in dfT.columns.tolist():
-    #     for idx, row in dfT.iterrows():
-    #         birth = dfT.loc[idx, 'birthdate']
-    #         test = dfT.loc[idx, 'date_testing']
-    #         if birth not in [np.nan, '', None]:
-    #             birth = pd.to_datetime(birth)
-    #             age = (test - birth) / np.timedelta64(1, 'Y')
-    #             dfT.loc[idx, 'age'] = np.round(age, 1)
-
-    ## print('Done fix date and ages')
-
-    # ## fix sex information
-    # dfT['sex'] = dfT['sex'].apply(lambda x: x[0] if x != '' else x)
-    # # print('Done fix sex')
-
 
 ## IF Molecular tests -> Add gene detection results
     def check_detection(ctValue):
@@ -511,48 +476,6 @@ if __name__ == '__main__':
     dfT = dfT.sort_values(by=['lab_id', 'test_id', 'date_testing'])
 
 ## time controller for optimization of functions `def`
-    ## example with tqdm for def
-    # start = time.time()
-    # for load_table in tqdm(range(1), desc='Execution Time'):
-    #     load_table
-    # end = time.time()
-    # print("Execution time for load_table: ", end - start)
-
-    start = time.time()
-    load_table
-    end = time.time()
-    print("Execution time for load_table: ", end - start)
-
-    # start = time.time()
-    # generate_id
-    # end = time.time()
-    # print("Execution time for generate_id: ", end - start)
-
-    # start = time.time()
-    # deduplicate
-    # end = time.time()
-    # print("Execution time for deduplicate: ", end - start)
-
-    # start = time.time()
-    # fix_datatable
-    # end = time.time()
-    # print("Execution time for fix_datatable: ", end - start)
-
-    # start = time.time()
-    # rename_columns
-    # end = time.time()
-    # print("Execution time for rename_columns: ", end - start)
-
-    # start = time.time()
-    # fix_data_points
-    # end = time.time()
-    # print("Execution time for fix_data_points: ", end - start)
-
-    # start = time.time()
-    # get_epiweeks
-    # end = time.time()
-    # print("Execution time for get_epiweeks: ", end - start)
-
     ## output combined dataframe
     dfT.to_csv(output, sep='\t', index=False)
     print('\nData successfully aggregated and saved in:\n%s\n' % output)
