@@ -337,7 +337,7 @@ def fix_datatable(df):
 
 if __name__ == '__main__':
     FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logger = logging.getLogger("SABIN ETL")
+    logger = logging.getLogger("HLAGYN ETL")
     # add handler to stdout
     handler = logging.StreamHandler()
     # Logger all levels

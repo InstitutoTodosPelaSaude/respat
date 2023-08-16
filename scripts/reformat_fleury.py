@@ -631,7 +631,7 @@ if __name__ == "__main__":
     )
 
     dfT["date_testing"] = pd.to_datetime(
-        dfT["date_testing"], format="mixed", dayfirst=True
+        dfT["date_testing"] , dayfirst=True
     )  # , format='%Y-%m-%d', errors='ignore'
 
     dfT["epiweek"] = dfT["date_testing"].apply(lambda x: get_epiweeks(x))

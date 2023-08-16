@@ -264,62 +264,65 @@ def fix_datatable(df):
     return dfN
 
 
-def aggregate_results(df, test_id_columns, test_result_columns, other_agg_rules={}, return_aggregated_df=False):
+def aggregate_results(df, test_id_columns, test_result_columns):
     """
     Aggregates the test results from a single test into a single row.
-    Using the specified test_id_columns as the grouping columns. 
-    
+    Using the specified test_id_columns as the grouping columns.
+
     The test results in the test_result_columns should be either 'Pos', 'Neg', or 'NT'.
 
     The final result is 'Pos' if any of the tests was positive.
-    'Neg' if none of the tests was positive and at least one was negative. 
+    'Neg' if none of the tests was positive and at least one was negative.
     'NT' if all of the tests were not performed.
 
     Args:
         df (pandas DataFrame): dataframe to be fixed
         test_id_columns (list of str): list of columns to be used as grouping columns
         test_result_columns (list of str): list of columns to be aggregated
-        other_agg_rules (dict): dictionary of other aggregation rules in the pandas format
-        return_aggregated_df (bool): whether to return the aggregated dataframe or to join the results back to the original dataframe
 
     Returns:
         pandas DataFrame: dataframe with aggregated results
     """
 
     df_test_results = (
-        df
-        [test_id_columns + test_result_columns + list(other_agg_rules.keys())]
+        df[test_id_columns + test_result_columns]
         .copy()
+        # Mapping the test results to 1, 0, -1
+        # and using the max to aggregate to improve performance
+        .assign(
+            **{
+                test_result_column: df[test_result_column].map(
+                    {"Pos": 1, "Neg": 0, "NT": -1}
+                )
+                for test_result_column in test_result_columns
+            }
+        )
         .groupby(test_id_columns)
         .agg(
             {
-                **{
-                    test_result_column: lambda x: (
-                        'Pos' if 'Pos' in x.values 
-                        else 'Neg' if 'Neg' in x.values 
-                        else 'NT'
-                    )
-                    for test_result_column in test_result_columns
-                },
-                **other_agg_rules
+                # test_result_column: at_least_one_positive
+                test_result_column: "max"
+                for test_result_column in test_result_columns
             }
         )
-        .reset_index()
     )
 
-    if return_aggregated_df:
-        return df_test_results
-
     # Join the aggregated test results back with the original dataframe
-    df = (
-        df
-        .drop(columns=test_result_columns)
-        .drop(columns=list(other_agg_rules.keys()))
-        .merge(df_test_results, on=test_id_columns, how='inner')
-    ) 
+    df = df.drop(columns=test_result_columns).merge(
+        df_test_results, on=test_id_columns, how="inner"
+    )
+
+    # map back the test results
+    df = df.assign(
+        **{
+            test_result_column: df[test_result_column].map(
+                {1: "Pos", 0: "Neg", -1: "NT"}
+            )
+            for test_result_column in test_result_columns
+        }
+    )
 
     return df
-
 
 if __name__ == "__main__":
     FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -541,11 +544,6 @@ if __name__ == "__main__":
                         'ENTERO_test_result',
                         'BAC_test_result',
                     ],
-                    {
-                        col: 'max'
-                        for col in ['date_testing', 'age', 'sex', 'location', 'state', 'sample_id']
-                    },
-                    return_aggregated_df=True
                 )
                 logger.info(f"Finished aggregating results - {filename}")
                 logger.info(f"New shape: {df.shape[0]} rows and {df.shape[1]} columns")
@@ -589,7 +587,7 @@ if __name__ == "__main__":
 
     # reformat dates and convert to datetime format
     dfT["date_testing"] = pd.to_datetime(
-        dfT["date_testing"], dayfirst=True, format='mixed', errors='ignore'
+        dfT["date_testing"], dayfirst=True, errors='ignore'
     )  # , format='%Y-%m-%d', errors='ignore'
 
     # create epiweek column
