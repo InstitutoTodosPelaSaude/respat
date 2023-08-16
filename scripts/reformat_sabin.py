@@ -177,11 +177,11 @@ def fix_datatable(df):
             if x in PARAMETERS_COVID_ANTIGEN
             else "covid_pcr" 
             if x in PARAMETERS_COVID_PCR
-            else "panel_21"
+            else "test_21"
             if x in PARAMETERS_21_TESTS
-            else "panel_24"
+            else "test_24"
             if x in PARAMETERS_24_TESTS
-            else "panel_4"
+            else "test_4"
             if x in PARAMETERS_4_TESTS
             else "unknown"
     )
