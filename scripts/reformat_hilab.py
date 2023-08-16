@@ -17,6 +17,7 @@ from tqdm import tqdm ## add to requirements
 
 ## Settings
 import warnings
+import logging
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
@@ -25,8 +26,165 @@ pd.options.mode.chained_assignment = None
 
 today = time.strftime('%Y-%m-%d', time.gmtime()) ##for snakefile
 
+def load_table(file):
+    df = ''
+    if str(file).split('.')[-1] == 'tsv':
+        separator = '\t'
+        df = pd.read_csv(file, encoding='utf-8', sep=separator, dtype='str')
+    elif str(file).split('.')[-1] == 'csv':
+        separator = ','
+        df = pd.read_csv(file, encoding='utf-8', sep=separator, dtype='str')
+    elif str(file).split('.')[-1] in ['xls', 'xlsx']:
+        df = pd.read_excel(file, index_col=None, header=0, sheet_name=0, dtype='str')
+        df.fillna('', inplace=True)
+    elif str(file).split('.')[-1] == 'parquet':
+        df = pd.read_parquet(file, engine='auto')
+        df.fillna('', inplace=True)
+    else:
+        print('Wrong file format. Compatible file formats: TSV, CSV, XLS, XLSX, PARQUET')
+        exit()
+    return df
+
+def get_epiweeks(date):
+    try:
+        date = pd.to_datetime(date)
+        epiweek = str(Week.fromdate(date, system="cdc")) # get epiweeks
+        year, week = epiweek[:4], epiweek[-2:]
+        epiweek = str(Week(int(year), int(week)).enddate())
+#             epiweek = str(Week.fromdate(date, system="cdc"))  # get epiweeks
+#             epiweek = epiweek[:4] + '_' + 'EW' + epiweek[-2:]
+    except:
+        epiweek = ''
+    return epiweek
+
+def generate_id(column_id):
+    id = hashlib.sha1(str(column_id).encode('utf-8')).hexdigest()
+    return id
+
+def fix_datatable(dfL):
+    dfN = dfL
+    # print(dfL.columns.tolist())
+    # print(''.join(dfL.columns.tolist()))
+    if 'Código Da Cápsula' in dfL.columns.tolist(): # and '' in dfL['Codigo'].tolist(): #column with unique row data
+        test_name = "Hilab exams"
+
+        print('\t\tDados test HILAB >> Correct format. Proceeding...')
+        
+        ## define columns dtypes to reduce the use of memory
+        dfL["Código Da Cápsula"] = dfL["Código Da Cápsula"].astype('str')
+        dfL["Região Do Brasil"] = dfL["Região Do Brasil"].astype('str')
+        dfL["Estado"] = dfL["Estado"].astype('str')
+        dfL["Cidade"] = dfL["Cidade"].astype('str')
+        dfL["Data Do Exame"] = pd.to_datetime(dfL["Data Do Exame"], )
+        dfL["Sexo"] = dfL["Sexo"].astype('str')
+        dfL["Idade"] = dfL["Idade"].replace('', '-1').astype('int8')
+        dfL["Exame"] = dfL["Exame"].astype('str')
+        dfL["Resultado"] = dfL["Resultado"].astype('str')
+
+        ## add sample_id and test_kit
+        dfL['sample_id'] = ''
+        dfL['test_kit'] = ''
+
+        ## set test_kit values for Covid-19 antigen tests
+        covid_antigen_mask = dfL['Exame'] == 'Covid-19 Antígeno'
+        dfL.loc[covid_antigen_mask, 'test_kit'] = 'covid_antigen'
+
+        ## set test_kit values for flu tests
+        flu_mask = dfL['Exame'].isin(['Influenza A', 'Influenza B'])
+        dfL.loc[flu_mask, 'test_kit'] = 'flu_antigen'
+
+        # ## set test_kit values for Dengue tests
+        # dengue_mask = dfL['Exame'].str.contains('Dengue')
+        # dfL.loc[dengue_mask, 'test_kit'] = 'dengue'
+
+        dfL.fillna('', inplace=True)
+
+        id_columns = [
+            'Código Da Cápsula',
+            'Região Do Brasil',
+            'Estado',
+            'Cidade',
+            'Data Do Exame',
+            'Exame',
+            'Resultado',
+            ]
+
+        for column in tqdm(id_columns):
+            if column not in dfL.columns.tolist():
+                dfL[column] = ''
+                print('\t\t\t - No \'%s\' column found. Please check for inconsistencies. Meanwhile, an empty \'%s\' column was added.' % (column, column))
+
+        ## adding missing columns
+        dfL['patient_id'] = ''
+        dfL['Ct_FluA'] = ''
+        dfL['Ct_FluB'] = ''
+        dfL['Ct_VSR'] = ''
+        dfL['Ct_RDRP'] = ''
+        dfL['Ct_geneE'] = ''
+        dfL['Ct_geneN'] = ''
+        dfL['Ct_geneS'] = ''
+        dfL['Ct_ORF1ab'] = ''
+        dfL['geneS_detection'] = ''
+
+        ## assign id and deduplicate
+        dfL, dfN = deduplicate(dfL, dfN, id_columns, test_name)
+        # print(df)
+
+        if dfL.empty:
+            #print('# Returning an empty dataframe')
+            return dfN
+
+        def assign_test_result(row):
+            if row['Resultado'] == 'Reagente':
+                return 'Pos'
+            elif row['Resultado'] == 'Não Reagente':
+                return 'Neg'
+            else:
+                return 'NT'
+        
+        # starting lab specific reformatting
+        pathogens = {
+            'SC2': ['Covid-19 Antígeno'], 
+            'FLUA': ['Influenza A'],
+            'FLUB': ['Influenza B'], 
+            'VSR': [], 
+            'META': [], 
+            'RINO': [],
+            'PARA': [], 
+            'ADENO': [], 
+            'BOCA': [], 
+            'COVS': [], 
+            'ENTERO': [], 
+            'BAC': [],
+            }
+
+        for p, t in tqdm(pathogens.items()):
+            if p == 'SC2':
+                mask = dfL['Exame'].isin(t)
+            else:
+                mask = dfL['Exame'].isin(t)
+
+            dfL.loc[mask, p + '_test_result'] = dfL.loc[mask].apply(assign_test_result, axis=1)
+            dfL.loc[~mask, p + '_test_result'] = 'NT'
+    else:
+        #print('\t\tFile = ' + file)
+        print('\t\tWARNING! Unknown file format. Check for inconsistencies.')
+        #exit()
+    return dfN
+
 ## Args
 if __name__ == '__main__':
+    FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    logger = logging.getLogger("SABIN ETL")
+    # add handler to stdout
+    handler = logging.StreamHandler()
+    # Logger all levels
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(FORMAT)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+
     parser = argparse.ArgumentParser(
         description="Performs diverse data processing tasks for specific Hilab lab cases. It seamlessly loads and combines data from multiple sources and formats into a unified dataframe. It applies renaming and correction rules to columns, generates unique identifiers, and eliminates duplicates based on prior data processing. Age information is derived from birth dates, and sex information is adjusted accordingly. The resulting dataframe is sorted by date and saved as a TSV file. Duplicate rows are also identified and saved separately for further analysis.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -45,43 +203,22 @@ if __name__ == '__main__':
     cache_file = args.cache
     output = args.output
 
-## local run - comment Args session
-    # path = "/Users/*/respat/"
-    # input_folder = path + 'data/'
-    # rename_file = input_folder + 'rename_columns.xlsx'
-    # correction_file = input_folder + 'fix_values.xlsx'
-    # cache_file = input_folder + 'combined_cache.tsv'
-    # output = input_folder + today + '_combined_dasa_test.tsv'
+    logger.info(f"Starting SABIN ETL")
+    logger.info(f"Input folder: {input_folder}")
+    logger.info(f"Rename file: {rename_file}")
+    logger.info(f"Correction file: {correction_file}")
+    logger.info(f"Cache file: {cache_file}")
+    logger.info(f"Output file: {output}")
 
-## Load diff files
-    def load_table(file):
-        df = ''
-        if str(file).split('.')[-1] == 'tsv':
-            separator = '\t'
-            df = pd.read_csv(file, encoding='utf-8', sep=separator, dtype='str')
-        elif str(file).split('.')[-1] == 'csv':
-            separator = ','
-            df = pd.read_csv(file, encoding='utf-8', sep=separator, dtype='str')
-        elif str(file).split('.')[-1] in ['xls', 'xlsx']:
-            df = pd.read_excel(file, index_col=None, header=0, sheet_name=0, dtype='str')
-            df.fillna('', inplace=True)
-        elif str(file).split('.')[-1] == 'parquet':
-            df = pd.read_parquet(file, engine='auto')
-            df.fillna('', inplace=True)
-        else:
-            print('Wrong file format. Compatible file formats: TSV, CSV, XLS, XLSX, PARQUET')
-            exit()
-        return df
-    # print('Done load tables')
-
-## load cache file
     if cache_file not in [np.nan, '', None]:
+        logger.info(f"Loading cache file: {cache_file}")
+
         dfT = load_table(cache_file)
         dfT.fillna('', inplace=True)
     else:
-        # dfP = pd.DataFrame()
+        logger.info(f"No cache file provided. Starting from scratch.")
+
         dfT = pd.DataFrame()
-    # print('Done load cache')
 
 ## load renaming patterns
     dfR = load_table(rename_file)
@@ -124,13 +261,6 @@ if __name__ == '__main__':
                     dict_corrections[id][colname] = {}
                 data_entry = {old_data: new_data}
                 dict_corrections[id][colname].update(data_entry)
-    # print('Load rename_columns')
-
-## generate ID
-    def generate_id(column_id):
-        id = hashlib.sha1(str(column_id).encode('utf-8')).hexdigest()
-        return id
-    # print('Done hashlib')
 
     def deduplicate(dfL, dfN, id_columns, test_name):
         # generate sample id
@@ -163,130 +293,6 @@ if __name__ == '__main__':
         return dfL, dfN
     # print('Done cache file')
 
-    ## Fix datatables - especific
-    print('\nFixing datatables...')
-    def fix_datatable(dfL):
-        dfN = dfL
-        # print(dfL.columns.tolist())
-        # print(''.join(dfL.columns.tolist()))
-        if 'Código Da Cápsula' in dfL.columns.tolist(): # and '' in dfL['Codigo'].tolist(): #column with unique row data
-            test_name = "Hilab exams"
-
-            print('\t\tDados test HILAB >> Correct format. Proceeding...')
-            
-            ## define columns dtypes to reduce the use of memory
-            dfL["Código Da Cápsula"] = dfL["Código Da Cápsula"].astype('str')
-            dfL["Região Do Brasil"] = dfL["Região Do Brasil"].astype('str')
-            dfL["Estado"] = dfL["Estado"].astype('str')
-            dfL["Cidade"] = dfL["Cidade"].astype('str')
-            dfL["Data Do Exame"] = pd.to_datetime(dfL["Data Do Exame"], )
-            dfL["Sexo"] = dfL["Sexo"].astype('str')
-            dfL["Idade"] = dfL["Idade"].replace('', '-1').astype('int8')
-            dfL["Exame"] = dfL["Exame"].astype('str')
-            dfL["Resultado"] = dfL["Resultado"].astype('str')
-
-            ## add sample_id and test_kit
-            dfL['sample_id'] = ''
-            dfL['test_kit'] = ''
-
-            ## set test_kit values for Covid-19 antigen tests
-            covid_antigen_mask = dfL['Exame'] == 'Covid-19 Antígeno'
-            dfL.loc[covid_antigen_mask, 'test_kit'] = 'covid_antigen'
-
-            ## set test_kit values for flu tests
-            flu_mask = dfL['Exame'].isin(['Influenza A', 'Influenza B'])
-            dfL.loc[flu_mask, 'test_kit'] = 'flu_antigen'
-
-            # ## set test_kit values for Dengue tests
-            # dengue_mask = dfL['Exame'].str.contains('Dengue')
-            # dfL.loc[dengue_mask, 'test_kit'] = 'dengue'
-
-            dfL.fillna('', inplace=True)
-
-            # id_columns = [
-            #     'code',
-            #     'region',
-            #     'address_state',
-            #     'address_city',
-            #     'exam_date',
-            #     'exam_name',
-            #     'result',
-            #     ]
-            id_columns = [
-                'Código Da Cápsula',
-                'Região Do Brasil',
-                'Estado',
-                'Cidade',
-                'Data Do Exame',
-                'Exame',
-                'Resultado',
-                ]
-
-            for column in tqdm(id_columns):
-                if column not in dfL.columns.tolist():
-                    dfL[column] = ''
-                    print('\t\t\t - No \'%s\' column found. Please check for inconsistencies. Meanwhile, an empty \'%s\' column was added.' % (column, column))
-
-            ## adding missing columns
-            dfL['patient_id'] = ''
-            dfL['Ct_FluA'] = ''
-            dfL['Ct_FluB'] = ''
-            dfL['Ct_VSR'] = ''
-            dfL['Ct_RDRP'] = ''
-            dfL['Ct_geneE'] = ''
-            dfL['Ct_geneN'] = ''
-            dfL['Ct_geneS'] = ''
-            dfL['Ct_ORF1ab'] = ''
-            dfL['geneS_detection'] = ''
-
-            ## assign id and deduplicate
-            dfL, dfN = deduplicate(dfL, dfN, id_columns, test_name)
-            # print(df)
-
-            if dfL.empty:
-                #print('# Returning an empty dataframe')
-                return dfN
-
-            def assign_test_result(row):
-                if row['Resultado'] == 'Reagente':
-                    return 'Pos'
-                elif row['Resultado'] == 'Não Reagente':
-                    return 'Neg'
-                else:
-                    return 'NT'
-            
-            # starting lab specific reformatting
-            pathogens = {
-                'SC2': ['Covid-19 Antígeno'], 
-                'FLUA': ['Influenza A'],
-                'FLUB': ['Influenza B'], 
-                'VSR': [], 
-                'META': [], 
-                'RINO': [],
-                'PARA': [], 
-                'ADENO': [], 
-                'BOCA': [], 
-                'COVS': [], 
-                'ENTERO': [], 
-                'BAC': [],
-                }
-
-            for p, t in tqdm(pathogens.items()):
-                if p == 'SC2':
-                    mask = dfL['Exame'].isin(t)
-                else:
-                    mask = dfL['Exame'].isin(t)
-
-                dfL.loc[mask, p + '_test_result'] = dfL.loc[mask].apply(assign_test_result, axis=1)
-                dfL.loc[~mask, p + '_test_result'] = 'NT'
-        else:
-            #print('\t\tFile = ' + file)
-            print('\t\tWARNING! Unknown file format. Check for inconsistencies.')
-            #exit()
-        return dfN
-    # print("Done reformating")
-
-## Rename 
     def rename_columns(id, df):
         # print(df.columns.tolist())
         # print(dict_rename[id])
@@ -303,66 +309,82 @@ if __name__ == '__main__':
     print('Done rename')
 
 ## open data files
-    for element in os.listdir(input_folder):
-        if not element.startswith('_'):
-            if element == 'HILAB': ## check if folder is the correct one
-                id = element
-                element = element + '/'
-                if os.path.isdir(input_folder + element) == True:
-                    print('\n# Processing datatables from: ' + id)
-                    for filename in sorted(os.listdir(input_folder + element)):
-                        if filename.split('.')[-1] in ['tsv', 'csv', 'xls', 'xlsx', 'parquet'] and filename[0] not in ['~', '_']:
-                            print('\n\t- File: ' + filename)
-                            df = load_table(input_folder + element + filename)
-                            df.fillna('', inplace=True)
-                            df.reset_index(drop=True)
+    for sub_folder in os.listdir(input_folder):
+        if sub_folder == 'HILAB': ## check if folder is the correct one
+            id = sub_folder
+            sub_folder = sub_folder + '/'
 
-                            # print('- ' + str(len(dfT['sample_id'].tolist())) + ' samples (pre)')
+            if not os.path.isdir(input_folder + sub_folder):
+                logger.error(f"Folder {input_folder + sub_folder} not found.")
+                break
+            logger.info(f"Processing DataFrame from: {id}")
 
-                            df = fix_datatable(df) # reformat datatable
-                            if df.empty:
-                                # print('##### Nothing to be done')
-                                continue
+            for filename in sorted(os.listdir(input_folder + sub_folder)):
+                
+                if not filename.endswith( ('.tsv', '.csv', '.xls', '.xlsx', '.parquet') ):
+                    continue
 
-                            df.insert(0, 'lab_id', id)
-                            df = rename_columns(id, df) # fix data points
-                            dfT = dfT.reset_index(drop=True)
-                            df = df.reset_index(drop=True)
+                if filename.startswith( ('~', '_') ):
+                    continue
 
-                            print('\n# Fixing data points...')
-                            for lab_id, columns in dict_corrections.items():
-                                print('\t- Fixing data from: ' + lab_id)
-                                for column, values in columns.items():
-                                    # print('\t- ' + column + ' (' + column + ' → ' + str(values) + ')')
-                                    df[column] = df[column].apply(lambda x: fix_data_points(lab_id, column, x))
-                            
-                            # checking duplicates
-                            # print(df.columns[df.columns.duplicated(keep=False)])
-                            # print(dfT.columns[dfT.columns.duplicated(keep=False)])
+                logger.info(f"Loading data from: {input_folder + sub_folder + filename}")
 
-                            ## add age from birthdate, if age is missing
-                            if 'birthdate' in df.columns.tolist():
-                                for idx, row in tqdm(df.iterrows()):
-                                    birth = df.loc[idx, 'birthdate']
-                                    test = df.loc[idx, 'date_testing']
-                                    if birth not in [np.nan, '', None]:
-                                        birth = pd.to_datetime(birth)
-                                        test = pd.to_datetime(test) ## add to correct dtypes for calculations
-                                        age = (test - birth) / np.timedelta64(1, 'Y')
-                                        df.loc[idx, 'age'] = np.round(age, 1)                  ## this gives decimals
-                                        #df.loc[idx, 'age'] = int(age)
-                                    print(f'Processing tests {idx + 1} of {len(df)}')            ## print processed lines 
+                df = load_table(input_folder + sub_folder + filename)
+                df.fillna('', inplace=True)
+                df.reset_index(drop=True)
 
-                                    ## Change the data type of the 'age' column to integer
-                                    df['age'] = pd.to_numeric(df['age'], downcast='integer',errors='coerce').fillna(-1).astype(int)
-                                    df['age'] = df['age'].apply(int)
+                logger.info(f"Loaded {df.shape[0]} rows and {df.shape[1]} columns")
 
-                            ## fix sex information
-                            df['sex'] = df['sex'].apply(lambda x: x[0] if x != '' else x)
+                logger.info(f"Starting to fix DataFrame - {filename}")
+                df = fix_datatable(df)
+                logger.info(f"Finished fixing DataFrame - {filename}")
+                logger.info(f"New shape: {df.shape[0]} rows and {df.shape[1]} columns")
+                if df.empty:
+                    logger.warning(f"Empty DataFrame after fixing - {filename}. Check for inconsistencies.")
+                    continue
 
-                            frames = [dfT, df]
-                            df2 = pd.concat(frames).reset_index(drop=True)
-                            dfT = df2
+                df.insert(0, 'lab_id', id)
+                df = rename_columns(id, df) # fix data points
+                dfT = dfT.reset_index(drop=True)
+                df = df.reset_index(drop=True)
+
+                logger.info(f"Starting to fix values - {filename}")
+
+                dict_corrections_full = {**dict_corrections['any']}
+                df = df.replace(dict_corrections_full)
+
+                logger.info(f"Finished fixing values - {filename}")
+                logger.info(f"New shape: {df.shape[0]} rows and {df.shape[1]} columns")
+
+                # checking duplicates
+                # print(df.columns[df.columns.duplicated(keep=False)])
+                # print(dfT.columns[dfT.columns.duplicated(keep=False)])
+
+                ## add age from birthdate, if age is missing
+                if 'birthdate' in df.columns.tolist():
+                    for idx, row in tqdm(df.iterrows()):
+                        birth = df.loc[idx, 'birthdate']
+                        test = df.loc[idx, 'date_testing']
+                        if birth not in [np.nan, '', None]:
+                            birth = pd.to_datetime(birth)
+                            test = pd.to_datetime(test) ## add to correct dtypes for calculations
+                            age = (test - birth) / np.timedelta64(1, 'Y')
+                            df.loc[idx, 'age'] = np.round(age, 1)                  ## this gives decimals
+                            #df.loc[idx, 'age'] = int(age)
+                        print(f'Processing tests {idx + 1} of {len(df)}')            ## print processed lines 
+
+                        ## Change the data type of the 'age' column to integer
+                        df['age'] = pd.to_numeric(df['age'], downcast='integer',errors='coerce').fillna(-1).astype(int)
+                        df['age'] = df['age'].apply(int)
+
+                ## fix sex information
+                df['sex'] = df['sex'].apply(lambda x: x[0] if x != '' else x)
+
+                frames = [dfT, df]
+                df2 = pd.concat(frames).reset_index(drop=True)
+                dfT = df2
+
+                logger.info(f"Finished processing file: {filename}")
 
     dfT = dfT.reset_index(drop=True)
     dfT.fillna('', inplace=True)
@@ -370,19 +392,6 @@ if __name__ == '__main__':
 
 ## reformat dates and get ages
     dfT['date_testing'] = pd.to_datetime(dfT['date_testing'], dayfirst=True, format='%d/%m%/%Y')
-
-## create epiweek column
-    def get_epiweeks(date):
-        try:
-            date = pd.to_datetime(date)
-            epiweek = str(Week.fromdate(date, system="cdc")) # get epiweeks
-            year, week = epiweek[:4], epiweek[-2:]
-            epiweek = str(Week(int(year), int(week)).enddate())
-#             epiweek = str(Week.fromdate(date, system="cdc"))  # get epiweeks
-#             epiweek = epiweek[:4] + '_' + 'EW' + epiweek[-2:]
-        except:
-            epiweek = ''
-        return epiweek
 
     dfT['epiweek'] = dfT['date_testing'].apply(lambda x: get_epiweeks(x))
 
@@ -452,22 +461,22 @@ if __name__ == '__main__':
         if col not in key_cols:
             dfT = dfT.drop(columns=[col])
 
+    for col in key_cols:
+        if col not in dfT.columns.tolist():
+            logger.warning(f"Column {col} not found in the table. Adding it with empty values.")
+            dfT[col] = ''
+
     dfT = dfT[key_cols]
 
     dfT['date_testing'] = dfT['date_testing'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else 'XXXXX')
 
-    ## fix test results with empty data
-    # for p in pathogens.keys():
-    #     dfT[p + '_test_result'] = dfT[p + '_test_result'].apply(lambda x: 'Negative' if x not in ['Negative', 'Positive'] else x)
-
-## output duplicates rows
     duplicates = dfT.duplicated().sum()
     if duplicates > 0:
         mask = dfT.duplicated(keep=False) # find duplicates
         dfD = dfT[mask]
         output2 = input_folder + 'duplicates.tsv'
         dfD.to_csv(output2, sep='\t', index=False)
-        print('\nWARNING!\nFile with %s duplicate entries saved in:\n%s' % (str(duplicates), output2))
+        logger.warning(f"File with {duplicates} duplicate entries saved in: {output2}")
 
     ## drop duplicates
     dfT = dfT.drop_duplicates(keep='last')
@@ -478,4 +487,4 @@ if __name__ == '__main__':
 ## time controller for optimization of functions `def`
     ## output combined dataframe
     dfT.to_csv(output, sep='\t', index=False)
-    print('\nData successfully aggregated and saved in:\n%s\n' % output)
+    logger.info(f"Data successfully aggregated and saved in: {output}")
