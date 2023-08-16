@@ -123,13 +123,13 @@ def fix_datatable(df):
     df["Código Posto"] = df["Código Posto"].astype('int16')
     df["Estado"] = df["Estado"].astype('str')
     df["Municipio"] = df["Municipio"].astype('str')
-    df["DataAtendimento"] = pd.to_datetime(df["DataAtendimento"], format='mixed')
-    df["DataNascimento"] = pd.to_datetime(df["DataNascimento"], format='mixed')
+    df["DataAtendimento"] = pd.to_datetime(df["DataAtendimento"], )
+    df["DataNascimento"] = pd.to_datetime(df["DataNascimento"], )
     df["Sexo"] = df["Sexo"].astype('str')
     df["Descricao"] = df["Descricao"].astype('str')
     df["Parametro"] = df["Parametro"].astype('str')
     df["Resultado"] = df["Resultado"].astype('str')
-    df["DataAssinatura"] = pd.to_datetime(df["DataAssinatura"], format='mixed')
+    df["DataAssinatura"] = pd.to_datetime(df["DataAssinatura"], )
 
     ## add sample_id and test_kit
     df.insert(1, 'sample_id', '')

@@ -179,7 +179,7 @@ if __name__ == '__main__':
             dfL["Região Do Brasil"] = dfL["Região Do Brasil"].astype('str')
             dfL["Estado"] = dfL["Estado"].astype('str')
             dfL["Cidade"] = dfL["Cidade"].astype('str')
-            dfL["Data Do Exame"] = pd.to_datetime(dfL["Data Do Exame"], format='mixed')
+            dfL["Data Do Exame"] = pd.to_datetime(dfL["Data Do Exame"], )
             dfL["Sexo"] = dfL["Sexo"].astype('str')
             dfL["Idade"] = dfL["Idade"].replace('', '-1').astype('int8')
             dfL["Exame"] = dfL["Exame"].astype('str')

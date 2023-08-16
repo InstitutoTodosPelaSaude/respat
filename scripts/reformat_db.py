@@ -344,7 +344,8 @@ if __name__ == '__main__':
                             if g not in genes:
                                 print('Gene ' + g + ' in an anomaly. Check for inconsistencies')
 
-                dfN = dfN.append(data, ignore_index=True)
+                # dfN = dfN.append(data, ignore_index=True)
+                dfN = pd.concat([dfN, pd.DataFrame(data, index=[0])], ignore_index=True)
                 # print(dfN.columns.tolist())
 
         elif 'Parametro' in dfL.columns.tolist() and 'C' in dfL[
@@ -418,7 +419,8 @@ if __name__ == '__main__':
                 if 'SGENE' not in dfG['Exame'].tolist():
                     if 'detectado' in [v.lower() for v in dfG['Resultado'].tolist()]:
                         new_entry = {'ResultadoLIS': '0.0', 'Exame': 'SGENE', 'Resultado': 'Detectado'}
-                        dfG = dfG.append(new_entry, ignore_index=True)
+                        # dfG = dfG.append(new_entry, ignore_index=True)
+                        dfG = pd.concat([dfG, pd.DataFrame(new_entry, index=[0])], ignore_index=True)
                         dfG['Resultado'] = 'Detectado'
 
                 ## fix Ct values
@@ -437,7 +439,8 @@ if __name__ == '__main__':
                             ct_value = ct_value / 10
                         data[gene] = str(np.round(ct_value, 1))
 
-                dfN = dfN.append(data, ignore_index=True)
+                # dfN = dfN.append(data, ignore_index=True)
+                dfN = pd.concat([dfN, pd.DataFrame(data, index=[0])], ignore_index=True)
 
         elif 'ParametroLIS' in dfL.columns.tolist():  ## unique column
             test_name = "covid_pcr"
@@ -551,7 +554,8 @@ if __name__ == '__main__':
                                         ct_value = ct_value / 10
                                     # print(ct_value)
                                     data[gene] = str(np.round(ct_value, 1))
-                dfN = dfN.append(data, ignore_index=True)
+                # dfN = dfN.append(data, ignore_index=True)
+                dfN = pd.concat([dfN, pd.DataFrame(data, index=[0])], ignore_index=True)
 
         else:
             # print(list(set(dfL['Parametro'].tolist())))
@@ -642,7 +646,7 @@ if __name__ == '__main__':
     dfT.fillna('', inplace=True)
 
     ## reformat dates and get ages
-    dfT['date_testing'] = pd.to_datetime(dfT['date_testing'])
+    dfT['date_testing'] = pd.to_datetime(dfT['date_testing'], )
 
 
     ## create epiweek column

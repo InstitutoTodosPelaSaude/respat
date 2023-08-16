@@ -278,7 +278,8 @@ if __name__ == '__main__':
                             if g not in genes:
                                 print('Gene ' + g + ' in an anomaly. Check for inconsistencies')
 
-                dfN = dfN.append(data, ignore_index=True)
+                # dfN = dfN.append(data, ignore_index=True)
+                dfN = pd.concat([dfN, pd.DataFrame(data, index=[0])], ignore_index=True)
             # print('# Returning some dataframe')
 
             # print(dfN.head())
@@ -478,7 +479,7 @@ if __name__ == '__main__':
     # print('Done fix tables')
 
     ## reformat dates and get ages
-    dfT['date_testing'] = pd.to_datetime(dfT['date_testing'])
+    dfT['date_testing'] = pd.to_datetime(dfT['date_testing'], )
 
     ## create epiweek column
     def get_epiweeks(date):
