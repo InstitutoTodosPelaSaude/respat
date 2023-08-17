@@ -13,6 +13,7 @@ import time
 import argparse
 from epiweeks import Week
 from tqdm.auto import tqdm
+from typing import Any
 
 import logging
 
@@ -118,18 +119,43 @@ def fix_datatable(df):
         print('\t\tWARNING! Unknown file format. Check for inconsistencies.')
         return df
     
-    ## define columns dtypes to reduce the use of memory
+# define columns dtypes to reduce the use of memory
     df["OS"] = df["OS"].astype('str')
     df["Código Posto"] = df["Código Posto"].astype('int16')
     df["Estado"] = df["Estado"].astype('str')
     df["Municipio"] = df["Municipio"].astype('str')
-    df["DataAtendimento"] = pd.to_datetime(df["DataAtendimento"], )
-    df["DataNascimento"] = pd.to_datetime(df["DataNascimento"], )
-    df["Sexo"] = df["Sexo"].astype('str')
     df["Descricao"] = df["Descricao"].astype('str')
     df["Parametro"] = df["Parametro"].astype('str')
     df["Resultado"] = df["Resultado"].astype('str')
-    df["DataAssinatura"] = pd.to_datetime(df["DataAssinatura"], )
+    df["Sexo"] = df["Sexo"].astype('str')
+
+    def convert_date_column(df: pd.DataFrame, column_name: str) -> None:
+        original_dates = df[column_name].copy()
+
+        def convert_date(date: Any) -> str:
+            try:
+                return pd.to_datetime(date, format='%d/%m/%Y', dayfirst=True).strftime('%d/%m/%Y')
+            except ValueError:
+                try:
+                    return pd.to_datetime(date).strftime('%d/%m/%Y')
+                except Exception as e:
+                    logging.warning(f"Failed to convert date {date}: {e}")
+                    return date
+
+        df[column_name] = df[column_name].apply(convert_date)
+        modified_rows = df[original_dates != df[column_name]].index
+        if len(modified_rows) > 0:
+            logging.info(f"Modified rows for column {column_name}: {modified_rows.tolist()}")
+
+
+    date_columns = ['DataAtendimento', 'DataNascimento', 'DataAssinatura']
+
+    for col in date_columns:
+        convert_date_column(df, col)
+        
+    ## Columns to consider for removing duplicates
+    duplicate_columns = ['Parametro', 'Resultado', 'DataAtendimento', 'OS', 'Descricao']
+
 
     ## add sample_id and test_kit
     df.insert(1, 'sample_id', '')
