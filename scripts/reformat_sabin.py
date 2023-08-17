@@ -129,6 +129,7 @@ def fix_datatable(df):
     df["Resultado"] = df["Resultado"].astype('str')
     df["Sexo"] = df["Sexo"].astype('str')
 
+    ## working with pandas 1.5.3 without creating errors at datetime conversion 
     def convert_date_column(df: pd.DataFrame, column_name: str) -> None:
         original_dates = df[column_name].copy()
 
@@ -619,17 +620,17 @@ if __name__ == '__main__':
                 logger.info(f"New shape: {df.shape[0]} rows and {df.shape[1]} columns")
 
                 # Calculate AGE from BIRTHDATE and DATE_TESTING
-                # Replacing null values with 1700-01-01 and 2300-01-01 to avoid errors
-
+                # Replacing null values with 1700-01-01 and 2200-01-01 to avoid errors (age 500)
                 df['birthdate'] = df['birthdate'].replace([np.nan, None, ''], '1700-01-01')
-                df['date_testing'] = df['date_testing'].replace([np.nan, None, ''], '2300-01-01')
+                df['date_testing'] = df['date_testing'].replace([np.nan, None, ''], '2200-01-01')
+
+                ## Calculate age, considering NaT, and round to 1 decimal; replace NaN with -1
                 df['age'] = (pd.to_datetime(df['date_testing']) - pd.to_datetime(df['birthdate'])) / np.timedelta64(1, 'Y')
                 df['age'] = df['age'].apply(lambda x: np.round(x, 1)) # round to 1 decimal
                 df['age'] = df['age'].apply(lambda x: int(x))
 
                 # Remove AGE values < 0 and > 150 -> absurd values created by the replacement of null values
                 df['age'] = df['age'].apply(lambda x: x if x >= 0 and x <= 150 else -1)
-
 
                 ## fix sex information
                 df['sex'] = df['sex'].apply(lambda x: x[0] if x != '' else x)
