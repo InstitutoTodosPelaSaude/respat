@@ -101,6 +101,32 @@ def generate_id(value):
     """ 
     return hashlib.sha1(str(value).encode('utf-8')).hexdigest()
 
+def convert_to_datetime_sabin(date):
+
+    # if date is instance of datetime, return it
+    if isinstance(date, pd.Timestamp):
+        return date
+    
+    # if date is instance of str, convert it
+    # try format dd/mm/yyyy
+    try:
+        return pd.to_datetime(date, format='%d/%m/%Y')
+    except:
+        pass
+
+    # try format yyyy-mm-dd
+    try:
+        return pd.to_datetime(date, format='%Y-%m-%d')
+    except:
+        pass
+
+    # try format yyyy-mm-dd hh:mm:ss
+    try:
+        return pd.to_datetime(date, format='%Y-%m-%d %H:%M:%S')
+    except:
+        pass
+
+
 
 def fix_datatable(df):
     """
@@ -123,13 +149,13 @@ def fix_datatable(df):
     df["Código Posto"] = df["Código Posto"].astype('int16')
     df["Estado"] = df["Estado"].astype('str')
     df["Municipio"] = df["Municipio"].astype('str')
-    df["DataAtendimento"] = pd.to_datetime(df["DataAtendimento"], )
-    df["DataNascimento"] = pd.to_datetime(df["DataNascimento"], )
+    df["DataAtendimento"] = df["DataAtendimento"].apply(convert_to_datetime_sabin).astype('datetime64[ns]')
+    df["DataNascimento"] = df["DataNascimento"].apply(convert_to_datetime_sabin).astype('datetime64[ns]')
+    df["DataAssinatura"] = df["DataAssinatura"].apply(convert_to_datetime_sabin).astype('datetime64[ns]')
     df["Sexo"] = df["Sexo"].astype('str')
     df["Descricao"] = df["Descricao"].astype('str')
     df["Parametro"] = df["Parametro"].astype('str')
     df["Resultado"] = df["Resultado"].astype('str')
-    df["DataAssinatura"] = pd.to_datetime(df["DataAssinatura"], )
 
     ## add sample_id and test_kit
     df.insert(1, 'sample_id', '')
