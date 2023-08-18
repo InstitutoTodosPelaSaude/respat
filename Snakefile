@@ -54,7 +54,7 @@ rule arguments:
 		datadir = "data",
 		rename_file = "data/rename_columns.xlsx",
 		correction_file = "data/fix_values.xlsx",
-		cache = "data/combined0.tsv",  ## first time data/combined0.tsv
+		cache = "data/combined_cache.tsv",  ## first time data/combined0.tsv
 		shapefile = "config/ibge_2020_shp/bra_admbnda_adm2_ibge_2020.shp",
 		coordinates = "config/cache_coordinates.tsv",
 		age_groups = "config/demo_bins.txt",
@@ -65,7 +65,7 @@ rule arguments:
 		index_column = "division_exposure",
 
 		start_date = "2021-11-01",
-		end_date = "2023-07-29" ## update last epidemiological week here
+		end_date = "2023-08-12" ## update last epidemiological week here
 
 arguments = rules.arguments.params
 
@@ -359,7 +359,7 @@ def set_index_results(spl, loc):
 	index2 = loc + " pathogen test_result"
 	extra_cols = index_results[loc][1]
 	filter1 = "~" + tests[spl] + ":NT"
-	filter2 = "test_kit:test_4, test_kit:test_21, test_kit:test_24"
+	filter2 = "test_kit:test_1, test_kit:test_2, test_kit:test_3, test_kit:test_4, test_kit:test_21, test_kit:test_24"
 	filter3 = "~test_kit:covid_antigen, ~test_kit:flu_antigen, ~test_kit:vsr_antigen"
 	add_col = "pathogen:" + spl
 	test_col = tests[spl]
@@ -710,7 +710,7 @@ tests = {
 def set_groups(spl):
 	yvar = tests[spl] + ' epiweek' #[0]
 	id_col = tests[spl] #[1]
-	filter = "sex:F, sex:M, test_kit:test_4, test_kit:test_21, test_kit:test_24, ~test_kit:'', ~age_group:''" #[2] gráfico de pirâmide somente kit
+	filter = "sex:F, sex:M,test_kit:test_1, test_kit:test_2, test_kit:test_3, test_kit:test_4, test_kit:test_21, test_kit:test_24, ~test_kit:'', ~age_group:''" #[2] gráfico de pirâmide somente kit
 
 	add_col = "pathogen:" + spl + ", name:Brasil" #[3] 
 	return([yvar, id_col, filter, add_col])

@@ -365,7 +365,7 @@ if __name__ == '__main__':
     cache_file = args.cache
     output = args.output
 
-    logger.info(f"Starting SABIN ETL")
+    logger.info(f"Starting HLAGyn ETL")
     logger.info(f"Input folder: {input_folder}")
     logger.info(f"Rename file: {rename_file}")
     logger.info(f"Correction file: {correction_file}")

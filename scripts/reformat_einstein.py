@@ -180,14 +180,14 @@ def fix_datatable(df):
 
     # CREATE test_kit COLUMN
     test_kit_dict = {
-        "PCR PAINEL DE PATOGENOS RESPIRATORIO":"painel_4",
+        "PCR PAINEL DE PATOGENOS RESPIRATORIO":"test_4",
 
-        "PAINEL MOLECULAR PARA PNEUMONIA":"painel_3",
-        "PCR MULTIPLEX ZIKA, DENGUE E CHIKUNG":"painel_3",
-        "PCR PARA INFLUENZA A/B E VRS":"painel_3",
-        "ZZPAINEL MOLECULAR PARA PNEUMONIA":"painel_3",
+        "PAINEL MOLECULAR PARA PNEUMONIA":"test_3",
+        "PCR MULTIPLEX ZIKA, DENGUE E CHIKUNG":"test_3",
+        "PCR PARA INFLUENZA A/B E VRS":"test_3",
+        "ZZPAINEL MOLECULAR PARA PNEUMONIA":"test_3",
 
-        "PESQUISA RÁPIDA PARA INFLUENZA A E B":"painel_2",
+        "PESQUISA RÁPIDA PARA INFLUENZA A E B":"test_2",
         "TESTE RÁPIDO PARA DENGUE IGM E NS1":"antibody",
         "SOROLOGIA PARA DENGUE":"antibody",
 
@@ -210,7 +210,7 @@ def fix_datatable(df):
         'HMSC - TESTE MOLECULAR ISOTÉRMICO COVID-': 'covid_pcr',
     }
     # Otherways, assign test_1
-    test_kit_dict = defaultdict(lambda: "painel_1", test_kit_dict)
+    test_kit_dict = defaultdict(lambda: "test_1", test_kit_dict)
 
     df_pivot = (
         df_pivot

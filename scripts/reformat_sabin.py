@@ -13,6 +13,7 @@ import time
 import argparse
 from epiweeks import Week
 from tqdm.auto import tqdm
+from typing import Any
 
 import logging
 
@@ -144,7 +145,7 @@ def fix_datatable(df):
         print('\t\tWARNING! Unknown file format. Check for inconsistencies.')
         return df
     
-    ## define columns dtypes to reduce the use of memory
+# define columns dtypes to reduce the use of memory
     df["OS"] = df["OS"].astype('str')
     df["Código Posto"] = df["Código Posto"].astype('int16')
     df["Estado"] = df["Estado"].astype('str')
@@ -203,11 +204,11 @@ def fix_datatable(df):
             if x in PARAMETERS_COVID_ANTIGEN
             else "covid_pcr" 
             if x in PARAMETERS_COVID_PCR
-            else "panel_21"
+            else "test_21"
             if x in PARAMETERS_21_TESTS
-            else "panel_24"
+            else "test_24"
             if x in PARAMETERS_24_TESTS
-            else "panel_4"
+            else "test_4"
             if x in PARAMETERS_4_TESTS
             else "unknown"
     )
@@ -619,17 +620,17 @@ if __name__ == '__main__':
                 logger.info(f"New shape: {df.shape[0]} rows and {df.shape[1]} columns")
 
                 # Calculate AGE from BIRTHDATE and DATE_TESTING
-                # Replacing null values with 1700-01-01 and 2300-01-01 to avoid errors
-
+                # Replacing null values with 1700-01-01 and 2200-01-01 to avoid errors (age 500)
                 df['birthdate'] = df['birthdate'].replace([np.nan, None, ''], '1700-01-01')
-                df['date_testing'] = df['date_testing'].replace([np.nan, None, ''], '2300-01-01')
+                df['date_testing'] = df['date_testing'].replace([np.nan, None, ''], '2200-01-01')
+
+                ## Calculate age, considering NaT, and round to 1 decimal; replace NaN with -1
                 df['age'] = (pd.to_datetime(df['date_testing']) - pd.to_datetime(df['birthdate'])) / np.timedelta64(1, 'Y')
                 df['age'] = df['age'].apply(lambda x: np.round(x, 1)) # round to 1 decimal
                 df['age'] = df['age'].apply(lambda x: int(x))
 
                 # Remove AGE values < 0 and > 150 -> absurd values created by the replacement of null values
                 df['age'] = df['age'].apply(lambda x: x if x >= 0 and x <= 150 else -1)
-
 
                 ## fix sex information
                 df['sex'] = df['sex'].apply(lambda x: x[0] if x != '' else x)
