@@ -16,6 +16,6 @@ data/*/*/*.tsv
 data/*/*/*.parquet
 
 results/*.tsv
-
+results
 
 .snakemake

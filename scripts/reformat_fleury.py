@@ -13,6 +13,8 @@ import time
 import argparse
 from epiweeks import Week
 
+from utils import aggregate_results
+
 import logging
 
 import warnings
@@ -24,68 +26,6 @@ pd.set_option("display.max_columns", 500)
 pd.options.mode.chained_assignment = None
 
 today = time.strftime("%Y-%m-%d", time.gmtime())
-
-
-def aggregate_results(df, test_id_columns, test_result_columns):
-    """
-    Aggregates the test results from a single test into a single row.
-    Using the specified test_id_columns as the grouping columns.
-
-    The test results in the test_result_columns should be either 'Pos', 'Neg', or 'NT'.
-
-    The final result is 'Pos' if any of the tests was positive.
-    'Neg' if none of the tests was positive and at least one was negative.
-    'NT' if all of the tests were not performed.
-
-    Args:
-        df (pandas DataFrame): dataframe to be fixed
-        test_id_columns (list of str): list of columns to be used as grouping columns
-        test_result_columns (list of str): list of columns to be aggregated
-
-    Returns:
-        pandas DataFrame: dataframe with aggregated results
-    """
-
-    df_test_results = (
-        df[test_id_columns + test_result_columns]
-        .copy()
-        # Mapping the test results to 1, 0, -1
-        # and using the max to aggregate to improve performance
-        .assign(
-            **{
-                test_result_column: df[test_result_column].map(
-                    {"Pos": 1, "Neg": 0, "NT": -1}
-                )
-                for test_result_column in test_result_columns
-            }
-        )
-        .groupby(test_id_columns)
-        .agg(
-            {
-                # test_result_column: at_least_one_positive
-                test_result_column: "max"
-                for test_result_column in test_result_columns
-            }
-        )
-    )
-
-    # Join the aggregated test results back with the original dataframe
-    df = df.drop(columns=test_result_columns).merge(
-        df_test_results, on=test_id_columns, how="inner"
-    )
-
-    # map back the test results
-    df = df.assign(
-        **{
-            test_result_column: df[test_result_column].map(
-                {1: "Pos", 0: "Neg", -1: "NT"}
-            )
-            for test_result_column in test_result_columns
-        }
-    )
-
-    return df
-
 
 def fix_datatable(df):
     # ignore = ['Influenza A e B - teste rápido', 'Virusmol, Rinovírus/Enterovírus', '']

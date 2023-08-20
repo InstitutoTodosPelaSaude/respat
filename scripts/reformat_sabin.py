@@ -15,9 +15,10 @@ from epiweeks import Week
 from tqdm.auto import tqdm
 from typing import Any
 
-import logging
+from utils import aggregate_results
 
 import warnings
+import logging
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
@@ -102,6 +103,7 @@ def generate_id(value):
     """ 
     return hashlib.sha1(str(value).encode('utf-8')).hexdigest()
 
+
 def convert_to_datetime_sabin(date):
 
     # if date is instance of datetime, return it
@@ -126,7 +128,6 @@ def convert_to_datetime_sabin(date):
         return pd.to_datetime(date, format='%Y-%m-%d %H:%M:%S')
     except:
         pass
-
 
 
 def fix_datatable(df):
@@ -376,53 +377,15 @@ def fix_datatable(df):
             lambda x: 'NT' if x['Parametro'] not in parameter_list else x['Resultado'], 
             axis=1
         )
+
+    # Add missing test_result columns
+    for pathogen in PATHOGENS_PARAMETERS.keys():
+        test_result = pathogen + '_test_result'
+        if test_result not in df.columns.tolist():
+            df[test_result] = 'NT'
     
-    return df
-
-
-def aggregate_results(df, test_id_columns, test_result_columns):
-    """
-    Aggregates the test results from a single test into a single row.
-    Using the specified test_id_columns as the grouping columns. 
-    
-    The test results in the test_result_columns should be either 'Pos', 'Neg', or 'NT'.
-
-    The final result is 'Pos' if any of the tests was positive.
-    'Neg' if none of the tests was positive and at least one was negative. 
-    'NT' if all of the tests were not performed.
-
-    Args:
-        df (pandas DataFrame): dataframe to be fixed
-        test_id_columns (list of str): list of columns to be used as grouping columns
-        test_result_columns (list of str): list of columns to be aggregated
-
-    Returns:
-        pandas DataFrame: dataframe with aggregated results
-    """
-
-    df_test_results = (
-        df
-        [test_id_columns + test_result_columns]
-        .copy()
-        .groupby(test_id_columns)
-        .agg(
-            {
-                test_result_column: lambda x: (
-                    'Pos' if 'Pos' in x.values 
-                    else 'Neg' if 'Neg' in x.values 
-                    else 'NT'
-                )
-                for test_result_column in test_result_columns
-            }
-        )
-    )
-
-    # Join the aggregated test results back with the original dataframe
-    df = (
-        df
-        .drop(columns=test_result_columns)
-        .merge(df_test_results, on=test_id_columns, how='inner')
-    ) 
+    # drop Resultado
+    df = df.drop(columns=['Resultado'], errors='ignore')
 
     return df
 
@@ -634,9 +597,14 @@ if __name__ == '__main__':
 
                 ## fix sex information
                 df['sex'] = df['sex'].apply(lambda x: x[0] if x != '' else x)
-                
+
+                logger.info(f"Concatenating DataFrames - {filename}")
+
+                df = df.reset_index(drop=True)
+                dfT = dfT.reset_index(drop=True)
+
                 frames = [dfT, df]
-                df2 = pd.concat(frames).reset_index(drop=True)
+                df2 = pd.concat(frames, ignore_index=True).reset_index(drop=True)
                 dfT = df2
 
                 logger.info(f"Finished processing file: {filename}")
