@@ -151,7 +151,7 @@ def fix_datatable(df):
             RESULTADO=lambda df: df["RESULTADO"]
             .str.lower()
             .str.strip()
-            .map(
+            .replace(
                 {
                     "não detectado": "Neg",
                     "detectado": "Pos",
@@ -190,8 +190,6 @@ def fix_datatable(df):
         "ZZPAINEL MOLECULAR PARA PNEUMONIA":"test_3",
 
         "PESQUISA RÁPIDA PARA INFLUENZA A E B":"test_2",
-        "TESTE RÁPIDO PARA DENGUE IGM E NS1":"antibody",
-        "SOROLOGIA PARA DENGUE":"antibody",
 
 
         'EXCLUSIVO EMPRESAS PCR COVID-19': 'covid_pcr',
@@ -210,15 +208,16 @@ def fix_datatable(df):
         'ZZTESTE MOLECULAR COVID-19, AMPLIFICAÇ': 'covid_pcr',
         'ZZTESTE RÁPIDO-ANTÍGENO COVID-19 (SARS': 'covid_antigen',
         'HMSC - TESTE MOLECULAR ISOTÉRMICO COVID-': 'covid_pcr',
+
+        '24 HRS COMPANHIA AÉREA - PCR COVID19': 'covid_pcr',
+        'PESQ RÁPIDA VÍRUS SINCICIAL RESPIRAT': 'vsr_antigen',
     }
-    # Otherways, assign test_1
-    test_kit_dict = defaultdict(lambda: "test_1", test_kit_dict)
 
     df_pivot = (
         df_pivot
         .assign(
             test_kit=lambda df: 
-            df["EXAME"].map(test_kit_dict),
+            df["EXAME"].replace(test_kit_dict),
         )
         .drop(columns=["EXAME", "DETALHE_EXAME"])
 
@@ -460,6 +459,12 @@ if __name__ == "__main__":
                 df = fix_datatable(df)
                 logger.info(f"Finished fixing DataFrame - {filename}")
                 logger.info(f"New shape: {df.shape[0]} rows and {df.shape[1]} columns")
+
+                dict_corrections_full = {
+                    #**dict_corrections['EINSTEIN'] 
+                    **dict_corrections['any']
+                }
+                df = df.replace(dict_corrections_full)
 
                 if df.empty:
                     logger.warning(f"Empty DataFrame after fixing - {filename}. Check for inconsistencies.")
