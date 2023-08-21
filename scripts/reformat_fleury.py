@@ -525,7 +525,11 @@ if __name__ == "__main__":
                 logger.info(f"Starting to fix values - {filename}")
 
                 # Joining the generic corrections with the lab-specific ones
-                # Nothing to be done.
+                dict_corrections_full = {
+                    #**dict_corrections['FLEURY'] 
+                    **dict_corrections['any']
+                }
+                df = df.replace(dict_corrections_full)
 
                 logger.info(f"Finished fixing values - {filename}")
                 logger.info(f"New shape: {df.shape[0]} rows and {df.shape[1]} columns")

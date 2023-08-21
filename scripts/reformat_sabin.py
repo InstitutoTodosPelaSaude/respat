@@ -106,14 +106,23 @@ def generate_id(value):
 
 def convert_to_datetime_sabin(date):
 
-    # if date is instance of datetime, return it
-    if isinstance(date, pd.Timestamp):
-        return date
-    
+    date = str(date)
     # if date is instance of str, convert it
     # try format dd/mm/yyyy
     try:
         return pd.to_datetime(date, format='%d/%m/%Y')
+    except:
+        pass
+
+    # try format yyyy-dd-mm
+    try:
+        return pd.to_datetime(date, format='%Y-%d-%m')
+    except:
+        pass
+
+    # try format yyyy-dd-mm hh:mm:ss
+    try:
+        return pd.to_datetime(date, format='%Y-%d-%m %H:%M:%S')
     except:
         pass
 
