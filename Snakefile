@@ -359,7 +359,7 @@ def set_index_results(spl, loc):
 	index2 = loc + " pathogen test_result"
 	extra_cols = index_results[loc][1]
 	filter1 = "~" + tests[spl] + ":NT"
-	filter2 = "test_kit:test_1, test_kit:test_2, test_kit:test_3, test_kit:test_4, test_kit:test_21, test_kit:test_24"
+	filter2 = "test_kit:test_4, test_kit:test_21, test_kit:test_24"
 	filter3 = "~test_kit:covid_antigen, ~test_kit:flu_antigen, ~test_kit:vsr_antigen"
 	add_col = "pathogen:" + spl
 	test_col = tests[spl]
@@ -710,7 +710,7 @@ tests = {
 def set_groups(spl):
 	yvar = tests[spl] + ' epiweek' #[0]
 	id_col = tests[spl] #[1]
-	filter = "sex:F, sex:M,test_kit:test_1, test_kit:test_2, test_kit:test_3, test_kit:test_4, test_kit:test_21, test_kit:test_24, ~test_kit:'', ~age_group:''" #[2] gráfico de pirâmide somente kit
+	filter = "sex:F, sex:M, test_kit:test_4, test_kit:test_21, test_kit:test_24, ~test_kit:'', ~age_group:''" #[2] gráfico de pirâmide somente kit
 
 	add_col = "pathogen:" + spl + ", name:Brasil" #[3] 
 	return([yvar, id_col, filter, add_col])
