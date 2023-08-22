@@ -608,12 +608,11 @@ if __name__ == '__main__':
                             df = df.reset_index(drop=True)
 
                             print('\n# Fixing data points...')
-                            for lab_id, columns in dict_corrections.items():
-                                print('\t- Fixing data from: ' + lab_id)
-                                for column, values in columns.items():
-                                    # print('\t- ' + column + ' (' + column + ' → ' + str(values) + ')')
-                                    if column in df.columns.tolist():  ##in case the column exist
-                                        df[column] = df[column].apply(lambda x: fix_data_points(lab_id, column, x))
+                            dict_corrections_full = {
+                                **dict_corrections['DB Mol'],
+                                **dict_corrections['any']
+                            }
+                            df = df.replace(dict_corrections_full)
 
                             ## add age from birthdate, if age is missing
                             if 'birthdate' in df.columns.tolist():
@@ -723,6 +722,11 @@ if __name__ == '__main__':
     for col in dfT.columns.tolist():
         if col not in key_cols:
             dfT = dfT.drop(columns=[col])
+
+    for col in key_cols:
+        if col not in dfT.columns.tolist():
+            print(f"Column {col} not found in the table. Adding it with empty values.")
+            dfT[col] = ''
 
     dfT = dfT[key_cols]
 
