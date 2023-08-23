@@ -491,6 +491,7 @@ if __name__ == '__main__':
                 df2 = pd.concat(frames).reset_index(drop=True)
                 dfT = df2
 
+    logger.info(f"Finished aggregating results. New shape: {dfT.shape[0]} rows and {dfT.shape[1]} columns")
     dfT = dfT.reset_index(drop=True)
     dfT.fillna('', inplace=True)
     # print('Done fix tables')
@@ -567,6 +568,11 @@ if __name__ == '__main__':
         if col not in key_cols:
             dfT = dfT.drop(columns=[col])
 
+    for col in key_cols:
+        if col not in dfT.columns.tolist():
+            logger.warning(f"Column {col} not found in the table. Adding it with empty values.")
+            dfT[col] = ''
+
     dfT = dfT[key_cols]
 
     # for idx, row in dfT.iterrows():
@@ -609,12 +615,7 @@ if __name__ == '__main__':
     # end = time.time()
     # print("Execution time for load_table: ", end - start)
 
-    start = time.time()
-    load_table
-    end = time.time()
-    print("Execution time for load_table: ", end - start)
-
 
     ## output combined dataframe
     dfT.to_csv(output, sep='\t', index=False)
-    print('\nData successfully aggregated and saved in:\n%s\n' % output)
+    logger.info(f"Finished processing. Output file: {output}")
