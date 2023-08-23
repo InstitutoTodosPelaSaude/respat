@@ -1,3 +1,6 @@
+import logging
+
+
 def aggregate_results(df, test_id_columns, test_result_columns):
     """
     Aggregates the test results from a single test into a single row.
@@ -18,7 +21,33 @@ def aggregate_results(df, test_id_columns, test_result_columns):
         pandas DataFrame: dataframe with aggregated results
     """
 
+    FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    logger = logging.getLogger("AGGREGATE RESULTS")
+    # add handler to stdout
+    handler = logging.StreamHandler()
+    # Logger all levels
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(FORMAT)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+
     df_test_results = df[test_id_columns + test_result_columns].copy()
+
+    logger.info(f"Starting aggregation of {len(df_test_results)} rows")
+    logger.info(f"Using {test_id_columns} as grouping columns")
+    logger.info(f"Using {test_result_columns} as test result columns")
+
+    # Replace the test results with 1, 0, -1
+    logger.info("Mapping test results to 1, 0, -1")
+
+    # SHOW WARNING IF THERE ARE ANY OTHER VALUES THAN Pos, Neg, NT
+    for test_result_column in test_result_columns:
+        test_result_column_values = set(df_test_results[test_result_column].unique())
+        if len(test_result_column_values - {"Pos", "Neg", "NT"}) > 0:
+            logger.warning(
+                f"Column {test_result_column} contains values other than Pos, Neg, NT - {test_result_column_values}"
+            )
 
     df_test_results = (
         df_test_results
@@ -34,6 +63,8 @@ def aggregate_results(df, test_id_columns, test_result_columns):
         )
     )
 
+    logger.info("Aggregating test results using AT LEAST ONE POSITIVE")
+
     df_test_results = (
         df_test_results
         .groupby(test_id_columns)
@@ -43,10 +74,18 @@ def aggregate_results(df, test_id_columns, test_result_columns):
         )
     )
 
+    logger.info("Joining aggregated test results back to the original dataframe")
+
     # Join the aggregated test results back with the original dataframe
     df = df.drop(columns=test_result_columns).merge(
         df_test_results, on=test_id_columns, how="inner"
     )
+
+    print(df.columns)
+
+    logger.info("Mapping test results back to Pos, Neg, NT")
+
+    print(df.columns)
 
     # map back the test results
     df = df.assign(
