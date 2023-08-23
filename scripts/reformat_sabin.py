@@ -151,29 +151,84 @@ def fix_datatable(df):
         pandas dataframe: fixed dataframe
     """        
 
+    FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    logger = logging.getLogger("SABIN FIX DATATABLE")
+    # add handler to stdout
+    handler = logging.StreamHandler()
+    # Logger all levels
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(FORMAT)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+
+
     if 'OS' not in df.columns.tolist():
-        print('\t\tWARNING! Unknown file format. Check for inconsistencies.')
+        logger.warning("Unknown file format. Check for inconsistencies.")
         return df
     
+    logger.info("Fixing dtypes and handling dates")
+
 # define columns dtypes to reduce the use of memory
     df["OS"] = df["OS"].astype('str')
     df["Código Posto"] = df["Código Posto"].astype('int16')
     df["Estado"] = df["Estado"].astype('str')
     df["Municipio"] = df["Municipio"].astype('str')
-    df["DataAtendimento"] = df["DataAtendimento"].apply(convert_to_datetime_sabin).astype('datetime64[ns]')
-    df["DataNascimento"] = df["DataNascimento"].apply(convert_to_datetime_sabin).astype('datetime64[ns]')
-    df["DataAssinatura"] = df["DataAssinatura"].apply(convert_to_datetime_sabin).astype('datetime64[ns]')
+
+    DATE_FORMATS = ['%d/%m/%Y', '%Y-%d-%m', '%Y-%d-%m %H:%M:%S', '%Y-%m-%d', '%Y-%m-%d %H:%M:%S']
+
+    df['DataAtendimentoOriginal'] = df['DataAtendimento'].astype('str')
+    df['DataNascimentoOriginal'] = df['DataNascimento'].astype('str')
+    df['DataAssinaturaOriginal'] = df['DataAssinatura'].astype('str')
+
+    df["DataAtendimento"] = pd.to_datetime(df["DataAtendimentoOriginal"], format=DATE_FORMATS[0], errors='coerce')
+    df["DataNascimento"] = pd.to_datetime(df["DataNascimentoOriginal"], format=DATE_FORMATS[0], errors='coerce')
+    df["DataAssinatura"] = pd.to_datetime(df["DataAssinaturaOriginal"], format=DATE_FORMATS[0], errors='coerce')
+
+    for date_format in DATE_FORMATS[1:]:
+        logger.info(f"Trying to convert datetime with format {date_format}")
+
+        df["DataAtendimento"] = df["DataAtendimento"].mask(
+            df["DataAtendimento"].isnull(),
+            pd.to_datetime(df["DataAtendimentoOriginal"], format=date_format, errors='coerce')
+        )
+        df["DataNascimento"] = df["DataNascimento"].mask(
+            df["DataNascimento"].isnull(),
+            pd.to_datetime(df["DataNascimentoOriginal"], format=date_format, errors='coerce')
+        )
+        df["DataAssinatura"] = df["DataAssinatura"].mask(
+            df["DataAssinatura"].isnull(),
+            pd.to_datetime(df["DataAssinaturaOriginal"], format=date_format, errors='coerce')
+        )
+
+    df['DataAtendimento'] = df['DataAtendimento'].astype('datetime64[ns]')
+    df['DataNascimento'] = df['DataNascimento'].astype('datetime64[ns]')
+    df['DataAssinatura'] = df['DataAssinatura'].astype('datetime64[ns]')
+
+    # show head of date columns
+
+    logger.info(f"DataAtendimento - {df['DataAtendimento'].min()} - {df['DataAtendimento'].max()}")
+    logger.info(f"DataNascimento - {df['DataNascimento'].min()} - {df['DataNascimento'].max()}")
+    logger.info(f"DataAssinatura - {df['DataAssinatura'].min()} - {df['DataAssinatura'].max()}")
+
+    # df["DataAtendimento"] = df["DataAtendimento"].apply(convert_to_datetime_sabin).astype('datetime64[ns]')
+    # df["DataNascimento"] = df["DataNascimento"].apply(convert_to_datetime_sabin).astype('datetime64[ns]')
+    # df["DataAssinatura"] = df["DataAssinatura"].apply(convert_to_datetime_sabin).astype('datetime64[ns]')
     df["Sexo"] = df["Sexo"].astype('str')
     df["Descricao"] = df["Descricao"].astype('str')
     df["Parametro"] = df["Parametro"].astype('str')
     df["Resultado"] = df["Resultado"].astype('str')
 
-    ## add sample_id and test_kit
+    ## add sample_id and test_kit 
     df.insert(1, 'sample_id', '')
     df.insert(1, 'test_kit', '')
 
+    logger.info("Finished fixing dtypes and handling dates")
+
     # Test Kit Covid
     # Test Kit 21 -> Painel Molecular
+
+    logger.info("Starting creating test_kit")
 
     PARAMETERS_21_TESTS = {
         # PAINCOVI
@@ -223,6 +278,8 @@ def fix_datatable(df):
             else "unknown"
     )
 
+    logger.info("Finished creating test_kit")
+
     # test_name = 'test_21' if 'test_21' in dfL['test_kit'].tolist() else 'covid'
     df.fillna('', inplace=True)
 
@@ -263,6 +320,8 @@ def fix_datatable(df):
         .query("Parametro not in ('RESPIRA', 'RESPIRA1', 'RESPIRA2', 'RESPIRA3', 'RESPIRA4')")
 
     )
+
+    logger.info("Calculating test results")
 
     # Fixing Result column on RESPIRA records
     # Negative if Resultado == '0'
@@ -366,7 +425,7 @@ def fix_datatable(df):
             'BP',	# Bordetella pertussis
             'CP',	# Chlamydophila pneumoniae
             'MP',	# Mycoplasma pneumoniae
-            'HI',	# Haemophilus influenza
+            'HI',	# Haemophilus in'f'luenza
             'LP',	# Legionella pneumophila
             'SP',	# Streptococcus pneumoniae
         },
@@ -387,6 +446,8 @@ def fix_datatable(df):
             axis=1
         )
 
+    logger.info("Finished calculating test results")
+
     # Add missing test_result columns
     for pathogen in PATHOGENS_PARAMETERS.keys():
         test_result = pathogen + '_test_result'
@@ -395,6 +456,9 @@ def fix_datatable(df):
     
     # drop Resultado
     df = df.drop(columns=['Resultado'], errors='ignore')
+
+    logger.info("Finished fix_datatables")
+    logger.info(f"DataFrame columns - {df.columns}")
 
     return df
 
@@ -536,6 +600,8 @@ if __name__ == '__main__':
                 df.insert(0, 'lab_id', id)
                 df = df.rename(columns=dict_rename[id])
 
+                logger.info(f"Renamed columns - {df.columns}")
+
                 dfT = dfT.reset_index(drop=True)
                 df = df.reset_index(drop=True)  
 
@@ -548,6 +614,7 @@ if __name__ == '__main__':
                 logger.info(f"Finished fixing values - {filename}")
                 logger.info(f"New shape: {df.shape[0]} rows and {df.shape[1]} columns")
                 logger.info(f"Starting to aggregate results - {filename}")
+
 
                 id_columns = [
                     'test_id',
@@ -593,11 +660,15 @@ if __name__ == '__main__':
 
                 # Calculate AGE from BIRTHDATE and DATE_TESTING
                 # Replacing null values with 1700-01-01 and 2200-01-01 to avoid errors (age 500)
-                df['birthdate'] = df['birthdate'].replace([np.nan, None, ''], '1700-01-01')
+                df['birthdate'] = df['birthdate'].replace([np.nan, None, ''], '1800-01-01')
                 df['date_testing'] = df['date_testing'].replace([np.nan, None, ''], '2200-01-01')
+                
+                logger.info(f"Calculating DATE TESTING - {df['date_testing'].min()} - {df['date_testing'].max()}")
+                logger.info(f"Calculating BIRTHDATE - {df['birthdate'].min()} - {df['birthdate'].max()}")
 
                 ## Calculate age, considering NaT, and round to 1 decimal; replace NaN with -1
-                df['age'] = (pd.to_datetime(df['date_testing']) - pd.to_datetime(df['birthdate'])) / np.timedelta64(1, 'Y')
+                df['age'] = (pd.to_datetime(df['date_testing']) - pd.to_datetime(df['birthdate'])) 
+                df['age'] = df['age'] / np.timedelta64(1, 'Y')
                 df['age'] = df['age'].apply(lambda x: np.round(x, 1)) # round to 1 decimal
                 df['age'] = df['age'].apply(lambda x: int(x))
 
