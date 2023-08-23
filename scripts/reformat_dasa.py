@@ -14,7 +14,7 @@ import time
 import argparse
 from epiweeks import Week
 from tqdm import tqdm ## add to requirements
-
+import re
 
 import warnings
 import logging
@@ -563,6 +563,32 @@ if __name__ == '__main__':
         'ENTERO_test_result',
         'BAC_test_result'
         ]
+    
+
+    # possible sex values [nan, 'MASCULINO', 'FEMININO', 'F', 'M', 'I', 'None', 'INDETERMINADO']
+    logger.info("Start fixing SEX and AGE columns")
+    sex_mapping = {
+        'MASCULINO': 'M',
+        'FEMININO': 'F',
+        'F': 'F',
+        'M': 'M',
+        'I': '',
+        'None': '',
+        'INDETERMINADO': ''
+    }
+    dfT['sex'] = dfT['sex'].replace(sex_mapping)
+
+    pattern_float = '(\d+\.\d+)'
+    pattern_int = '(\d+)'
+
+    dfT['age'] = dfT['age'].astype('str').apply(
+        lambda x: re.findall(pattern_float, x)[0] 
+        if re.findall(pattern_float, x) else 
+        re.findall(pattern_int, x)[0] 
+        if re.findall(pattern_int, x) 
+        else '-1'
+    ).fillna('-1').astype('int')
+    dfT['age'] = dfT['age'].apply(lambda x: -1 if x > 120 else x)
 
     for col in dfT.columns.tolist():
         if col not in key_cols:
@@ -574,13 +600,6 @@ if __name__ == '__main__':
             dfT[col] = ''
 
     dfT = dfT[key_cols]
-
-    # for idx, row in dfT.iterrows():
-    #     date = dfT.loc[idx, 'date_testing']
-    #     if type(date) == str:
-    #         lab = dfT.loc[idx, 'lab_id']
-    #         sid = dfT.loc[idx, 'sample_id']
-    #         print(date, lab, sid)
 
     def date2str(value):
         try:
@@ -606,15 +625,6 @@ if __name__ == '__main__':
 
     ## sorting by date
     dfT = dfT.sort_values(by=['lab_id', 'test_id', 'date_testing'])
-
-    ## time controller for optimization of functions `def`
-    ## example with tqdm for def
-    # start = time.time()
-    # for load_table in tqdm(range(1), desc='Execution Time'):
-    #     load_table
-    # end = time.time()
-    # print("Execution time for load_table: ", end - start)
-
 
     ## output combined dataframe
     dfT.to_csv(output, sep='\t', index=False)
