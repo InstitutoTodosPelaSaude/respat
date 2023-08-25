@@ -179,24 +179,6 @@ def fix_datatable(df):
 
     # Test Kit Covid
     # Test Kit 21 -> Painel Molecular
-    logger.info("Start deduplicating using cache")
-    id_columns = [
-        'test_id',
-        'state',
-        'location',
-        'date_testing',
-        'sex',
-        'test_kit',
-    ]
-
-    for column in id_columns:
-        if column not in df.columns.tolist():
-            df[column] = ''
-            logger.warning(f"No '{column}' column found. Please check for inconsistencies. Meanwhile, an empty '{column}' column was added.")
-
-    df, dfN = deduplicate(df, dfN, id_columns)
-    if df.empty:
-        return dfN
 
     logger.info("Starting creating test_kit")
 
@@ -522,47 +504,6 @@ if __name__ == '__main__':
                 data_entry = {old_data: new_data}
                 dict_corrections[id][colname].update(data_entry)
 
-    def deduplicate(dfL, dfN, id_columns):
-        # generate sample id
-        dfL["unique_id"] = (
-            dfL[id_columns].astype(str).sum(axis=1)
-        )  # combine values in rows as a long string
-        dfL["sample_id"] = dfL["unique_id"].apply(
-            lambda x: generate_id(x)[:16]
-        )  # generate alphanumeric sample id
-
-        # prevent reprocessing of previously processed samples
-        if cache_file not in [np.nan, "", None]:
-            duplicates = set(
-                dfL[dfL["sample_id"].isin(dfT["sample_id"].tolist())][
-                    "sample_id"
-                ].tolist()
-            )
-            if len(duplicates) == len(set(dfL["sample_id"].tolist())):
-                print(
-                    "\n\t\t * ALL samples (%s) were already previously processed. All set!"
-                    % len(duplicates)
-                )
-                dfN = (
-                    pd.DataFrame()
-                )  # create empty dataframe, and populate it with reformatted data from original lab dataframe
-                dfL = pd.DataFrame()
-                return dfN, dfL
-            else:
-                print(
-                    "\n\t\t * A total of %s out of %s samples were already previously processed."
-                    % (str(len(duplicates)), str(len(set(dfL["sample_id"].tolist()))))
-                )
-                new_samples = len(set(dfL["sample_id"].tolist())) - len(duplicates)
-                print("\t\t\t - Processing %s new samples..." % (str(new_samples)))
-                dfL = dfL[
-                    ~dfL["sample_id"].isin(dfT["sample_id"].tolist())
-                ]  # remove duplicates
-        else:
-            new_samples = len(dfL["sample_id"].tolist())
-            print("\n\t\t\t - Processing %s new samples..." % (str(new_samples)))
-        return dfL, dfN
-
     ## open data files
     for sub_folder in os.listdir(input_folder):
         if sub_folder == 'SABIN': # check if folder is the correct one
@@ -627,6 +568,25 @@ if __name__ == '__main__':
                 logger.info(f"Finished fixing values - {filename}")
                 logger.info(f"New shape: {df.shape[0]} rows and {df.shape[1]} columns")
                 logger.info(f"Starting to aggregate results - {filename}")
+
+
+                id_columns = [
+                    'test_id',
+                    'state',
+                    'location',
+                    'date_testing',
+                    'sex',
+                    'test_kit',
+                ]
+
+                for column in id_columns:
+                    if column not in df.columns.tolist():
+                        df[column] = ''
+                        logger.warning(f"No '{column}' column found. Please check for inconsistencies. Meanwhile, an empty '{column}' column was added.")
+
+                # Assigning test_id
+                df['unique_id'] = df[id_columns].astype(str).sum(axis=1)  ## combine values in rows as a long string
+                df['sample_id'] = df['unique_id'].apply(lambda x: generate_id(x)[:16])  ## generate alphanumeric sample id with 16 characters
 
                 df = aggregate_results(
                     df, 

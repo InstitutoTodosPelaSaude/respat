@@ -24,11 +24,11 @@ dependencies:
   - pip=22.1.1
   - pyqt
 
-- pip:
-  - epiweeks
-  - pycountry-convert
-  - PyQt5
-  - patool==1.12
-  - lxml==4.9.1
-  - colour
-  - plotly
+  - pip:
+    - epiweeks
+    - pycountry-convert
+    - PyQt5
+    - patool==1.12
+    - lxml==4.9.1
+    - colour
+    - plotly

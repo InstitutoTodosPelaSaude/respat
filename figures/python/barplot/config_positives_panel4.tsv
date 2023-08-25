@@ -14,7 +14,7 @@ legend_position	horizontal	# Legend position: horizontal (bottom), or vertical (
 plot_label		# Legend position (e.g. best , upper left, etc. If left empty, no legend will be displayed)
 column_legend	4	# number of columns of the legend
 xtick_every	2	# frequency of tick in X axis
-ytick_every	50	# frequency of tick in Y axis
+ytick_every	200	# frequency of tick in Y axis
 tick_order		# order of ticks in non-numerical axis
 show_grid	y	# show grip for X or Y axis?
 nrows	1	# number of rows of the multiplot
@@ -22,7 +22,7 @@ ncols	1	# number of columns of the multiplot
 same_yscale	no	# same Y axis scale
 same_xscale	no	# same Y axis scale
 min_y		# minimum value for Y axis
-max_y	550	# maximum value for Y axis
+max_y	2500	# maximum value for Y axis
 log_scale	no	# convert values to white scale
 figsize	7, 6	# figure size: width and height, in inches
 backend	pdf	# matplotlib backend (recommended: pdf, Qt5Agg). Options: 'GTK3Agg', 'GTK3Cairo', 'GTK4Agg', 'GTK4Cairo', 'MacOSX', 'nbAgg', 'QtAgg', 'QtCairo', 'Qt5Agg', 'Qt5Cairo', 'TkAgg', 'TkCairo', 'WebAgg', 'WX', 'WXAgg', 'WXCairo', 'agg', 'cairo', 'pdf', 'pgf', 'ps', 'svg', 'template'
