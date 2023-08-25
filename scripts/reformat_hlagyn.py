@@ -529,7 +529,7 @@ if __name__ == '__main__':
                 break
             
             logger.info(f"Processing DataFrame from: {id}")
-            for filename in sorted(os.listdir(input_folder + sub_folder)):
+            for file_i, filename in enumerate(sorted(os.listdir(input_folder + sub_folder))):
                 
                 if not filename.endswith(('tsv', 'csv', 'xls', 'xlsx', 'parquet')):
                     continue
@@ -538,6 +538,7 @@ if __name__ == '__main__':
                     continue
 
                 logger.info(f"Loading data from: {input_folder + sub_folder + filename}")
+                logger.info(f"File {file_i + 1} of {len(os.listdir(input_folder + sub_folder))}")
                 df = load_table(input_folder + sub_folder + filename)
                 df.fillna('', inplace=True)
                 df.reset_index(drop=True)
@@ -654,41 +655,6 @@ if __name__ == '__main__':
         'ENTERO_test_result',
         'BAC_test_result'
         ]
-
-    # key_cols = {
-    #     'lab_id': 'category',
-    #     'test_id': str,
-    #     'test_kit': 'category',
-    #     'sample_id': str,
-    #     # 'region': str,
-    #     'state': 'category',
-    #     'location': str,
-    #     'date_testing': 'datetime64[ns]',
-    #     'epiweek': 'datetime64[ns]',
-    #     'age': 'int16',
-    #     'sex': 'category',
-    #     'FLUA_test_result': 'category',
-    #     'Ct_FluA': 'float32',
-    #     'FLUB_test_result': 'category',
-    #     'Ct_FluB': 'float32',
-    #     'VSR_test_result': 'category',
-    #     'Ct_VSR': 'float32',
-    #     'SC2_test_result': 'category',
-    #     'Ct_geneE': 'float32',
-    #     'Ct_geneN': 'float32',
-    #     'Ct_geneS': 'float32',
-    #     'Ct_ORF1ab': 'float32',
-    #     'Ct_RDRP': 'float32',
-    #     'geneS_detection': 'category',
-    #     'META_test_result': 'category',
-    #     'RINO_test_result': 'category',
-    #     'PARA_test_result': 'category',
-    #     'ADENO_test_result': 'category',
-    #     'BOCA_test_result': 'category',
-    #     'COVS_test_result': 'category',
-    #     'ENTERO_test_result': 'category',
-    #     'BAC_test_result': 'category'
-    #     }
 
     for col in dfT.columns.tolist():
         if col not in key_cols:

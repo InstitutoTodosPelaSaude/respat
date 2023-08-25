@@ -614,6 +614,13 @@ if __name__ == '__main__':
                             }
                             df = df.replace(dict_corrections_full)
 
+                            # Replace the nan values with 'NT' in the test result columns
+                            for col in df.columns.tolist():
+                                if col.endswith('_test_result'):
+                                    df[col] = df[col].replace(np.nan, 'NT')
+                                    df[col] = df[col].replace('', 'NT')
+                                    df[col] = df[col].replace('nan', 'NT')
+
                             ## add age from birthdate, if age is missing
                             if 'birthdate' in df.columns.tolist():
                                 for idx, row in tqdm(df.iterrows()):

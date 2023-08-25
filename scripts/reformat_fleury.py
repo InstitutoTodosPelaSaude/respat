@@ -495,7 +495,7 @@ if __name__ == "__main__":
 
             logger.info(f"Processing DataFrame from: {id}")
 
-            for filename in sorted(os.listdir(input_folder + sub_folder)):
+            for file_i, filename in enumerate(sorted(os.listdir(input_folder + sub_folder))):
                 if not filename.endswith((".tsv", ".csv", ".xls", ".xlsx", ".parquet")):
                     continue
                 if filename.startswith(("~", "_")):
@@ -504,6 +504,7 @@ if __name__ == "__main__":
                 logger.info(
                     f"Loading data from: {input_folder + sub_folder + filename}"
                 )
+                logger.info(f"File {file_i + 1} of {len(os.listdir(input_folder + sub_folder))}")
                 df = load_table(input_folder + sub_folder + filename, separator="\t")
 
                 logger.info(f"Loaded {df.shape[0]} rows and {df.shape[1]} columns")

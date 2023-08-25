@@ -14,6 +14,7 @@ import argparse
 from epiweeks import Week
 from tqdm.auto import tqdm
 from typing import Any
+import re
 
 from utils import aggregate_results
 
@@ -103,41 +104,22 @@ def generate_id(value):
     """ 
     return hashlib.sha1(str(value).encode('utf-8')).hexdigest()
 
-
-def convert_to_datetime_sabin(date):
-
-    date = str(date)
-    # if date is instance of str, convert it
-    # try format dd/mm/yyyy
-    try:
-        return pd.to_datetime(date, format='%d/%m/%Y')
-    except:
-        pass
-
-    # try format yyyy-dd-mm
-    try:
-        return pd.to_datetime(date, format='%Y-%d-%m')
-    except:
-        pass
-
-    # try format yyyy-dd-mm hh:mm:ss
-    try:
-        return pd.to_datetime(date, format='%Y-%d-%m %H:%M:%S')
-    except:
-        pass
-
-    # try format yyyy-mm-dd
-    try:
-        return pd.to_datetime(date, format='%Y-%m-%d')
-    except:
-        pass
-
-    # try format yyyy-mm-dd hh:mm:ss
-    try:
-        return pd.to_datetime(date, format='%Y-%m-%d %H:%M:%S')
-    except:
-        pass
-
+tqdm.pandas()
+def convert_date_column(df: pd.DataFrame, column_name: str) -> None:
+    original_dates = df[column_name].copy()
+    def convert_date(date: Any) -> str:
+        try:
+            return pd.to_datetime(date, format='%d/%m/%Y', dayfirst=True).strftime('%d/%m/%Y')
+        except ValueError:
+            try:
+                return pd.to_datetime(date).strftime('%d/%m/%Y')
+            except Exception as e:
+                logging.warning(f"Failed to convert date {date}: {e}")
+                return date
+    df[column_name] = df[column_name].progress_apply(convert_date)
+    modified_rows = df[original_dates != df[column_name]].index
+    if len(modified_rows) > 0:
+        logging.info(f"Modified rows for column {column_name}: {modified_rows.tolist()}")
 
 def fix_datatable(df):
     """
@@ -175,45 +157,15 @@ def fix_datatable(df):
     df["Estado"] = df["Estado"].astype('str')
     df["Municipio"] = df["Municipio"].astype('str')
 
-    DATE_FORMATS = ['%d/%m/%Y', '%Y-%d-%m', '%Y-%d-%m %H:%M:%S', '%Y-%m-%d', '%Y-%m-%d %H:%M:%S']
-
-    df['DataAtendimentoOriginal'] = df['DataAtendimento'].astype('str')
-    df['DataNascimentoOriginal'] = df['DataNascimento'].astype('str')
-    df['DataAssinaturaOriginal'] = df['DataAssinatura'].astype('str')
-
-    df["DataAtendimento"] = pd.to_datetime(df["DataAtendimentoOriginal"], format=DATE_FORMATS[0], errors='coerce')
-    df["DataNascimento"] = pd.to_datetime(df["DataNascimentoOriginal"], format=DATE_FORMATS[0], errors='coerce')
-    df["DataAssinatura"] = pd.to_datetime(df["DataAssinaturaOriginal"], format=DATE_FORMATS[0], errors='coerce')
-
-    for date_format in DATE_FORMATS[1:]:
-        logger.info(f"Trying to convert datetime with format {date_format}")
-
-        df["DataAtendimento"] = df["DataAtendimento"].mask(
-            df["DataAtendimento"].isnull(),
-            pd.to_datetime(df["DataAtendimentoOriginal"], format=date_format, errors='coerce')
-        )
-        df["DataNascimento"] = df["DataNascimento"].mask(
-            df["DataNascimento"].isnull(),
-            pd.to_datetime(df["DataNascimentoOriginal"], format=date_format, errors='coerce')
-        )
-        df["DataAssinatura"] = df["DataAssinatura"].mask(
-            df["DataAssinatura"].isnull(),
-            pd.to_datetime(df["DataAssinaturaOriginal"], format=date_format, errors='coerce')
-        )
-
-    df['DataAtendimento'] = df['DataAtendimento'].astype('datetime64[ns]')
-    df['DataNascimento'] = df['DataNascimento'].astype('datetime64[ns]')
-    df['DataAssinatura'] = df['DataAssinatura'].astype('datetime64[ns]')
+    convert_date_column( df, "DataAtendimento" )
+    convert_date_column( df, "DataNascimento" )
+    convert_date_column( df, "DataAssinatura" )
 
     # show head of date columns
-
     logger.info(f"DataAtendimento - {df['DataAtendimento'].min()} - {df['DataAtendimento'].max()}")
     logger.info(f"DataNascimento - {df['DataNascimento'].min()} - {df['DataNascimento'].max()}")
     logger.info(f"DataAssinatura - {df['DataAssinatura'].min()} - {df['DataAssinatura'].max()}")
 
-    # df["DataAtendimento"] = df["DataAtendimento"].apply(convert_to_datetime_sabin).astype('datetime64[ns]')
-    # df["DataNascimento"] = df["DataNascimento"].apply(convert_to_datetime_sabin).astype('datetime64[ns]')
-    # df["DataAssinatura"] = df["DataAssinatura"].apply(convert_to_datetime_sabin).astype('datetime64[ns]')
     df["Sexo"] = df["Sexo"].astype('str')
     df["Descricao"] = df["Descricao"].astype('str')
     df["Parametro"] = df["Parametro"].astype('str')
@@ -227,6 +179,24 @@ def fix_datatable(df):
 
     # Test Kit Covid
     # Test Kit 21 -> Painel Molecular
+    logger.info("Start deduplicating using cache")
+    id_columns = [
+        'test_id',
+        'state',
+        'location',
+        'date_testing',
+        'sex',
+        'test_kit',
+    ]
+
+    for column in id_columns:
+        if column not in df.columns.tolist():
+            df[column] = ''
+            logger.warning(f"No '{column}' column found. Please check for inconsistencies. Meanwhile, an empty '{column}' column was added.")
+
+    df, dfN = deduplicate(df, dfN, id_columns)
+    if df.empty:
+        return dfN
 
     logger.info("Starting creating test_kit")
 
@@ -552,6 +522,47 @@ if __name__ == '__main__':
                 data_entry = {old_data: new_data}
                 dict_corrections[id][colname].update(data_entry)
 
+    def deduplicate(dfL, dfN, id_columns):
+        # generate sample id
+        dfL["unique_id"] = (
+            dfL[id_columns].astype(str).sum(axis=1)
+        )  # combine values in rows as a long string
+        dfL["sample_id"] = dfL["unique_id"].apply(
+            lambda x: generate_id(x)[:16]
+        )  # generate alphanumeric sample id
+
+        # prevent reprocessing of previously processed samples
+        if cache_file not in [np.nan, "", None]:
+            duplicates = set(
+                dfL[dfL["sample_id"].isin(dfT["sample_id"].tolist())][
+                    "sample_id"
+                ].tolist()
+            )
+            if len(duplicates) == len(set(dfL["sample_id"].tolist())):
+                print(
+                    "\n\t\t * ALL samples (%s) were already previously processed. All set!"
+                    % len(duplicates)
+                )
+                dfN = (
+                    pd.DataFrame()
+                )  # create empty dataframe, and populate it with reformatted data from original lab dataframe
+                dfL = pd.DataFrame()
+                return dfN, dfL
+            else:
+                print(
+                    "\n\t\t * A total of %s out of %s samples were already previously processed."
+                    % (str(len(duplicates)), str(len(set(dfL["sample_id"].tolist()))))
+                )
+                new_samples = len(set(dfL["sample_id"].tolist())) - len(duplicates)
+                print("\t\t\t - Processing %s new samples..." % (str(new_samples)))
+                dfL = dfL[
+                    ~dfL["sample_id"].isin(dfT["sample_id"].tolist())
+                ]  # remove duplicates
+        else:
+            new_samples = len(dfL["sample_id"].tolist())
+            print("\n\t\t\t - Processing %s new samples..." % (str(new_samples)))
+        return dfL, dfN
+
     ## open data files
     for sub_folder in os.listdir(input_folder):
         if sub_folder == 'SABIN': # check if folder is the correct one
@@ -578,8 +589,10 @@ if __name__ == '__main__':
                 df.fillna('', inplace=True)
                 df.reset_index(drop=True)
 
+
                 logger.info(f"Loaded {df.shape[0]} rows and {df.shape[1]} columns")
 
+                # df['ExcelSheet'] = re.compile(".+(PAINCOVI|RESPIRA|PCRESPSL|PCRVRESP|[0-9]{4}).csv").search(filename).group(1)
                 # Remove duplicates
                 df = df.drop_duplicates(
                     subset=['OS', 'DataAtendimento', 'Parametro', 'Resultado', 'Descricao'], 
@@ -614,25 +627,6 @@ if __name__ == '__main__':
                 logger.info(f"Finished fixing values - {filename}")
                 logger.info(f"New shape: {df.shape[0]} rows and {df.shape[1]} columns")
                 logger.info(f"Starting to aggregate results - {filename}")
-
-
-                id_columns = [
-                    'test_id',
-                    'state',
-                    'location',
-                    'date_testing',
-                    'sex',
-                    'test_kit',
-                ]
-
-                for column in id_columns:
-                    if column not in df.columns.tolist():
-                        df[column] = ''
-                        logger.warning(f"No '{column}' column found. Please check for inconsistencies. Meanwhile, an empty '{column}' column was added.")
-
-                # Assigning test_id
-                df['unique_id'] = df[id_columns].astype(str).sum(axis=1)  ## combine values in rows as a long string
-                df['sample_id'] = df['unique_id'].apply(lambda x: generate_id(x)[:16])  ## generate alphanumeric sample id with 16 characters
 
                 df = aggregate_results(
                     df, 
