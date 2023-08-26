@@ -88,44 +88,23 @@ def load_table(file):
 
 
 def fix_datatable(df):
-    PATHOGENS = {
-        "FLUA": ["Influenza A"],
-        "FLUB": ["Influenza B"],
-        "VSR": ["Vírus Sincicial Respiratório"],
-        "SC2": ["COVID"],
-        "META": [],
-        "PARA": [],
-        "ADENO": [],
-        "COVS": [],
-        "RINO": [],
-        "ENTERO": [],
-        "BOCA": [],
-        "BAC": [],
-    }
+    
+    df = df.query("PATOGENO not in ('DENGUE', 'VARIOLA SIMIA')")
 
     # generate sample id
     df.insert(1, "sample_id", "")
     df.fillna("", inplace=True)
 
-    # dfN = dfL
-    dfN = (
-        pd.DataFrame()
-    )  # create empty dataframe, and populate it with reformatted data from original lab dataframe
-
-    #
-    # [WIP] Retrocompatibilidade com dados anteriores
-    #
-    # date_cols = ["DH_COLETA", "DT_COLETA"]
-    # date = "DT_LIBERACAO"
-    # for col in date_cols:
-    #     if col in df.columns.tolist():
-    #         date = col
-
-    # main_id_column = "NU_ACCESSION"
-    # if "NU_ACCESSION" not in df.columns.tolist():
-    #     main_id_column = "ACCESSION"
-
-    id_columns = ["ACCESSION", "EXAME", "DETALHE_EXAME", "IDADE", "SEXO", "DH_COLETA", "MUNICÍPIO", "ESTADO"]
+    id_columns = [
+        "ACCESSION", 
+        "EXAME",
+        # "MUNICÍPIO",
+        # "EXAME",
+        "IDADE",
+        "SEXO", 
+        # "DH_COLETA",
+        # "RESULTADO"
+    ]
 
     for column in id_columns:
         if column not in df.columns.tolist():
@@ -136,22 +115,20 @@ def fix_datatable(df):
             )
 
     # assign id and deduplicate
+    dfN = df
     df, dfN = deduplicate(df, dfN, id_columns)
-
     if df.empty:
         return dfN
 
     df_pivot = (
-        df
-        .query("PATOGENO not in ('DENGUE', 'VARIOLA SIMIA')")
-        .assign(
+        df.assign(
             DETALHE_EXAME=lambda df: df["DETALHE_EXAME"].fillna("S/ DETALHE"),
         )
         .assign(
             RESULTADO=lambda df: df["RESULTADO"]
             .str.lower()
             .str.strip()
-            .replace(
+            .map(
                 {
                     "não detectado": "Neg",
                     "detectado": "Pos",
@@ -159,26 +136,40 @@ def fix_datatable(df):
             )
         )
         .assign(
-            # DIVIDINDO INFLUENZA EM A E B
+            # CORRIGINDO PATOGENO INFLUENZA
             PATOGENO=lambda df: df.apply(
                 lambda row: "INFLUENZA B"
-                if (" B" in row["DETALHE_EXAME"] and "INFLU" in row["DETALHE_EXAME"])
+                if "INFLUENZA B" in row["DETALHE_EXAME"]
                 else "INFLUENZA A"
                 if "INF A" in row["DETALHE_EXAME"] or "INFLUENZA" in row["DETALHE_EXAME"]
                 else row["PATOGENO"],
                 axis=1,
             )
         )
-        .pivot_table(
-            index=id_columns+["sample_id"],
-            columns="PATOGENO",
-            values="RESULTADO",
-            aggfunc="first",
-            fill_value="NT"
-        )
-        .reset_index()
     )
 
+    # Assign results to each pathogen
+    PATHOGEN_NAMES = {
+        'SC2': {'COVID'},
+        'FLUA': {'INFLUENZA A'},
+        'FLUB': {'INFLUENZA B'},
+        'VSR': {'VIRUS SINCICIAL RESPIRATÓRIO'},
+        'META':{},
+        'RINO':{},
+        'PARA':{},
+        'ADENO':{},
+        'BOCA':{},
+        'COVS':{},
+        'BAC':{},
+        'ENTERO':{},
+    }
+
+    for pathogen, name_list in PATHOGEN_NAMES.items():
+        test_result = pathogen + '_test_result'
+        df_pivot[test_result] = df_pivot.apply(
+            lambda x: 'NT' if x['PATOGENO'] not in name_list else x['RESULTADO'], 
+            axis=1
+        )
 
     # CREATE test_kit COLUMN
     test_kit_dict = {
@@ -219,23 +210,24 @@ def fix_datatable(df):
             test_kit=lambda df: 
             df["EXAME"].replace(test_kit_dict),
         )
-        .drop(columns=["EXAME", "DETALHE_EXAME"])
+        .drop(columns=["EXAME"], axis=1)
+        .drop(columns=["DETALHE_EXAME"], axis=1)
+    )
 
+    print("\n\nTest 2")
+    print(df_pivot.columns.tolist())
+    df_pivot =(
         # RENAME COLUMNS
+        df_pivot
         .rename(
             columns = {
-                "INFLUENZA A": "FLUA_test_result",
-                "INFLUENZA B": "FLUB_test_result",
-                "VIRUS SINCICIAL RESPIRATÓRIO": "VSR_test_result",
-                "COVID": "SC2_test_result",
-
                 "ACCESSION": "test_id",
 
                 "DH_COLETA": "date_testing",
                 "ESTADO":"state",
                 "MUNICÍPIO":"location",
                 "IDADE": "age",
-                "SEXO": "sex"
+                "SEXO": "sex"   
             }
         )
     )
@@ -252,17 +244,7 @@ def fix_datatable(df):
     df_pivot["Ct_geneS"] = ""
     df_pivot["geneS_detection"] = ""
 
-    # adding missing pathogen columns
-    for pathogen in PATHOGENS.keys():
-        if pathogen+"_test_result" not in df_pivot.columns.tolist():
-            df_pivot[pathogen+"_test_result"] = "NT"
-
-    print(df_pivot.head())
-
-    # dfN = dfN.append(df_pivot, ignore_index=True)
-    dfN = pd.concat([dfN, df_pivot])
-
-    return dfN
+    return df_pivot
 
 if __name__ == "__main__":
     FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -458,8 +440,12 @@ if __name__ == "__main__":
                 logger.info(f"Starting to fix DataFrame - {filename}")
                 df = fix_datatable(df)
                 logger.info(f"Finished fixing DataFrame - {filename}")
-                logger.info(f"New shape: {df.shape[0]} rows and {df.shape[1]} columns")
 
+                if df.empty:
+                    logger.warning(f"Empty DataFrame after fixing - {filename}. Check for inconsistencies.")
+                    continue
+
+                logger.info(f"New shape: {df.shape[0]} rows and {df.shape[1]} columns")
                 dict_corrections_full = {
                     #**dict_corrections['EINSTEIN'] 
                     **dict_corrections['any']
@@ -491,6 +477,7 @@ if __name__ == "__main__":
                         'BAC_test_result',
                     ],
                 )
+                
                 logger.info(f"Finished aggregating results - {filename}")
                 logger.info(f"New shape: {df.shape[0]} rows and {df.shape[1]} columns")
 
