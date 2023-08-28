@@ -157,9 +157,28 @@ def fix_datatable(df):
     df["Estado"] = df["Estado"].astype('str')
     df["Municipio"] = df["Municipio"].astype('str')
 
-    convert_date_column( df, "DataAtendimento" )
-    convert_date_column( df, "DataNascimento" )
-    convert_date_column( df, "DataAssinatura" )
+    # convert_date_column( df, "DataAtendimento" )
+    # convert_date_column( df, "DataNascimento" )
+    # convert_date_column( df, "DataAssinatura" )
+
+    # if data is in format dd/mm/yy replace by dd/mm/yyyy
+    # replace by 2020, 2021, 2022 or 2023
+    format = r"\d{2}/\d{2}/\d{2}$"
+    reformat_year_function = lambda x: x if re.match(format, x) is None else x[:-2] + "20" + x[-2:]
+    df["DataAtendimento"] = df["DataAtendimento"].apply(
+        reformat_year_function
+    )
+    df["DataNascimento"] = df["DataNascimento"].apply(
+        reformat_year_function
+    )
+    df["DataAssinatura"] = df["DataAssinatura"].apply(
+        reformat_year_function
+    )
+
+    # convert dates ad %d/%m/%Y
+    df["DataAtendimento"] = pd.to_datetime(df["DataAtendimento"], format='%d/%m/%Y', dayfirst=True)
+    df["DataNascimento"] = pd.to_datetime(df["DataNascimento"], format='%d/%m/%Y', dayfirst=True, errors='coerce')
+    df["DataAssinatura"] = pd.to_datetime(df["DataAssinatura"], format='%d/%m/%Y', dayfirst=True)
 
     # show head of date columns
     logger.info(f"DataAtendimento - {df['DataAtendimento'].min()} - {df['DataAtendimento'].max()}")
@@ -594,6 +613,18 @@ if __name__ == '__main__':
                 df.fillna('', inplace=True)
                 df.reset_index(drop=True)
 
+                if filename.endswith('csv'):
+                    # 20230823_SABIN_Painel respiratorio 2023ateSE33.xlsx - PAINCOVI.csv
+                    # 20230823_SABIN_Painel respiratorio 2023ateSE33.xlsx - RESPIRA.csv
+                    # 20230823_SABIN_Painel respiratorio 2023ateSE33.xlsx - PCRESPSL.csv
+                    # 20230823_SABIN_Painel respiratorio 2023ateSE33.xlsx - PCRVRESP.csv
+                    df['ExcelSheet'] = (
+                        'PAINCOVI' if 'PAINCOVI' in filename 
+                        else 'RESPIRA' if 'RESPIRA' in filename 
+                        else 'PCRESPSL' if 'PCRESPSL' in filename 
+                        else 'PCRVRESP' if 'PCRVRESP' in filename 
+                        else 'COVID'
+                    )
 
                 logger.info(f"Loaded {df.shape[0]} rows and {df.shape[1]} columns")
 

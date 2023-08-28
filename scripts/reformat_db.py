@@ -607,6 +607,10 @@ if __name__ == '__main__':
                             dfT = dfT.reset_index(drop=True)
                             df = df.reset_index(drop=True)
 
+                            # add 'age' 
+                            if 'age' not in df.columns.tolist():
+                                df['age'] = '-1'
+
                             print('\n# Fixing data points...')
                             dict_corrections_full = {
                                 **dict_corrections['DB Mol'],
