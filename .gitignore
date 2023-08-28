@@ -18,4 +18,6 @@ data/*/*/*.parquet
 results/*.tsv
 results
 
+tests/
+
 .snakemake
