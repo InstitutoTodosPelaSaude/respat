@@ -177,6 +177,8 @@ def fix_datatable(df):
         if "A" in age
         else 0
         if "D" in age
+        else int(age)
+        if "M" not in age
         else 0
     )
 
