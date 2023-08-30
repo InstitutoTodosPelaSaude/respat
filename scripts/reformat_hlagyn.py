@@ -16,7 +16,7 @@ from epiweeks import Week
 from tqdm.auto import tqdm
 
 import logging
-
+from utils import has_something_to_be_done
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -381,6 +381,17 @@ if __name__ == '__main__':
     # cache_file = input_folder + 'combined_cache.tsv'
     # output = input_folder + today + '_combined_data_hlagyn.tsv'
 
+    lab_data_folder = input_folder + 'HLAGyn/'
+    if not has_something_to_be_done(lab_data_folder):
+        logger.info(f"No files found in {lab_data_folder}")
+        if cache_file not in [np.nan, '', None]: 
+            logger.info(f"Just copying {cache_file} to {output}")
+            os.system(f"cp {cache_file} {output}")
+        else:
+            logger.info(f"No cache file found. Nothing to be done.")
+        logger.info(f"Data successfully aggregated and saved in: {output}")
+        exit()
+
 
     def load_table(file):
         df = ''
@@ -592,6 +603,7 @@ if __name__ == '__main__':
                 df2 = pd.concat(frames).reset_index(drop=True)
                 dfT = df2
 
+    logger.info(f"Finished processing all files.")
     dfT = dfT.reset_index(drop=True)
     dfT.fillna('', inplace=True)
     # print('Done fix tables')
@@ -614,6 +626,7 @@ if __name__ == '__main__':
             epiweek = ''
         return epiweek
 
+    logger.info(f"Creating epiweek column")
     dfT['epiweek'] = dfT['date_testing'].apply(lambda x: get_epiweeks(x))
 
     ## add gene S detection column (blank)
@@ -678,6 +691,7 @@ if __name__ == '__main__':
 
     # dfT['date_testing'] = dfT['date_testing'].apply(lambda x: x.strftime('%Y-%m-%d') if x is pd.Timestamp else '')
 
+    logger.info(f"Finding duplicates")
     ## output duplicates rows
     duplicates = dfT.duplicated().sum()
     if duplicates > 0:

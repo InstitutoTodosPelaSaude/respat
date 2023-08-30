@@ -13,7 +13,7 @@ import time
 import argparse
 from epiweeks import Week
 
-from utils import aggregate_results
+from utils import aggregate_results, has_something_to_be_done
 
 import logging
 
@@ -369,6 +369,18 @@ if __name__ == "__main__":
     logger.info(f"Correction file: {correction_file}")
     logger.info(f"Cache file: {cache_file}")
     logger.info(f"Output file: {output}")
+
+    lab_data_folder = input_folder + 'FLEURY/'
+    if not has_something_to_be_done(lab_data_folder):
+        print(f"No files found in {lab_data_folder}")
+        if cache_file not in [np.nan, '', None]: 
+            print(f"Just copying {cache_file} to {output}")
+            os.system(f"cp {cache_file} {output}")
+        else:
+            print(f"No cache file found. Nothing to be done.")
+        print(f"Data successfully aggregated and saved in: {output}")
+        exit()
+
 
     # # path = "/Users/anderson/google_drive/ITpS/projetos_itps/resp_pathogens/analyses/dev/20230428_fleury/"
     # path = "/Users/Anderson/Library/CloudStorage/GoogleDrive-anderson.brito@itps.org.br/Outros computadores/My Mac mini/google_drive/ITpS/projetos_itps/resp_pathogens/analyses/dev/20230428_fleury/"

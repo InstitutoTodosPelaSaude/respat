@@ -15,6 +15,7 @@ import argparse
 from epiweeks import Week
 from tqdm import tqdm ## add to requirements
 import re
+from utils import has_something_to_be_done
 
 import warnings
 import logging
@@ -310,6 +311,16 @@ if __name__ == '__main__':
     # correction_file = input_folder + 'fix_values.xlsx'
     # cache_file = input_folder + 'combined_cache.tsv'
     # output = input_folder + today + '_combined_dasa_test.tsv'
+
+    lab_data_folder = input_folder + 'DASA/'
+    if not has_something_to_be_done(lab_data_folder):
+        logger.info(f"No files found in {lab_data_folder}")
+        if cache_file not in [np.nan, '', None]: 
+            logger.info(f"Just copying {cache_file} to {output}")
+            os.system(f"cp {cache_file} {output}")
+        else:
+            logger.info(f"No cache file found. Nothing to be done.")
+        exit()
 
 
     def load_table(file):

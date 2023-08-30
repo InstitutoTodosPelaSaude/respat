@@ -1,4 +1,5 @@
 import logging
+import os
 
 
 def aggregate_results(df, test_id_columns, test_result_columns):
@@ -100,3 +101,16 @@ def aggregate_results(df, test_id_columns, test_result_columns):
     df = df.reset_index(drop=True)
 
     return df
+
+
+def has_something_to_be_done( data_folder ):
+
+    for dir in os.listdir(data_folder):
+        if not dir.endswith( ('.tsv', '.csv', '.xls', '.xlsx', '.parquet') ):
+            continue
+        if dir.startswith( ('~', '_') ):
+            continue
+        
+        return True
+
+    return False
