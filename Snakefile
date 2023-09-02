@@ -908,8 +908,19 @@ rule copy_files:
 		"""
 		python scripts/copy_files.py
         """
-		# cp results/demography/combined_matrix_agegroup_100k.tsv figures/pyramid
 
+rule flourish:
+	message:
+		"""
+		Script to generate Flourish plots from data
+		"""
+	params:
+		path_flourish = "figures/flourish",
+	shell:
+		"""
+		python scripts/flourish.py \
+			--path_flourish {params.path_flourish}
+        """
 
 #rule xxx:
 #	message:
@@ -931,6 +942,8 @@ rule copy_files:
 #			--extra-columns {params.} \
 #			--date-column {params.} \
 #			--output {output.}
+# 		
+#		cp results/combined.tsv data/combined_cache.tsv
 #		"""
 
 
