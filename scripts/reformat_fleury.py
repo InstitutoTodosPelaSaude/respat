@@ -3,7 +3,8 @@
 # Created by: Anderson Brito
 # Email: anderson.brito@itps.org.br
 # Release date: 2022-12-15
-## Last update: 2023-07-04
+## Last update: 2023-09-01
+## Refactor by Bragatte e João Pedro
 
 import pandas as pd
 import os
@@ -363,7 +364,7 @@ if __name__ == "__main__":
     cache_file = args.cache
     output = args.output
 
-    logger.info(f"Starting SABIN ETL")
+    logger.info(f"Starting FLEURY ETL")
     logger.info(f"Input folder: {input_folder}")
     logger.info(f"Rename file: {rename_file}")
     logger.info(f"Correction file: {correction_file}")
@@ -382,13 +383,6 @@ if __name__ == "__main__":
         exit()
 
 
-    # # path = "/Users/anderson/google_drive/ITpS/projetos_itps/resp_pathogens/analyses/dev/20230428_fleury/"
-    # path = "/Users/Anderson/Library/CloudStorage/GoogleDrive-anderson.brito@itps.org.br/Outros computadores/My Mac mini/google_drive/ITpS/projetos_itps/resp_pathogens/analyses/dev/20230428_fleury/"
-    # input_folder = path + 'data/'
-    # rename_file = input_folder + 'rename_columns.xlsx'
-    # correction_file = input_folder + 'fix_values.xlsx'
-    # cache_file = '' # path + 'data/cache.tsv'#input_folder + '2022-08-02_combined_data_dasa.tsv'
-    # output = input_folder + today + '_combined_data_fleury.tsv'
 
     # load cache file
     if cache_file not in [np.nan, "", None]:

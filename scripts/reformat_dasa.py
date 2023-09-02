@@ -3,8 +3,8 @@
 ## Created by: Anderson Brito
 ## Email: anderson.brito@itps.org.br
 ## Release date: 2022-01-19
-## Last update: 2023-07-04
-## Refactor by: Bragatte
+## Last update: 2023-09-01
+## Refactor by Bragatte e João Pedro
 
 import pandas as pd
 import os
@@ -297,7 +297,7 @@ if __name__ == '__main__':
     cache_file = args.cache
     output = args.output
 
-    logger.info(f"Starting SABIN ETL")
+    logger.info(f"Starting DASA ETL")
     logger.info(f"Input folder: {input_folder}")
     logger.info(f"Rename file: {rename_file}")
     logger.info(f"Correction file: {correction_file}")
