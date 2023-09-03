@@ -207,7 +207,7 @@ def fix_datatable(df):
         'Resultado',
     ]
 
-    id_columns = ['OS', 'Estado', 'Municipio', 'DataAtendimento', 'Sexo', 'Descricao']
+    id_columns = ['OS', 'Estado', 'Municipio', 'DataAtendimento', 'Sexo', 'DataNascimento', 'Descricao']
     for column in id_columns:
         if column not in df.columns.tolist():
             df[column] = ''
