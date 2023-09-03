@@ -65,7 +65,7 @@ rule arguments:
 		index_column = "division_exposure",
 
 		start_date = "2021-11-01",
-		end_date = "2023-08-19" ## update last epidemiological week here
+		end_date = "2023-08-26" ## update last epidemiological week here
 
 arguments = rules.arguments.params
 
@@ -906,25 +906,21 @@ rule copy_files:
 		"""
 	shell:
 		"""
-		cp results/combined.tsv data/combined_cache.tsv
+		python scripts/copy_files.py
+        """
 
-		cp results/demography/combined_matrix_agegroup.tsv figures/python/pyramid
-
-		cp results/country/combined_matrix_country_posneg_full_weeks.tsv figures/python/barplot
-		cp results/country/combined_matrix_country_posneg_panel_weeks.tsv figures/python/barplot
-		cp results/country/combined_matrix_country_posneg_allpat_weeks.tsv figures/python/barplot
-
-		cp results/country/combined_matrix_country_posrate_full_weeks.tsv figures/python/lineplot
-
-		cp results/state/combined_matrix_state_posrate_full_weeks.tsv figures/python/heatmap
-		cp results/demography/matrix_agegroups_weeks_SC2_posrate.tsv figures/python/heatmap
-		cp results/demography/matrix_agegroups_weeks_FLUA_posrate.tsv figures/python/heatmap
-		cp results/demography/matrix_agegroups_weeks_FLUB_posrate.tsv figures/python/heatmap
-		cp results/demography/matrix_agegroups_weeks_VSR_posrate.tsv figures/python/heatmap
-
-	"""
-		# cp results/demography/combined_matrix_agegroup_100k.tsv figures/pyramid
-
+rule flourish:
+	message:
+		"""
+		Script to generate Flourish plots from data
+		"""
+	params:
+		path_flourish = "figures/flourish",
+	shell:
+		"""
+		python scripts/flourish.py \
+			--path_flourish {params.path_flourish}
+        """
 
 #rule xxx:
 #	message:
@@ -946,6 +942,8 @@ rule copy_files:
 #			--extra-columns {params.} \
 #			--date-column {params.} \
 #			--output {output.}
+# 		
+#		cp results/combined.tsv data/combined_cache.tsv
 #		"""
 
 
@@ -956,6 +954,7 @@ rule remove_figs:
 		rm figures/*/*/matrix*
 		rm figures/*/*/combined*
 		rm figures/*/*/*.pdf
+		rm figures/*/*.xlsx
 		"""
 
 
