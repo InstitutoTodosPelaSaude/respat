@@ -3,6 +3,7 @@ name: diag
 channels:
   - conda-forge
   - defaults
+  - bioconda
 
 dependencies:
   - python==3.8.16
@@ -32,3 +33,4 @@ dependencies:
     - lxml==4.9.1
     - colour
     - plotly
+    - tqdm
