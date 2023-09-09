@@ -14,6 +14,7 @@ import time
 import argparse
 from epiweeks import Week
 from tqdm import tqdm ## add to requirements
+from utils import aggregate_results
 
 ## Settings
 import warnings
@@ -69,13 +70,17 @@ def fix_datatable(dfL):
         test_name = "Hilab exams"
 
         print('\t\tDados test HILAB >> Correct format. Proceeding...')
+
+        ## drop arboviruses and bHCG tests
+        arboviruses = ['Dengue', 'Zika','bHCG']
+        dfL = dfL[~dfL['Exame'].str.contains('|'.join(arboviruses))]
         
         ## define columns dtypes to reduce the use of memory
         dfL["Código Da Cápsula"] = dfL["Código Da Cápsula"].astype('str')
         dfL["Região Do Brasil"] = dfL["Região Do Brasil"].astype('str')
         dfL["Estado"] = dfL["Estado"].astype('str')
         dfL["Cidade"] = dfL["Cidade"].astype('str')
-        dfL["Data Do Exame"] = pd.to_datetime(dfL["Data Do Exame"], )
+        dfL["Data Do Exame"] = pd.to_datetime(dfL["Data Do Exame"], dayfirst=True, format='%d/%m/%Y')
         dfL["Sexo"] = dfL["Sexo"].astype('str')
         dfL["Idade"] = dfL["Idade"].replace('', '-1').astype('int8')
         dfL["Exame"] = dfL["Exame"].astype('str')
@@ -104,9 +109,7 @@ def fix_datatable(dfL):
             'Região Do Brasil',
             'Estado',
             'Cidade',
-            'Data Do Exame',
-            'Exame',
-            'Resultado',
+            'Data Do Exame'
             ]
 
         for column in tqdm(id_columns):
@@ -158,14 +161,17 @@ def fix_datatable(dfL):
             'BAC': [],
             }
 
-        for p, t in tqdm(pathogens.items()):
-            if p == 'SC2':
-                mask = dfL['Exame'].isin(t)
+        for pathogen, tests in tqdm(pathogens.items()):
+            if pathogen == 'SC2':
+                mask = dfL['Exame'].isin(tests)
             else:
-                mask = dfL['Exame'].isin(t)
+                mask = dfL['Exame'].isin(tests)
 
-            dfL.loc[mask, p + '_test_result'] = dfL.loc[mask].apply(assign_test_result, axis=1)
-            dfL.loc[~mask, p + '_test_result'] = 'NT'
+            dfL.loc[mask, pathogen + '_test_result'] = dfL.loc[mask].apply(assign_test_result, axis=1)
+            dfL.loc[~mask, pathogen + '_test_result'] = 'NT'
+
+        dfL = dfL.drop(columns=['Resultado'])
+        return dfL
     else:
         #print('\t\tFile = ' + file)
         print('\t\tWARNING! Unknown file format. Check for inconsistencies.')
@@ -333,6 +339,9 @@ if __name__ == '__main__':
                 df.fillna('', inplace=True)
                 df.reset_index(drop=True)
 
+                test_id = df.query("`Código Da Cápsula` == '0003942169:019:900:75:0:VLP4CV:DATA'")["Data Do Exame"]
+                print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
+
                 logger.info(f"Loaded {df.shape[0]} rows and {df.shape[1]} columns")
 
                 logger.info(f"Starting to fix DataFrame - {filename}")
@@ -343,10 +352,17 @@ if __name__ == '__main__':
                     logger.warning(f"Empty DataFrame after fixing - {filename}. Check for inconsistencies.")
                     continue
 
+                test_id = df.query("`Código Da Cápsula` == '0003942169:019:900:75:0:VLP4CV:DATA'")["Data Do Exame"]
+                print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
+
+
                 df.insert(0, 'lab_id', id)
                 df = rename_columns(id, df) # fix data points
                 dfT = dfT.reset_index(drop=True)
                 df = df.reset_index(drop=True)
+
+                test_id = df.query("`test_id` == '0003942169:019:900:75:0:VLP4CV:DATA'")["date_testing"]
+                print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
 
                 logger.info(f"Starting to fix values - {filename}")
 
@@ -355,6 +371,30 @@ if __name__ == '__main__':
 
                 logger.info(f"Finished fixing values - {filename}")
                 logger.info(f"New shape: {df.shape[0]} rows and {df.shape[1]} columns")
+
+                df = aggregate_results(
+                    df, 
+                    test_id_columns=[
+                        'test_id', 'test_kit'
+                    ], 
+                    test_result_columns=[
+                        'FLUB_test_result',
+                        'FLUA_test_result',
+                        'VSR_test_result',
+                        'SC2_test_result',
+                        'META_test_result',
+                        'RINO_test_result',
+                        'PARA_test_result',
+                        'ADENO_test_result',
+                        'BOCA_test_result',
+                        'COVS_test_result',
+                        'ENTERO_test_result',
+                        'BAC_test_result',
+                    ],
+                )
+
+                test_id = df.query("`test_id` == '0003942169:019:900:75:0:VLP4CV:DATA'")["date_testing"]
+                print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
 
                 # checking duplicates
                 # print(df.columns[df.columns.duplicated(keep=False)])
@@ -376,6 +416,9 @@ if __name__ == '__main__':
                         ## Change the data type of the 'age' column to integer
                         df['age'] = pd.to_numeric(df['age'], downcast='integer',errors='coerce').fillna(-1).astype(int)
                         df['age'] = df['age'].apply(int)
+                
+                test_id = df.query("`test_id` == '0003942169:019:900:75:0:VLP4CV:DATA'")["date_testing"]
+                print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
 
                 ## fix sex information
                 df['sex'] = df['sex'].apply(lambda x: x[0] if x != '' else x)
@@ -384,16 +427,26 @@ if __name__ == '__main__':
                 df2 = pd.concat(frames).reset_index(drop=True)
                 dfT = df2
 
+                test_id = df.query("`test_id` == '0003942169:019:900:75:0:VLP4CV:DATA'")["date_testing"]
+                print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
+
                 logger.info(f"Finished processing file: {filename}")
 
     dfT = dfT.reset_index(drop=True)
     dfT.fillna('', inplace=True)
     # print('Done fix tables')
 
+    test_id = dfT.query("`test_id` == '0003942169:019:900:75:0:VLP4CV:DATA'")["date_testing"]
+    print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
+
+
 ## reformat dates and get ages
     dfT['date_testing'] = pd.to_datetime(dfT['date_testing'], dayfirst=True, format='%d/%m%/%Y')
 
     dfT['epiweek'] = dfT['date_testing'].apply(lambda x: get_epiweeks(x))
+
+    test_id = dfT.query("`test_id` == '0003942169:019:900:75:0:VLP4CV:DATA'")["date_testing"]
+    print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
 
 ## IF Molecular tests -> Add gene detection results
     def check_detection(ctValue):
@@ -457,6 +510,9 @@ if __name__ == '__main__':
         'BAC_test_result',
         ]
 
+    test_id = dfT.query("`test_id` == '0003942169:019:900:75:0:VLP4CV:DATA'")["date_testing"]
+    print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
+
     for col in dfT.columns.tolist():
         if col not in key_cols:
             dfT = dfT.drop(columns=[col])
@@ -470,6 +526,9 @@ if __name__ == '__main__':
 
     dfT['date_testing'] = dfT['date_testing'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else 'XXXXX')
 
+    test_id = dfT.query("`test_id` == '0003942169:019:900:75:0:VLP4CV:DATA'")["date_testing"]
+    print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
+
     duplicates = dfT.duplicated().sum()
     if duplicates > 0:
         mask = dfT.duplicated(keep=False) # find duplicates
@@ -480,6 +539,11 @@ if __name__ == '__main__':
 
     ## drop duplicates
     dfT = dfT.drop_duplicates(keep='last')
+
+    test_id = dfT.query("`test_id` == '0003942169:019:900:75:0:VLP4CV:DATA'")["date_testing"]
+    print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
+
+    
 
 ## sorting by date
     dfT = dfT.sort_values(by=['lab_id', 'test_id', 'date_testing'])
