@@ -602,8 +602,9 @@ if __name__ == '__main__':
                 frames = [dfT, df]
                 df2 = pd.concat(frames).reset_index(drop=True)
                 dfT = df2
+                logger.info(f"Finished aggregating results - {filename}")
 
-    logger.info(f"Finished processing all files.")
+    logger.info(f"Finished processing all files. Final shape {dfT.shape[0]} rows and {dfT.shape[1]} columns")
     dfT = dfT.reset_index(drop=True)
     dfT.fillna('', inplace=True)
     # print('Done fix tables')

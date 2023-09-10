@@ -100,8 +100,8 @@ def fix_datatable(df):
         "EXAME",
         # "MUNICÍPIO",
         # "EXAME",
-        "IDADE",
-        "SEXO", 
+        # "IDADE",
+        # "SEXO", 
         # "DH_COLETA",
         # "RESULTADO"
     ]
@@ -119,6 +119,28 @@ def fix_datatable(df):
     df, dfN = deduplicate(df, dfN, id_columns)
     if df.empty:
         return dfN
+    
+    # Fix age column
+    df_fix_age_column = (
+        df
+        [ id_columns + ['IDADE'] ]
+        .assign(
+            IDADE=df['IDADE'].astype(int)
+        )
+        .groupby(id_columns)
+        .max()
+    )
+
+    # replace the fixed age column on the original dataframe
+    df = (
+        df
+        .drop(columns=['IDADE'], axis=1)
+        .merge(
+            df_fix_age_column, 
+            on=id_columns, 
+            how='inner'
+        )
+    )
 
     df_pivot = (
         df.assign(
@@ -139,7 +161,7 @@ def fix_datatable(df):
             # CORRIGINDO PATOGENO INFLUENZA
             PATOGENO=lambda df: df.apply(
                 lambda row: "INFLUENZA B"
-                if "INFLUENZA B" in row["DETALHE_EXAME"]
+                if "INFLUENZA B" in row["DETALHE_EXAME"] or "INFLUENZA  B" in row["DETALHE_EXAME"]
                 else "INFLUENZA A"
                 if "INF A" in row["DETALHE_EXAME"] or "INFLUENZA" in row["DETALHE_EXAME"]
                 else row["PATOGENO"],
@@ -472,7 +494,7 @@ if __name__ == "__main__":
                 df = aggregate_results(
                     df, 
                     [
-                        'test_id', 'test_kit'
+                        'test_id', 'test_kit', 'sample_id'
                     ], 
                     [
                         'FLUB_test_result',
