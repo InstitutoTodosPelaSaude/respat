@@ -197,17 +197,15 @@ def fix_datatable(df):
     logger.info("Finished fixing dtypes and handling dates")
 
     id_columns = [
-        'OS', # 'test_id',
-        'Estado', # 'state',
-        'Municipio', # 'location',
-        'DataAtendimento', # 'date_testing',
-        'Sexo', # 'sex',
-        'Parametro', # 'test_kit',
-        'DataNascimento',
-        'Resultado',
+        'OS', 
+        'Estado', 
+        'Municipio', 
+        'DataAtendimento', 
+        'Sexo', 
+        'DataNascimento', 
+        'Descricao'
     ]
 
-    id_columns = ['OS', 'Estado', 'Municipio', 'DataAtendimento', 'Sexo', 'DataNascimento', 'Descricao']
     for column in id_columns:
         if column not in df.columns.tolist():
             df[column] = ''
@@ -639,10 +637,9 @@ if __name__ == '__main__':
 
                 logger.info(f"Loaded {df.shape[0]} rows and {df.shape[1]} columns")
 
-                # df['ExcelSheet'] = re.compile(".+(PAINCOVI|RESPIRA|PCRESPSL|PCRVRESP|[0-9]{4}).csv").search(filename).group(1)
                 # Remove duplicates
                 df = df.drop_duplicates(
-                    subset=['OS', 'DataAtendimento', 'Parametro', 'Resultado', 'Descricao'], 
+                    subset=['OS', 'Descricao', 'Parametro'], 
                     keep='last'
                 )
 
