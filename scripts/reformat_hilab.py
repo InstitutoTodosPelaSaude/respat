@@ -339,9 +339,6 @@ if __name__ == '__main__':
                 df.fillna('', inplace=True)
                 df.reset_index(drop=True)
 
-                test_id = df.query("`Código Da Cápsula` == '0003942169:019:900:75:0:VLP4CV:DATA'")["Data Do Exame"]
-                print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
-
                 logger.info(f"Loaded {df.shape[0]} rows and {df.shape[1]} columns")
 
                 logger.info(f"Starting to fix DataFrame - {filename}")
@@ -352,17 +349,10 @@ if __name__ == '__main__':
                     logger.warning(f"Empty DataFrame after fixing - {filename}. Check for inconsistencies.")
                     continue
 
-                test_id = df.query("`Código Da Cápsula` == '0003942169:019:900:75:0:VLP4CV:DATA'")["Data Do Exame"]
-                print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
-
-
                 df.insert(0, 'lab_id', id)
                 df = rename_columns(id, df) # fix data points
                 dfT = dfT.reset_index(drop=True)
                 df = df.reset_index(drop=True)
-
-                test_id = df.query("`test_id` == '0003942169:019:900:75:0:VLP4CV:DATA'")["date_testing"]
-                print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
 
                 logger.info(f"Starting to fix values - {filename}")
 
@@ -393,9 +383,6 @@ if __name__ == '__main__':
                     ],
                 )
 
-                test_id = df.query("`test_id` == '0003942169:019:900:75:0:VLP4CV:DATA'")["date_testing"]
-                print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
-
                 # checking duplicates
                 # print(df.columns[df.columns.duplicated(keep=False)])
                 # print(dfT.columns[dfT.columns.duplicated(keep=False)])
@@ -416,9 +403,6 @@ if __name__ == '__main__':
                         ## Change the data type of the 'age' column to integer
                         df['age'] = pd.to_numeric(df['age'], downcast='integer',errors='coerce').fillna(-1).astype(int)
                         df['age'] = df['age'].apply(int)
-                
-                test_id = df.query("`test_id` == '0003942169:019:900:75:0:VLP4CV:DATA'")["date_testing"]
-                print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
 
                 ## fix sex information
                 df['sex'] = df['sex'].apply(lambda x: x[0] if x != '' else x)
@@ -427,26 +411,17 @@ if __name__ == '__main__':
                 df2 = pd.concat(frames).reset_index(drop=True)
                 dfT = df2
 
-                test_id = df.query("`test_id` == '0003942169:019:900:75:0:VLP4CV:DATA'")["date_testing"]
-                print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
-
                 logger.info(f"Finished processing file: {filename}")
 
     dfT = dfT.reset_index(drop=True)
     dfT.fillna('', inplace=True)
     # print('Done fix tables')
 
-    test_id = dfT.query("`test_id` == '0003942169:019:900:75:0:VLP4CV:DATA'")["date_testing"]
-    print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
-
 
 ## reformat dates and get ages
     dfT['date_testing'] = pd.to_datetime(dfT['date_testing'], dayfirst=True, format='%d/%m%/%Y')
 
     dfT['epiweek'] = dfT['date_testing'].apply(lambda x: get_epiweeks(x))
-
-    test_id = dfT.query("`test_id` == '0003942169:019:900:75:0:VLP4CV:DATA'")["date_testing"]
-    print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
 
 ## IF Molecular tests -> Add gene detection results
     def check_detection(ctValue):
@@ -510,9 +485,6 @@ if __name__ == '__main__':
         'BAC_test_result',
         ]
 
-    test_id = dfT.query("`test_id` == '0003942169:019:900:75:0:VLP4CV:DATA'")["date_testing"]
-    print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
-
     for col in dfT.columns.tolist():
         if col not in key_cols:
             dfT = dfT.drop(columns=[col])
@@ -526,9 +498,6 @@ if __name__ == '__main__':
 
     dfT['date_testing'] = dfT['date_testing'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else 'XXXXX')
 
-    test_id = dfT.query("`test_id` == '0003942169:019:900:75:0:VLP4CV:DATA'")["date_testing"]
-    print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
-
     duplicates = dfT.duplicated().sum()
     if duplicates > 0:
         mask = dfT.duplicated(keep=False) # find duplicates
@@ -539,11 +508,6 @@ if __name__ == '__main__':
 
     ## drop duplicates
     dfT = dfT.drop_duplicates(keep='last')
-
-    test_id = dfT.query("`test_id` == '0003942169:019:900:75:0:VLP4CV:DATA'")["date_testing"]
-    print(f'>>>>>>>>>>>>>>>>>>> {test_id}')
-
-    
 
 ## sorting by date
     dfT = dfT.sort_values(by=['lab_id', 'test_id', 'date_testing'])
