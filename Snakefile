@@ -41,6 +41,7 @@ rule all:
 		snakemake --cores all demogposrate_go
 
 		snakemake --cores all copy_files
+		snakemake --cores all flourish
 		"""
 
 		
