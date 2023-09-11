@@ -80,7 +80,7 @@ def fix_datatable(dfL):
         dfL["Região Do Brasil"] = dfL["Região Do Brasil"].astype('str')
         dfL["Estado"] = dfL["Estado"].astype('str')
         dfL["Cidade"] = dfL["Cidade"].astype('str')
-        dfL["Data Do Exame"] = pd.to_datetime(dfL["Data Do Exame"], dayfirst=True, format='%d/%m/%Y')
+        dfL["Data Do Exame"] = pd.to_datetime(dfL["Data Do Exame"], dayfirst=True, format='%d/%m/%Y').apply(lambda s: s.strftime('%Y-%m-%d'))
         dfL["Sexo"] = dfL["Sexo"].astype('str')
         dfL["Idade"] = dfL["Idade"].replace('', '-1').astype('int8')
         dfL["Exame"] = dfL["Exame"].astype('str')
@@ -118,7 +118,6 @@ def fix_datatable(dfL):
                 print('\t\t\t - No \'%s\' column found. Please check for inconsistencies. Meanwhile, an empty \'%s\' column was added.' % (column, column))
 
         ## adding missing columns
-        dfL['patient_id'] = ''
         dfL['Ct_FluA'] = ''
         dfL['Ct_FluB'] = ''
         dfL['Ct_VSR'] = ''
@@ -419,8 +418,6 @@ if __name__ == '__main__':
 
 
 ## reformat dates and get ages
-    dfT['date_testing'] = pd.to_datetime(dfT['date_testing'], dayfirst=True, format='%d/%m%/%Y')
-
     dfT['epiweek'] = dfT['date_testing'].apply(lambda x: get_epiweeks(x))
 
 ## IF Molecular tests -> Add gene detection results
@@ -495,8 +492,6 @@ if __name__ == '__main__':
             dfT[col] = ''
 
     dfT = dfT[key_cols]
-
-    dfT['date_testing'] = dfT['date_testing'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else 'XXXXX')
 
     duplicates = dfT.duplicated().sum()
     if duplicates > 0:
