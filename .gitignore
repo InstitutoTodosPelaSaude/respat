@@ -21,3 +21,5 @@ results
 tests/
 
 .snakemake
+
+__pycache__/
