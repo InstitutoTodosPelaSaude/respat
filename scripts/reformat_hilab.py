@@ -82,9 +82,15 @@ def fix_datatable(dfL):
         dfL["Cidade"] = dfL["Cidade"].astype('str')
         dfL["Data Do Exame"] = pd.to_datetime(dfL["Data Do Exame"], dayfirst=True, format='%d/%m/%Y').apply(lambda s: s.strftime('%Y-%m-%d'))
         dfL["Sexo"] = dfL["Sexo"].astype('str')
-        dfL["Idade"] = dfL["Idade"].replace('', '-1').astype('int8')
+        dfL["Idade"] = dfL["Idade"].replace('', np.nan).astype(int, errors='ignore')
         dfL["Exame"] = dfL["Exame"].astype('str')
         dfL["Resultado"] = dfL["Resultado"].astype('str')
+
+        ## change negative ages to NaN
+        dfL.loc[dfL.fillna(0)['Idade'].astype(int) < 0, 'Idade'] = np.nan
+        ## change ages greater than 200 to NaN
+        dfL.loc[dfL.fillna(0)['Idade'].astype(int) > 127, 'Idade'] = np.nan
+        dfL["Idade"] = dfL["Idade"].apply(lambda x: str(x).split('.')[0] if str(x).split('.')[0].isdigit() else x).astype(int, errors='ignore')
 
         ## add sample_id and test_kit
         dfL['sample_id'] = ''
@@ -180,7 +186,7 @@ def fix_datatable(dfL):
 ## Args
 if __name__ == '__main__':
     FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logger = logging.getLogger("SABIN ETL")
+    logger = logging.getLogger("HILAB ETL")
     # add handler to stdout
     handler = logging.StreamHandler()
     # Logger all levels
@@ -208,7 +214,7 @@ if __name__ == '__main__':
     cache_file = args.cache
     output = args.output
 
-    logger.info(f"Starting SABIN ETL")
+    logger.info(f"Starting HILAB ETL")
     logger.info(f"Input folder: {input_folder}")
     logger.info(f"Rename file: {rename_file}")
     logger.info(f"Correction file: {correction_file}")
