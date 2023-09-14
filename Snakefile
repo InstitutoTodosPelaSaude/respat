@@ -217,7 +217,7 @@ rule reformat_einstein:
 	params:
 		datadir = arguments.datadir
 	output:
-		matrix = rules.files.input.combined1, # new combined1_lab or temp("results/combined_eintein.tsv")
+		matrix = "results/combined_eintein.tsv", # new combined1_lab or temp("results/combined_eintein.tsv")
 	shell:
 		"""
 		python scripts/reformat_einstein.py \
@@ -228,28 +228,28 @@ rule reformat_einstein:
 			--output {output.matrix}
 		"""
 
-# rule reformat_hilab:
-# 	message:
-# 		"""
-# 		Given the input data from the Hilab laboratory, we combine multiple files, create unique hashes for each row, manipulate and clean column variables, apply 'if' statements for specific cases, incorporate age and sex information, eliminate duplicates, and finally, save the output in a relational structure.
-# 		"""
-# 	input:
-# 		rename = arguments.rename_file,
-# 		correction = arguments.correction_file,
-# 		cache = rules.reformat_einstein.output.matrix # last lab
-# 	params:
-# 		datadir = arguments.datadir
-# 	output:
-# 		matrix = rules.files.input.combined1, # new combined1_lab or temp("results/combined_hilab.tsv")
-# 	shell:
-# 		"""
-# 		python scripts/reformat_einstein.py \
-# 			--datadir {params.datadir} \
-# 			--rename {input.rename} \
-# 			--correction {input.correction} \
-# 			--cache {input.cache} \
-# 			--output {output.matrix}
-# 		"""
+rule reformat_hilab:
+	message:
+		"""
+		Given the input data from the Hilab laboratory, we combine multiple files, create unique hashes for each row, manipulate and clean column variables, apply 'if' statements for specific cases, incorporate age and sex information, eliminate duplicates, and finally, save the output in a relational structure.
+		"""
+	input:
+		rename = arguments.rename_file,
+		correction = arguments.correction_file,
+		cache = rules.reformat_einstein.output.matrix # last lab
+	params:
+		datadir = arguments.datadir
+	output:
+		matrix = rules.files.input.combined1, # new combined1_lab or temp("results/combined_hilab.tsv")
+	shell:
+		"""
+		python scripts/reformat_hilab.py \
+			--datadir {params.datadir} \
+			--rename {input.rename} \
+			--correction {input.correction} \
+			--cache {input.cache} \
+			--output {output.matrix}
+		"""
 
 rule agegroups:
 	message:
@@ -917,10 +917,13 @@ rule flourish:
 		"""
 	params:
 		path_flourish = "figures/flourish",
+		end_date = arguments.end_date,
+
 	shell:
 		"""
 		python scripts/flourish.py \
-			--path_flourish {params.path_flourish}
+			--path_flourish {params.path_flourish} \
+			--end_date {params.end_date}
         """
 
 #rule xxx:
