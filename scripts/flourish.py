@@ -8,6 +8,8 @@ import argparse
 import pandas as pd
 import numpy as np
 import os
+from datetime import datetime, timedelta
+
 
 def generate_bar_posneg():
     bar_posneg = pd.read_csv("barplot/combined_matrix_country_posneg_allpat_weeks.tsv", sep='\t')
@@ -49,17 +51,21 @@ def generate_line_plots():
     lines_piv.to_excel('lineplot/line_full.xlsx', index=False)
     
 def generate_heatmap_positivos():
-    heat = pd.read_csv("heatmap/matrix_agegroups_weeks_SC2_posrate.tsv", sep='\t')
-    heat_cleaned = heat.drop('country', axis=1).dropna(axis=1)
-    heat_cleaned = heat_cleaned.rename(columns={'age_group': 'faixas etárias'})
-    heat_cleaned = heat_cleaned.loc[~heat_cleaned['SC2_test_result'].str.contains('Não Detectado|Not tested')]
-    heat_cleaned['faixas etárias'] = heat_cleaned['faixas etárias'].replace({'0-4': '00-04', '4-9': '04-09', '9-19': '09-19'})
-
-    heat_melted = pd.melt(heat_cleaned, id_vars=['SC2_test_result', 'faixas etárias'], var_name='semana epidemiológica', value_name='percentual')
-    heat_melted['percentual'] = heat_melted['percentual'].apply(lambda x: f'{round(x * 100, 2)}%')
-    heat_melted_positivos = heat_melted[heat_melted['SC2_test_result'] == 'Pos'].reset_index(drop=True)
+    targets = [('FLUA', 'Influenza_A_'), ('SC2', 'SARS-CoV-2_')]
     
-    heat_melted_positivos.to_excel('heatmap/heatmap_SC2demog.xlsx', index=False)
+    for target, rename_target in targets:
+        heat = pd.read_csv(f"heatmap/matrix_agegroups_weeks_{target}_posrate.tsv", sep='\t')
+        heat_cleaned = heat.drop('country', axis=1).dropna(axis=1)
+
+        heat_cleaned = heat_cleaned.rename(columns={'age_group': 'faixas etárias'})
+        heat_cleaned = heat_cleaned.loc[~heat_cleaned[f'{target}_test_result'].str.contains('Não Detectado|Not tested')]
+        heat_cleaned['faixas etárias'] = heat_cleaned['faixas etárias'].replace({'0-4': '00-04', '4-9': '04-09', '9-19': '09-19'})
+
+        heat_melted = pd.melt(heat_cleaned, id_vars=[f'{target}_test_result', 'faixas etárias'], var_name='semana epidemiológica', value_name='percentual')
+        heat_melted['percentual'] = heat_melted['percentual'].apply(lambda x: f'{round(x * 100, 2)}%')
+        heat_melted_positivos = heat_melted[heat_melted[f'{target}_test_result'] == 'Pos'].reset_index(drop=True)
+
+        heat_melted_positivos.to_excel(f'heatmap/heatmap_{rename_target}demog.xlsx', index=False)        
 
 def generate_heatmap_estados():
     heat_ufs = pd.read_csv("heatmap/combined_matrix_state_posrate_full_weeks.tsv", sep='\t')
@@ -88,8 +94,8 @@ def generate_heatmap_estados():
     heatmap_ufs = heatmap_ufs.sort_values(['Regiao', 'UF'])
     
     heatmap_ufs.to_excel('heatmap/heatmap_states.xlsx', index=False)
-    
-def generate_pyramid_totaltestpanel():
+
+def generate_pyramid_totaltestpanel(date_filter):
     pyr_t = pd.read_csv("pyramid/combined_matrix_agegroup.tsv", sep='\t')
     column_mapping = {'0-4': '00-04', '4-9': '04-09', '9-19': '09-19'}
     pyr_t = pyr_t.rename(columns=column_mapping)
@@ -98,36 +104,43 @@ def generate_pyramid_totaltestpanel():
     pyr_pos = pyr_t_melt[pyr_t_melt['test_result'] == 'Pos'].reset_index(drop=True)
     pyr_piv = pyr_pos.pivot_table(index=('epiweek','faixas_etárias'), columns='pathogen', values='casos', aggfunc='sum').reset_index()
 
-    ## CHANGE WEEKS HERE
-    datas_filtradas = ['2023-08-05', '2023-08-12', '2023-08-19', '2023-08-26']
-    pyr_dates = pyr_piv[pyr_piv['epiweek'].isin(datas_filtradas)]
+    ## Use the automatically computed weeks
+    pyr_dates = pyr_piv[pyr_piv['epiweek'].isin(date_filter)]
     
     pyr_ages = pyr_dates.reindex(columns=['epiweek', 'faixas_etárias', 'RINO', 'ENTERO', 'META', 'PARA', 'BOCA', 'COVS','ADENO', 'BAC','FLUA', 'FLUB', 'SC2', 'VSR'])
     pyr_ages = pyr_ages.rename(columns={'epiweek':'semana_epidemiológica','RINO': 'Rinovírus', 'ENTERO': 'Enterovírus', 'META': 'Metapneumovírus', 'PARA': 'Vírus Parainfluenza', 'BOCA': 'Bocavírus', 'COVS': 'Coronavírus sazonais', 'ADENO': 'Adenovírus', 'BAC': 'Bactérias', 'FLUA': 'Influenza A',  'FLUB': 'Influenza B', 'SC2':'SARS-CoV-2', 'VSR':'Vírus Sincicial Respiratório'})
     
     pyr_ages.to_excel('pyramid/pyr_agegroups.xlsx', index=False)
 
-def flourish_plots(path_flourish):
+def flourish_plots(path_flourish, end_date):
     ## Change work directory for path_flourish
     os.chdir(path_flourish)
     
+    ## Extracting end_date from argparse and converting to datetime object
+    end_date_obj = datetime.strptime(args.end_date, '%Y-%m-%d')
+
+    ## Calculate the four weeks leading up to end_date
+    date_filter = [(end_date_obj - timedelta(days=7*i)).strftime('%Y-%m-%d') for i in range(4)]
+    
     ## Bar plot section
-    generate_bar_posneg()
-    generate_bar_panels()
+    # generate_bar_posneg()
+    # generate_bar_panels()
     
     ## Lineplot section
-    generate_line_plots()
+    # generate_line_plots()
 
     ## Heatmap section
     generate_heatmap_positivos()
-    generate_heatmap_estados()
+    # generate_heatmap_estados()
     
     ## Pyramid section
-    generate_pyramid_totaltestpanel()
+    generate_pyramid_totaltestpanel(date_filter)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Script to generate Flourish plots from data')
     parser.add_argument('--path_flourish', help='Path to the flourish folder inside figures dir', required=False)
+    parser.add_argument('--end_date', help='End date for the analysis', required=True)
     
     args = parser.parse_args()
-    flourish_plots(args.path_flourish)
+    
+    flourish_plots(args.path_flourish, args.end_date)
