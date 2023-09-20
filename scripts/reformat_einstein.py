@@ -18,8 +18,6 @@ from utils import aggregate_results, has_something_to_be_done
 import warnings
 import logging
 
-from collections import defaultdict
-
 warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
 
@@ -120,6 +118,7 @@ def fix_datatable(df):
     if df.empty:
         return dfN
     
+    df['ACCESSION'] = df['ACCESSION'].astype(int)
     # Fix age column
     df_fix_age_column = (
         df
@@ -141,6 +140,7 @@ def fix_datatable(df):
             how='inner'
         )
     )
+    df['IDADE'] = df['IDADE'].fillna(-1).astype(int)
 
     df_pivot = (
         df.assign(
@@ -253,6 +253,7 @@ def fix_datatable(df):
             }
         )
     )
+    df_pivot['sex'] = df_pivot['sex'].fillna('I')
     
     # ADDING MISSING COLUMNS
     # df["birthdate"] = ""
@@ -345,7 +346,7 @@ if __name__ == "__main__":
     else:
         # dfP = pd.DataFrame()
         dfT = pd.DataFrame()
-
+        
     # load renaming patterns
     dfR = load_table(rename_file)
     dfR.fillna("", inplace=True)
@@ -534,24 +535,6 @@ if __name__ == "__main__":
     dfT = dfT.reset_index(drop=True)
     dfT.fillna("", inplace=True)
 
-    # [WIP] Update fix data points
-    # fix data points
-    # def fix_data_points(id, col_name, value):
-    #     new_value = value
-    #     if value in dict_corrections[id][col_name]:
-    #         new_value = dict_corrections[id][col_name][value]
-    #     return new_value
-
-    # # print(dfT.head())
-    # print("\n# Fixing data points...")
-    # for lab_id, columns in dict_corrections.items():
-    #     print("\t- Fixing data from: " + lab_id)
-    #     for column, values in columns.items():
-    #         # print('\t- ' + column + ' (' + column + ' → ' + str(values) + ')')
-    #         dfT[column] = dfT[column].apply(
-    #             lambda x: fix_data_points(lab_id, column, x)
-    #         )
-
     # reformat dates and convert to datetime format
     dfT["date_testing"] = pd.to_datetime(
         dfT["date_testing"], dayfirst=True, errors='ignore'
@@ -569,17 +552,6 @@ if __name__ == "__main__":
         return epiweek
 
     dfT["epiweek"] = dfT["date_testing"].apply(lambda x: get_epiweeks(x))
-
-    # [WIP] Handle Birthdate
-    # add age from birthdate, if age is missing
-    # if "birthdate" in dfT.columns.tolist():
-    #     for idx, row in dfT.iterrows():
-    #         birth = dfT.loc[idx, "birthdate"]
-    #         test = dfT.loc[idx, "date_testing"]
-    #         if birth not in [np.nan, "", None]:
-    #             birth = pd.to_datetime(birth)
-    #             age = (test - birth) / np.timedelta64(1, "Y")
-    #             dfT.loc[idx, "age"] = np.round(age, 1)
 
     # fix sex information
     dfT["sex"] = dfT["sex"].apply(lambda x: x.upper()[0] if x != "" else x)
