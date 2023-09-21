@@ -123,15 +123,15 @@ def flourish_plots(path_flourish, end_date):
     date_filter = [(end_date_obj - timedelta(days=7*i)).strftime('%Y-%m-%d') for i in range(4)]
     
     ## Bar plot section
-    # generate_bar_posneg()
-    # generate_bar_panels()
+    generate_bar_posneg()
+    generate_bar_panels()
     
     ## Lineplot section
-    # generate_line_plots()
+    generate_line_plots()
 
     ## Heatmap section
     generate_heatmap_positivos()
-    # generate_heatmap_estados()
+    generate_heatmap_estados()
     
     ## Pyramid section
     generate_pyramid_totaltestpanel(date_filter)
