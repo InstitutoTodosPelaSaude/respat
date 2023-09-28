@@ -79,6 +79,7 @@ rule files:
 		expand(["results/{geo}/matrix_{sample}_{geo}_posneg.tsv", "results/{geo}/combined_matrix_{geo}_posneg.tsv", "results/{geo}/combined_matrix_{geo}_posneg_weeks.tsv", "results/{geo}/combined_matrix_{geo}_posneg.tsv", "results/{geo}/combined_matrix_{geo}_totaltests.tsv", "results/{geo}/combined_matrix_{geo}_posrate.tsv", "results/demography/matrix_{sample}_agegroups.tsv"], sample=SAMPLES, geo=LOCATIONS),
 		combined1 = "results/combined1_labs.tsv", #labs
 		combined2 = "results/combined2_age.tsv", #age
+		combined3 = "results/combined3_geo.tsv", #geomatch
 		combined = "results/combined.tsv", #geocols
 
 		merged = "results/demography/combined_matrix_agegroup.tsv",
@@ -278,38 +279,38 @@ rule agegroups:
 			--output {output.matrix}
 		"""
 
-# rule geomatch:
-# 	message:
-# 		"""
-# 		Using as input file Match location names with geographic shapefile polygons
-# 		"""
-# 	input:
-# 		input_file = rules.agegroups.output.matrix,
-# 		coordinates = arguments.coordinates,
-# 		shapefile = arguments.shapefile,
-# 	params:
-# 		geo_columns = "state, location",
-# 		add_geo = "country:Brazil",
-# 		lat = "lat",
-# 		long = "long",
-# 		check_match = "ADM2_PT",
-# 		target = "state, state_code, ADM2_PT, ADM2_PCODE",
-# 	output:
-# 		matrix = "results/combined_testdata3.tsv"
-# 	shell:
-# 		"""
-# 		python scripts/name2shape.py \
-# 			--input {input.input_file} \
-# 			--shapefile \"{input.shapefile}\" \
-# 			--geo-columns \"{params.geo_columns}\" \
-# 			--add-geo {params.add_geo} \
-# 			--lat {params.lat} \
-# 			--long {params.long} \
-# 			--cache {input.coordinates} \
-# 			--check-match {params.check_match} \
-# 			--target \"{params.target}\" \
-# 			--output {output.matrix}
-# 		"""
+rule geomatch:
+	message:
+		"""
+		Using as input file Match location names with geographic shapefile polygons
+		"""
+	input:
+		input_file = rules.agegroups.output.matrix,
+		coordinates = arguments.coordinates,
+		shapefile = arguments.shapefile,
+	params:
+		geo_columns = "state, location",
+		add_geo = "country:Brazil",
+		lat = "lat",
+		long = "long",
+		check_match = "ADM2_PT",
+		target = "state, ADM2_PT, ADM2_PCODE",
+	output:
+		matrix = rules.files.input.combined3
+	shell:
+		"""
+		python scripts/name2shape.py \
+			--input {input.input_file} \
+			--shapefile \"{input.shapefile}\" \
+			--geo-columns \"{params.geo_columns}\" \
+			--add-geo {params.add_geo} \
+			--lat {params.lat} \
+			--long {params.long} \
+			--cache {input.coordinates} \
+			--check-match {params.check_match} \
+			--target \"{params.target}\" \
+			--output {output.matrix}
+		"""
 
 
 rule geocols:
@@ -318,10 +319,10 @@ rule geocols:
 		Using the output matrix from the 'agegroups' rule, we augment it by incorporating additional geographic columns. These columns are specified in the 'arguments.geography' input. Our focus targets are 'country', 'region', and 'state_code', located respectively at the 5th, 6th, and 8th positions. We introduce these new elements into the 'state' index column. To perform this 'add' operation, we employ the 'reformat_dataframe.py' script, indicating 'columns' as the operational mode. Consequently, we generate an updated combined file, which is subsequently stored as a refreshed 'combined_cache', primed for the next stage of processing.
 		"""
 	input:
-		file = rules.agegroups.output.matrix,
+		file = rules.geomatch.output.matrix,
 		newcols = arguments.geography,
 	params:
-		target = "country#5, region#6, state_code#8",
+		target = "region#6, state_code#8",
 		index = "state",
 		action = "add",
 		mode = "columns"
@@ -422,7 +423,7 @@ rule test_results:
 			--sortby {params.sortby} \
 			--output {output.posneg_labtests}
 		
-		sed -i '' 's/{params.test_col}/test_result/' {output.posneg_labtests}
+		sed -i 's/{params.test_col}/test_result/' {output.posneg_labtests}
 
 		python scripts/collapser.py \
 			--input {output.posneg_labtests} \
@@ -749,7 +750,7 @@ rule demog:
 			--end-date {params.end_date} \
 			--output {output.age_matrix}
 			
-		sed -i '' 's/{params.unique_id}/test_result/' {output.age_matrix}
+		sed -i 's/{params.unique_id}/test_result/' {output.age_matrix}
 		"""
 		## Linux
 		## sed -i 's/{params.unique_id}/test_result/' {output.age_matrix}
