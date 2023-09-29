@@ -364,7 +364,7 @@ if __name__ == '__main__':
         'geneS_detection',	
 
 
-        'country',
+        #'country',
         'state',
         'ADM2_PT',
         'location',
@@ -372,6 +372,9 @@ if __name__ == '__main__':
         #'lat',
         #'long',
     ]
+
+    if new_cols:
+        results_columns = results_columns + new_cols
     
     if 'state_code' in target_cols:
         results_columns = results_columns + ['state_code']

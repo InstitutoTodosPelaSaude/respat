@@ -290,7 +290,7 @@ rule geomatch:
 		shapefile = arguments.shapefile,
 	params:
 		geo_columns = "state, location",
-		add_geo = "country:Brazil",
+		add_geo = "",
 		lat = "lat",
 		long = "long",
 		check_match = "ADM2_PT",
@@ -303,7 +303,6 @@ rule geomatch:
 			--input {input.input_file} \
 			--shapefile \"{input.shapefile}\" \
 			--geo-columns \"{params.geo_columns}\" \
-			--add-geo {params.add_geo} \
 			--lat {params.lat} \
 			--long {params.long} \
 			--cache {input.coordinates} \
@@ -322,7 +321,7 @@ rule geocols:
 		file = rules.geomatch.output.matrix,
 		newcols = arguments.geography,
 	params:
-		target = "region#6, state_code#8",
+		target = "country#5, region#6, state_code#8",
 		index = "state",
 		action = "add",
 		mode = "columns"
