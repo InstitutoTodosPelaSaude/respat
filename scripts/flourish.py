@@ -2,7 +2,7 @@
 
 ## Created by: Bragatte
 ## Email: marcelo.bragatte@itps.org.br
-## Release date: 2023-09-01
+## Release date: 2023-09-21
 
 import argparse
 import pandas as pd
@@ -59,7 +59,7 @@ def generate_heatmap_positivos():
 
         heat_cleaned = heat_cleaned.rename(columns={'age_group': 'faixas etárias'})
         heat_cleaned = heat_cleaned.loc[~heat_cleaned[f'{target}_test_result'].str.contains('Não Detectado|Not tested')]
-        heat_cleaned['faixas etárias'] = heat_cleaned['faixas etárias'].replace({'0-4': '00-04', '4-9': '04-09', '9-19': '09-19'})
+        heat_cleaned['faixas etárias'] = heat_cleaned['faixas etárias'].replace({'0-4': '00-04', '4-9': '05-09', '9-19': '10-19', '19-29': '20-29', '29-39': '30-39', '39-49': '40-49', '49-59': '50-59', '59-69': '60-69', '69-79': '70-79'})
 
         heat_melted = pd.melt(heat_cleaned, id_vars=[f'{target}_test_result', 'faixas etárias'], var_name='semana epidemiológica', value_name='percentual')
         heat_melted['percentual'] = heat_melted['percentual'].apply(lambda x: f'{round(x * 100, 2)}%')
@@ -97,7 +97,7 @@ def generate_heatmap_estados():
 
 def generate_pyramid_totaltestpanel(date_filter):
     pyr_t = pd.read_csv("pyramid/combined_matrix_agegroup.tsv", sep='\t')
-    column_mapping = {'0-4': '00-04', '4-9': '04-09', '9-19': '09-19'}
+    column_mapping = {'0-4': '00-04', '4-9': '05-09', '9-19': '10-19', '19-29': '20-29', '29-39': '30-39', '39-49': '40-49', '49-59': '50-59', '59-69': '60-69', '69-79': '70-79'}
     pyr_t = pyr_t.rename(columns=column_mapping)
     
     pyr_t_melt = pyr_t.melt(id_vars=['name', 'pathogen', 'test_result', 'epiweek'], var_name='faixas_etárias', value_name='casos')
