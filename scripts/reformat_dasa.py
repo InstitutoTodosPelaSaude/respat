@@ -39,6 +39,27 @@ def get_epiweeks(date):
 
 def fix_datatable(df):
     dfN = df
+
+    # Fixing column names to match the new standard and 
+    # ensure retrocompatibility with previous versions
+    # New: Código da amostra,   Data de coleta,  Estado, Municipio, Positivo, Sexo, Idade, Patógeno
+    # Old: codigorequisicao,    data_exame,	    uf,     cidade,    positivo, sexo, idade, codigo
+    if {'Código da amostra', 'Data de coleta', 'Estado', 'Municipio'}.issubset(set(df.columns.tolist())):
+        df.rename(columns={
+            'Código da amostra': 'codigorequisicao',
+            'Data de coleta': 'data_exame',
+            'Estado': 'uf',
+            'Municipio': 'cidade',
+            'Positivo': 'positivo',
+            'Sexo': 'sexo',
+            'Idade': 'idade',
+            'Patógeno': 'codigo'
+        }, inplace=True)
+
+        # Fixing date format: dd/mm/yyyy -> yyyy-mm-dd
+        df['data_exame'] = pd.to_datetime(df['data_exame'], format='%d/%m/%Y', errors='coerce').dt.strftime('%Y-%m-%d')
+        df = df[ ['codigorequisicao', 'data_exame', 'uf', 'cidade', 'positivo', 'sexo', 'idade', 'codigo'] ]
+        
     if 'codigo' in df.columns.tolist(): ##column with unique row data
         test_name = "test_4"
         # print('\t\tDados resp_vir >> Correct format. Proceeding...')
