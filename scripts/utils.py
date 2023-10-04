@@ -1,6 +1,27 @@
 import logging
 import os
+from logging import getLogger, INFO, StreamHandler, Formatter
 
+class LoggerSingleton:
+    loggers = {}
+    FORMAT = "%(asctime)s - %(name)-30s - %(levelname)s - %(message)s"
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def get_logger(name: str):
+        if name not in LoggerSingleton.loggers:
+            # create a stdout logger
+            LoggerSingleton.loggers[name] = getLogger(name)
+            LoggerSingleton.loggers[name].setLevel("INFO")
+            handler = StreamHandler()
+            handler.setLevel(INFO)
+            formatter = Formatter(LoggerSingleton.FORMAT)
+            handler.setFormatter(formatter)
+            LoggerSingleton.loggers[name].addHandler(handler)
+
+        return LoggerSingleton.loggers[name]
 
 def aggregate_results(df, test_id_columns, test_result_columns):
     """
@@ -21,17 +42,7 @@ def aggregate_results(df, test_id_columns, test_result_columns):
     Returns:
         pandas DataFrame: dataframe with aggregated results
     """
-
-    FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logger = logging.getLogger("AGGREGATE RESULTS")
-    # add handler to stdout
-    handler = logging.StreamHandler()
-    # Logger all levels
-    handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter(FORMAT)
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    logger.setLevel(logging.DEBUG)
+    logger = LoggerSingleton().get_logger("AGGREGATE RESULTS")
 
     df_test_results = df[test_id_columns + test_result_columns].copy()
 
