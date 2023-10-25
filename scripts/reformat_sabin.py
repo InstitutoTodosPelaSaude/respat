@@ -16,7 +16,7 @@ from tqdm.auto import tqdm
 from typing import Any
 import re
 
-from utils import aggregate_results, has_something_to_be_done
+from utils import aggregate_results, has_something_to_be_done, LoggerSingleton
 
 import warnings
 import logging
@@ -134,16 +134,7 @@ def fix_datatable(df):
     """        
 
     FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logger = logging.getLogger("SABIN FIX DATATABLE")
-    # add handler to stdout
-    handler = logging.StreamHandler()
-    # Logger all levels
-    handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter(FORMAT)
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    logger.setLevel(logging.DEBUG)
-
+    logger = LoggerSingleton().get_logger("SABIN FIX DATATABLE")
 
     if 'OS' not in df.columns.tolist():
         logger.warning("Unknown file format. Check for inconsistencies.")
@@ -450,7 +441,6 @@ def fix_datatable(df):
     df = df.drop(columns=['Resultado'], errors='ignore')
 
     logger.info("Finished fix_datatables")
-    logger.info(f"DataFrame columns - {df.columns}")
 
     return df
 
@@ -657,7 +647,7 @@ if __name__ == '__main__':
                 df.insert(0, 'lab_id', id)
                 df = df.rename(columns=dict_rename[id])
 
-                logger.info(f"Renamed columns - {df.columns}")
+                # logger.info(f"Renamed columns - {df.columns}")
 
                 dfT = dfT.reset_index(drop=True)
                 df = df.reset_index(drop=True)  
