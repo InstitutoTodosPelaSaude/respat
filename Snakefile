@@ -66,7 +66,7 @@ rule arguments:
 		index_column = "division_exposure",
 
 		start_date = "2021-11-01",
-		end_date = "2023-09-23" ## update last epidemiological week here
+		end_date = "2023-10-21" ## update last epidemiological week here
 
 arguments = rules.arguments.params
 
