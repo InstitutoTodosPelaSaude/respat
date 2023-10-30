@@ -23,3 +23,8 @@ tests/
 .snakemake
 
 __pycache__/
+
+figures/*/*/matrix*
+figures/*/*/combined*
+figures/*/*/*.pdf
+figures/*/*/*.xlsx
