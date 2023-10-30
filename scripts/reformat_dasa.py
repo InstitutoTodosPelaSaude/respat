@@ -43,34 +43,40 @@ def fix_datatable(df):
 
     dfN = df
 
-    logger.debug(f"The test with the lower number of tests (pathogens) has {df[['Patógeno', 'Código da amostra']].groupby('Código da amostra').count().min()} tests")
+    # Rename columns
+    lab_id = 'DASA'
+    df = rename_columns(lab_id, df)
+
+    logger.debug(f"The test with the lower number of tests (pathogens) has {df[['pathogen', 'test_id']].groupby('test_id').count().min()} tests")
 
     # Cast dates to datetime
     logger.info(f"Converting date columns to datetime")
     
     try:
-        df['Data de coleta'] = pd.to_datetime(df['Data de coleta'], format='%Y-%m-%d')
+        df['date_testing'] = pd.to_datetime(df['date_testing'], format='%Y-%m-%d')
     except:
         logger.info("Failed to convert date_testing to datetime. Trying another format.")
-        df['Data de coleta'] = pd.to_datetime(df['Data de coleta'], format='%d/%m/%Y')
+        df['date_testing'] = pd.to_datetime(df['date_testing'], format='%d/%m/%Y')
 
-    # Drop rows with null values in Código da amostra
+    # Drop rows with null values in test_id
     previous_rows = df.shape[0]
-    df = df.dropna(subset=['Código da amostra'])
-    df = df[df['Código da amostra'] != '']
-    logger.info(f"Dropped {previous_rows - df.shape[0]} rows with null values in Código da amostra")
+    df = df.dropna(subset=['test_id'])
+    df = df[df['test_id'] != '']
+    logger.info(f"Dropped {previous_rows - df.shape[0]} rows with null values in test_id")
 
-    if 'Código da amostra' in df.columns.tolist(): ##column with unique row data
-        test_name = "test_14"
-        # print('\t\tDados resp_vir >> Correct format. Proceeding...')
+    if 'pathogen' in df.columns.tolist(): ##column with unique row data
+        # Create test_kit name
+        pathogens_count = df[['pathogen', 'test_id']].groupby('test_id').count().max().values[0]
+        test_name = f"test_{pathogens_count}"
+        logger.info(f"Creating test_kit column with name {test_name}")
 
         id_columns = [
-            'Código da amostra',
-            'Idade',
-            'Sexo',
-            'Data de coleta',
-            'Municipio',
-            'Estado'
+            'test_id',
+            'age',
+            'sex',
+            'date_testing',
+            'location',
+            'state'
             ]
 
         dfN = pd.DataFrame() ## create empty dataframe, and populate it with reformatted data from original lab dataframe
@@ -93,7 +99,7 @@ def fix_datatable(df):
 
         ## generate sample id
         df.insert(1, 'sample_id', '')
-        df.insert(1, 'test_kit', 'test_14')
+        df.insert(1, 'test_kit', test_name)
         df.fillna('', inplace=True)
 
         ## assign id and deduplicate
@@ -104,14 +110,14 @@ def fix_datatable(df):
             # print('# Returning an empty dataframe')
             return dfN
 
-        print(df['Patógeno'].unique())
+        logger.info("Pathogens found: " + ";".join(df['pathogen'].unique()))
 
         ## starting lab specific reformatting
         pathogens = {
             'SC2': ['COVID'], 
-            'FLUA': ['INFLUENZA_A'], 
-            'FLUB': ['INFLUENZA_B'], 
-            'VSR': ['SINCICIAL'], 
+            'FLUA': ['INFLUENZA_A', 'FLUA'], 
+            'FLUB': ['INFLUENZA_B', 'FLUB'], 
+            'VSR': ['SINCICIAL', 'VSR'], 
             'META': ['METAPNEUMOVIRUS'], 
             'RINO': ['RINOVIRUS'],
             'PARA': ['PARAINFLUENZA'], 
@@ -123,7 +129,7 @@ def fix_datatable(df):
             }
         unique_cols = list(set(df.columns.tolist()))
 
-        for i, (code, dfR) in enumerate(df.groupby('Código da amostra')):
+        for i, (code, dfR) in enumerate(df.groupby('test_id')):
             data = {} ## one data row for each request
             for col in unique_cols:
                 data[col] = dfR[col].tolist()[0]
@@ -134,12 +140,12 @@ def fix_datatable(df):
                 for g in t:
                     target_pathogen[g] = p
 
-            dfR['pathogen'] = dfR['Patógeno'].apply(lambda x: target_pathogen[x])
+            dfR['pathogen'] = dfR['pathogen'].apply(lambda x: target_pathogen[x])
 
             for virus, dfG in dfR.groupby('pathogen'):
                 for idx, row in dfG.iterrows():
                     gene = dfG.loc[idx, 'pathogen']
-                    ct_value = int(dfG.loc[idx, 'Positivo'])
+                    ct_value = int(dfG.loc[idx, 'positivo'])
                     data[gene] = str(ct_value)
                     if ct_value == 1: # if Ct = 1
                         result = 'DETECTADO'
@@ -180,7 +186,7 @@ def fix_datatable(df):
                 print('\t\t\t - No \'requisicao\' column found. Please check for inconsistencies. Meanwhile, an empty \'requisicao\' column was added.')
 
         # print(dfL.columns.tolist())
-        id_columns = ['requisicao', 'data', 'idade', 'sexo', 'cidade_norm', 'uf_norm', 'Gene N', 'Gene ORF', 'Gene S']
+        id_columns = ['requisicao', 'date_testing', 'age', 'sex', 'location', 'state', 'Gene N', 'Gene ORF', 'Gene S']
         for column in id_columns:
             if column not in df.columns.tolist():
                 df[column] = ''
@@ -242,8 +248,8 @@ def fix_datatable(df):
                 geo_data = ''
             return geo_data
 
-        df['cidade_norm'] = df['cidade_norm'].apply(lambda x: not_assigned(x))
-        df['uf_norm'] = df['uf_norm'].apply(lambda x: not_assigned(x))
+        df['location'] = df['location'].apply(lambda x: not_assigned(x))
+        df['state'] = df['state'].apply(lambda x: not_assigned(x))
 
         for idx, row in df.iterrows():
             result = df.loc[idx, 'resultado']
@@ -486,7 +492,7 @@ if __name__ == '__main__':
                     continue
 
                 df.insert(0, 'lab_id', id)
-                df = rename_columns(id, df) # fix data points
+                # df = rename_columns(id, df) # fix data points
                 dfT = dfT.reset_index(drop=True)
                 df = df.reset_index(drop=True)
 
