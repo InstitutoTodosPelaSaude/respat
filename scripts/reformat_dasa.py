@@ -65,11 +65,6 @@ def fix_datatable(df):
     logger.info(f"Dropped {previous_rows - df.shape[0]} rows with null values in test_id")
 
     if 'pathogen' in df.columns.tolist(): ##column with unique row data
-        # Create test_kit name
-        pathogens_count = df[['pathogen', 'test_id']].groupby('test_id').count().max().values[0]
-        test_name = f"test_{pathogens_count}"
-        logger.info(f"Creating test_kit column with name {test_name}")
-
         id_columns = [
             'test_id',
             'age',
@@ -97,20 +92,18 @@ def fix_datatable(df):
         df['Ct_FluA'] = ''   
         df['Ct_FluB'] = ''
 
-        ## generate sample id
+        ## generate sample_id and test_kit columns
         df.insert(1, 'sample_id', '')
-        df.insert(1, 'test_kit', test_name)
+        df.insert(1, 'test_kit', 'unknown') # Set test_kit to unknown, it will be updated later
         df.fillna('', inplace=True)
 
         ## assign id and deduplicate
-        df, dfN = deduplicate(df, dfN, id_columns, test_name)
-        #  print(dfL.head())
+        df, dfN = deduplicate(df, dfN, id_columns)
 
         if df.empty:
-            # print('# Returning an empty dataframe')
             return dfN
 
-        logger.info("Pathogens found: " + ";".join(df['pathogen'].unique()))
+        logger.info("Pathogens found: " + "; ".join(df['pathogen'].unique()))
 
         ## starting lab specific reformatting
         pathogens = {
@@ -141,7 +134,7 @@ def fix_datatable(df):
                     target_pathogen[g] = p
 
             dfR['pathogen'] = dfR['pathogen'].apply(lambda x: target_pathogen[x])
-
+            
             for virus, dfG in dfR.groupby('pathogen'):
                 for idx, row in dfG.iterrows():
                     gene = dfG.loc[idx, 'pathogen']
@@ -154,19 +147,23 @@ def fix_datatable(df):
                         result = 'NÃO DETECTADO'
                         data[virus + '_test_result'] = 'Neg' #result
 
-            # dfN = dfN.append(data, ignore_index=True)
+            # Create test_kit for the test_id
+            row_pathogens = dfR['pathogen'].unique().tolist()
+            if len(row_pathogens) == 4:
+                data['test_kit'] = 'test_4'
+            elif len(row_pathogens) == 11:
+                data['test_kit'] = 'test_10'
+            else:
+                raise Exception(f"Unexpected number of pathogens when creating test_kit: {len(row_pathogens)} ({row_pathogens})")
+            
+            # Add row data to dataframe
             dfN = pd.concat([dfN, pd.DataFrame(data, index=[0])], ignore_index=True)
-        # print('# Returning some dataframe')
 
-        # print(dfN.head())
-        # print('-')
-        # print(dfN.columns.tolist())
-        # print('-')
+        # Check if all test_kit values are set
+        assert 'unknown' not in dfN['test_kit'].unique().tolist(), "Some test_kit values are still unknown"
 
     elif 'Gene S' in df.columns.tolist():
-        # print('\t\tDados covid >> Correct format. Proceeding...')
-        test_name = "thermo"
-
+        ################################ DEPRECATED ################################
         if 'resultado' not in df.columns.tolist():
             if 'resultado_norm' in df.columns.tolist():
                 df.rename(columns={'resultado_norm': 'resultado'}, inplace=True)
@@ -206,7 +203,7 @@ def fix_datatable(df):
         df['Ct_geneE'] = ''
 
         ## assign id and deduplicate
-        df, dfN = deduplicate(df, dfN, id_columns, test_name)
+        df, dfN = deduplicate(df, dfN, id_columns)
         # print('3')
         # print(dfL.head())
 
@@ -264,10 +261,7 @@ def fix_datatable(df):
                 df.loc[idx, 'Gene S'] = str(round(float(df.loc[idx, 'Gene S']), 1))
 
         dfN = df
-        # print('# Returning some dataframe')
-
     else:
-        #print('\t\tFile = ' + file)
         print('\t\tWARNING! Unknown file format. Check for inconsistencies.')
         exit()
         
@@ -408,7 +402,7 @@ if __name__ == '__main__':
     # print('Done hashlib')
 
 
-    def deduplicate(dfL, dfN, id_columns, test_name):
+    def deduplicate(dfL, dfN, id_columns):
         # generate sample id
         dfL['unique_id'] = dfL[id_columns].astype(str).sum(axis=1)  ## combine values in rows as a long string
         dfL['sample_id'] = dfL['unique_id'].apply(lambda x: generate_id(x)[:16])  ## generate alphanumeric sample id with 16 characters
@@ -417,27 +411,21 @@ if __name__ == '__main__':
         if cache_file not in [np.nan, '', None]:
             duplicates = set(dfL[dfL['sample_id'].isin(dfT['sample_id'].tolist())]['sample_id'].tolist())
             if len(duplicates) == len(set(dfL['sample_id'].tolist())):
-                print('\n\t\t * ALL samples (%s) were already previously processed. All set!' % test_name)
+                print('\n\t\t * ALL samples were already previously processed. All set!')
                 dfN = pd.DataFrame()  ## create empty dataframe, and populate it with reformatted data from original lab dataframe
                 dfL = pd.DataFrame()
 
-                # print('1')
-                # print(dfL.head())
-
                 return dfN, dfL
             else:
-                print('\n\t\t * A total of %s out of %s samples (%s) were already previously processed.' % (str(len(duplicates)), str(len(set(dfL['sample_id'].tolist()))), test_name))
+                print('\n\t\t * A total of %s out of %s samples were already previously processed.' % (str(len(duplicates)), str(len(set(dfL['sample_id'].tolist())))))
                 new_samples = len(set(dfL['sample_id'].tolist())) - len(duplicates)
                 print('\t\t\t - Processing %s new samples...' % (str(new_samples)))
                 dfL = dfL[~dfL['sample_id'].isin(dfT['sample_id'].tolist())]  ## remove duplicates
         else:
             new_samples = len(dfL['sample_id'].tolist())
-            print('\n\t\t\t - Processing %s new samples (%s)...' % (str(new_samples), test_name))
+            print('\n\t\t\t - Processing %s new samples...' % (str(new_samples)))
 
-        # print('2')
-        # print(dfL.head())
         return dfL, dfN
-    # print('Done cache file')
 
     def rename_columns(id, df):
         # print(df.columns.tolist())
