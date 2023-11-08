@@ -2,7 +2,7 @@
 
 ## Created by: Bragatte
 ## Email: marcelo.bragatte@itps.org.br
-## Release date: 2023-09-21
+## Release date: 2023-09-01 | Updated: 2023-11-02
 
 import argparse
 import pandas as pd
@@ -23,6 +23,7 @@ def generate_bar_posneg():
     bar_posneg_combined.columns = ['semana epidemiológica', 'Positivos', 'Negativos']
     
     bar_posneg_combined.to_excel('barplot/bar_posneg.xlsx', index=False)
+    bar_posneg_combined.to_csv('barplot/bar_posneg.csv', index=False)
 
 def generate_bar_panels():
     bars = pd.read_csv("barplot/combined_matrix_country_posneg_panel_weeks.tsv", sep='\t')
@@ -37,6 +38,7 @@ def generate_bar_panels():
     bars = bars.rename(columns={'RINO': 'Rinovírus', 'ENTERO': 'Enterovírus', 'META': 'Metapneumovírus', 'PARA': 'Vírus Parainfluenza', 'BOCA': 'Bocavírus', 'COVS': 'Coronavírus sazonais', 'ADENO': 'Adenovírus', 'BAC': 'Bactérias', 'FLUA': 'Influenza A',  'FLUB': 'Influenza B', 'SC2':'SARS-CoV-2', 'VSR':'Vírus Sincicial Respiratório'})
     
     bars.to_excel('barplot/bar_panels.xlsx', index=False)
+    bars.to_csv('barplot/bar_panels.csv', index=False)    
 
 def generate_line_plots():
     lines = pd.read_csv("lineplot/combined_matrix_country_posrate_full_weeks.tsv", sep='\t')
@@ -51,21 +53,17 @@ def generate_line_plots():
     lines_piv.to_excel('lineplot/line_full.xlsx', index=False)
     
 def generate_heatmap_positivos():
-    targets = [('FLUA', 'Influenza_A_'), ('SC2', 'SARS-CoV-2_')]
-    
-    for target, rename_target in targets:
-        heat = pd.read_csv(f"heatmap/matrix_agegroups_weeks_{target}_posrate.tsv", sep='\t')
-        heat_cleaned = heat.drop('country', axis=1).dropna(axis=1)
+    heat = pd.read_csv("heatmap/matrix_agegroups_weeks_SC2_posrate.tsv", sep='\t')
+    heat_cleaned = heat.drop('country', axis=1).dropna(axis=1)
+    heat_cleaned = heat_cleaned.rename(columns={'age_group': 'faixas etárias'})
+    heat_cleaned = heat_cleaned.loc[~heat_cleaned['SC2_test_result'].str.contains('Não Detectado|Not tested')]
+    heat_cleaned['faixas etárias'] = heat_cleaned['faixas etárias'].replace({'0-4': '00-04', '4-9': '04-09', '9-19': '09-19'})
+    heat_melted = pd.melt(heat_cleaned, id_vars=['SC2_test_result', 'faixas etárias'], var_name='semana epidemiológica', value_name='percentual')
+    heat_melted['percentual'] = heat_melted['percentual'].apply(lambda x: f'{round(x * 100, 2)}%')
+    heat_melted_positivos = heat_melted[heat_melted['SC2_test_result'] == 'Pos'].reset_index(drop=True)
 
-        heat_cleaned = heat_cleaned.rename(columns={'age_group': 'faixas etárias'})
-        heat_cleaned = heat_cleaned.loc[~heat_cleaned[f'{target}_test_result'].str.contains('Não Detectado|Not tested')]
-        heat_cleaned['faixas etárias'] = heat_cleaned['faixas etárias'].replace({'0-4': '00-04', '4-9': '05-09', '9-19': '10-19', '19-29': '20-29', '29-39': '30-39', '39-49': '40-49', '49-59': '50-59', '59-69': '60-69', '69-79': '70-79'})
-
-        heat_melted = pd.melt(heat_cleaned, id_vars=[f'{target}_test_result', 'faixas etárias'], var_name='semana epidemiológica', value_name='percentual')
-        heat_melted['percentual'] = heat_melted['percentual'].apply(lambda x: f'{round(x * 100, 2)}%')
-        heat_melted_positivos = heat_melted[heat_melted[f'{target}_test_result'] == 'Pos'].reset_index(drop=True)
-
-        heat_melted_positivos.to_excel(f'heatmap/heatmap_{rename_target}demog.xlsx', index=False)        
+    heat_melted_positivos.to_excel('heatmap/heatmap_SC2demog.xlsx', index=False)
+    heat_melted_positivos.to_csv('heatmap/heatmap_SC2demog.csv', index=False)
 
 def generate_heatmap_estados():
     heat_ufs = pd.read_csv("heatmap/combined_matrix_state_posrate_full_weeks.tsv", sep='\t')
@@ -94,8 +92,10 @@ def generate_heatmap_estados():
     heatmap_ufs = heatmap_ufs.sort_values(['Regiao', 'UF'])
     
     heatmap_ufs.to_excel('heatmap/heatmap_states.xlsx', index=False)
+    heatmap_ufs.to_csv('heatmap/heatmap_states.csv', index=False)
 
-def generate_pyramid_totaltestpanel(date_filter):
+    
+def generate_pyramid_totaltestpanel():
     pyr_t = pd.read_csv("pyramid/combined_matrix_agegroup.tsv", sep='\t')
     column_mapping = {'0-4': '00-04', '4-9': '05-09', '9-19': '10-19', '19-29': '20-29', '29-39': '30-39', '39-49': '40-49', '49-59': '50-59', '59-69': '60-69', '69-79': '70-79'}
     pyr_t = pyr_t.rename(columns=column_mapping)
@@ -111,6 +111,7 @@ def generate_pyramid_totaltestpanel(date_filter):
     pyr_ages = pyr_ages.rename(columns={'epiweek':'semana_epidemiológica','RINO': 'Rinovírus', 'ENTERO': 'Enterovírus', 'META': 'Metapneumovírus', 'PARA': 'Vírus Parainfluenza', 'BOCA': 'Bocavírus', 'COVS': 'Coronavírus sazonais', 'ADENO': 'Adenovírus', 'BAC': 'Bactérias', 'FLUA': 'Influenza A',  'FLUB': 'Influenza B', 'SC2':'SARS-CoV-2', 'VSR':'Vírus Sincicial Respiratório'})
     
     pyr_ages.to_excel('pyramid/pyr_agegroups.xlsx', index=False)
+    pyr_ages.to_csv('pyramid/pyr_agegroups.csv', index=False)
 
 def flourish_plots(path_flourish, end_date):
     ## Change work directory for path_flourish
