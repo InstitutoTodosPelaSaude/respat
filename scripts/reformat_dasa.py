@@ -38,18 +38,40 @@ def get_epiweeks(date):
     return epiweek
 
 def fix_datatable(df):
-    dfN = df
-    if 'codigo' in df.columns.tolist(): ##column with unique row data
-        test_name = "test_4"
-        # print('\t\tDados resp_vir >> Correct format. Proceeding...')
+    logger.info(f"Fixing DataFrame with {df.shape[0]} rows and {df.shape[1]} columns")
+    logger.info(df.columns.tolist())
 
+    dfN = df
+
+    # Rename columns
+    lab_id = 'DASA'
+    df = rename_columns(lab_id, df)
+
+    logger.debug(f"The test with the lower number of tests (pathogens) has {df[['pathogen', 'test_id']].groupby('test_id').count().min()} tests")
+
+    # Cast dates to datetime
+    logger.info(f"Converting date columns to datetime")
+    
+    try:
+        df['date_testing'] = pd.to_datetime(df['date_testing'], format='%Y-%m-%d')
+    except:
+        logger.info("Failed to convert date_testing to datetime. Trying another format.")
+        df['date_testing'] = pd.to_datetime(df['date_testing'], format='%d/%m/%Y')
+
+    # Drop rows with null values in test_id
+    previous_rows = df.shape[0]
+    df = df.dropna(subset=['test_id'])
+    df = df[df['test_id'] != '']
+    logger.info(f"Dropped {previous_rows - df.shape[0]} rows with null values in test_id")
+
+    if 'pathogen' in df.columns.tolist(): ##column with unique row data
         id_columns = [
-            'codigorequisicao',
-            'idade',
-            'sexo',
-            'data_exame',
-            'cidade',
-            'uf'
+            'test_id',
+            'age',
+            'sex',
+            'date_testing',
+            'location',
+            'state'
             ]
 
         dfN = pd.DataFrame() ## create empty dataframe, and populate it with reformatted data from original lab dataframe
@@ -70,37 +92,37 @@ def fix_datatable(df):
         df['Ct_FluA'] = ''   
         df['Ct_FluB'] = ''
 
-        ## generate sample id
+        ## generate sample_id and test_kit columns
         df.insert(1, 'sample_id', '')
-        df.insert(1, 'test_kit', 'test_4')
+        df.insert(1, 'test_kit', 'unknown') # Set test_kit to unknown, it will be updated later
         df.fillna('', inplace=True)
 
         ## assign id and deduplicate
-        df, dfN = deduplicate(df, dfN, id_columns, test_name)
-        #  print(dfL.head())
+        df, dfN = deduplicate(df, dfN, id_columns)
 
         if df.empty:
-            # print('# Returning an empty dataframe')
             return dfN
+
+        logger.info("Pathogens found: " + "; ".join(df['pathogen'].unique()))
 
         ## starting lab specific reformatting
         pathogens = {
             'SC2': ['COVID'], 
-            'FLUA': ['FLUA'], 
-            'FLUB': ['FLUB'], 
-            'VSR': ['VSR'], 
-            'META': [], 
-            'RINO': [],
-            'PARA': [], 
-            'ADENO': [], 
-            'BOCA': [], 
-            'COVS': [], 
-            'ENTERO': [], 
+            'FLUA': ['INFLUENZA_A', 'FLUA'], 
+            'FLUB': ['INFLUENZA_B', 'FLUB'], 
+            'VSR': ['SINCICIAL', 'VSR'], 
+            'META': ['METAPNEUMOVIRUS'], 
+            'RINO': ['RINOVIRUS'],
+            'PARA': ['PARAINFLUENZA'], 
+            'ADENO': ['ADENOVIRUS'], 
+            'BOCA': ['BOCAVIRUS'], 
+            'COVS': ['CORONAVIRUS_229', 'CORONAVIRUS_43', 'CORONAVIRUS_63', 'CORONAVIRUS_HKU1'], 
+            'ENTERO': ['ENTEROVIRUS'], 
             'BAC': []
             }
         unique_cols = list(set(df.columns.tolist()))
 
-        for i, (code, dfR) in enumerate(df.groupby('codigorequisicao')):
+        for i, (code, dfR) in enumerate(df.groupby('test_id')):
             data = {} ## one data row for each request
             for col in unique_cols:
                 data[col] = dfR[col].tolist()[0]
@@ -110,56 +132,38 @@ def fix_datatable(df):
                 data[p + '_test_result'] = 'NT' #'Not tested'
                 for g in t:
                     target_pathogen[g] = p
-            dfR['pathogen'] = dfR['codigo'].apply(lambda x: target_pathogen[x])
 
-            genes = {'FLUA': 1, 'FLUB': 1, 'VSR': 1, 'COVID': 1}
-            found = []
-
+            dfR['pathogen'] = dfR['pathogen'].apply(lambda x: target_pathogen[x])
+            
             for virus, dfG in dfR.groupby('pathogen'):
                 for idx, row in dfG.iterrows():
-                    gene = dfG.loc[idx, 'codigo']
+                    gene = dfG.loc[idx, 'pathogen']
                     ct_value = int(dfG.loc[idx, 'positivo'])
-                    result = '' ## to be determined
-                    if gene in genes:
-                        found.append(gene)
-                        if gene not in data:
-                            data[gene] = str(ct_value)
-                            if ct_value == genes[gene]: # if Ct = 1
-                                result = 'DETECTADO'
-                                data[virus + '_test_result'] = 'Pos' #result
-                            else: # if Ct = 0
-                                result = 'NÃO DETECTADO'
-                                data[virus + '_test_result'] = 'Neg' #result
+                    data[gene] = str(ct_value)
+                    if ct_value == 1: # if Ct = 1
+                        result = 'DETECTADO'
+                        data[virus + '_test_result'] = 'Pos' #result
+                    else: # if Ct = 0
+                        result = 'NÃO DETECTADO'
+                        data[virus + '_test_result'] = 'Neg' #result
 
-                            # else: ## if no Ct is reported
-                            #     result = 'NÃO DETECTADO'
-                            #     if data[virus + '_test_result'] != 'DETECTADO':
-                            #         data[virus + '_test_result'] =  'NT'# result
-                    else:
-                        found.append(gene)
-
-                # check if gene was detected
-                for g in genes.keys():
-                    if g in found:
-                        found.remove(g)
-                if len(found) > 0:
-                    for g in found:
-                        if g not in genes:
-                            print('Gene ' + g + ' in an anomaly. Check for inconsistencies')
-
-            # dfN = dfN.append(data, ignore_index=True)
+            # Create test_kit for the test_id
+            row_pathogens = dfR['pathogen'].unique().tolist()
+            if len(row_pathogens) == 4:
+                data['test_kit'] = 'test_4'
+            elif len(row_pathogens) == 11:
+                data['test_kit'] = 'test_10'
+            else:
+                raise Exception(f"Unexpected number of pathogens when creating test_kit: {len(row_pathogens)} ({row_pathogens})")
+            
+            # Add row data to dataframe
             dfN = pd.concat([dfN, pd.DataFrame(data, index=[0])], ignore_index=True)
-        # print('# Returning some dataframe')
 
-        # print(dfN.head())
-        # print('-')
-        # print(dfN.columns.tolist())
-        # print('-')
+        # Check if all test_kit values are set
+        assert 'unknown' not in dfN['test_kit'].unique().tolist(), "Some test_kit values are still unknown"
 
     elif 'Gene S' in df.columns.tolist():
-        # print('\t\tDados covid >> Correct format. Proceeding...')
-        test_name = "thermo"
-
+        ################################ DEPRECATED ################################
         if 'resultado' not in df.columns.tolist():
             if 'resultado_norm' in df.columns.tolist():
                 df.rename(columns={'resultado_norm': 'resultado'}, inplace=True)
@@ -179,7 +183,7 @@ def fix_datatable(df):
                 print('\t\t\t - No \'requisicao\' column found. Please check for inconsistencies. Meanwhile, an empty \'requisicao\' column was added.')
 
         # print(dfL.columns.tolist())
-        id_columns = ['requisicao', 'data', 'idade', 'sexo', 'cidade_norm', 'uf_norm', 'Gene N', 'Gene ORF', 'Gene S']
+        id_columns = ['requisicao', 'date_testing', 'age', 'sex', 'location', 'state', 'Gene N', 'Gene ORF', 'Gene S']
         for column in id_columns:
             if column not in df.columns.tolist():
                 df[column] = ''
@@ -199,7 +203,7 @@ def fix_datatable(df):
         df['Ct_geneE'] = ''
 
         ## assign id and deduplicate
-        df, dfN = deduplicate(df, dfN, id_columns, test_name)
+        df, dfN = deduplicate(df, dfN, id_columns)
         # print('3')
         # print(dfL.head())
 
@@ -241,8 +245,8 @@ def fix_datatable(df):
                 geo_data = ''
             return geo_data
 
-        df['cidade_norm'] = df['cidade_norm'].apply(lambda x: not_assigned(x))
-        df['uf_norm'] = df['uf_norm'].apply(lambda x: not_assigned(x))
+        df['location'] = df['location'].apply(lambda x: not_assigned(x))
+        df['state'] = df['state'].apply(lambda x: not_assigned(x))
 
         for idx, row in df.iterrows():
             result = df.loc[idx, 'resultado']
@@ -257,10 +261,7 @@ def fix_datatable(df):
                 df.loc[idx, 'Gene S'] = str(round(float(df.loc[idx, 'Gene S']), 1))
 
         dfN = df
-        # print('# Returning some dataframe')
-
     else:
-        #print('\t\tFile = ' + file)
         print('\t\tWARNING! Unknown file format. Check for inconsistencies.')
         exit()
         
@@ -401,7 +402,7 @@ if __name__ == '__main__':
     # print('Done hashlib')
 
 
-    def deduplicate(dfL, dfN, id_columns, test_name):
+    def deduplicate(dfL, dfN, id_columns):
         # generate sample id
         dfL['unique_id'] = dfL[id_columns].astype(str).sum(axis=1)  ## combine values in rows as a long string
         dfL['sample_id'] = dfL['unique_id'].apply(lambda x: generate_id(x)[:16])  ## generate alphanumeric sample id with 16 characters
@@ -410,27 +411,21 @@ if __name__ == '__main__':
         if cache_file not in [np.nan, '', None]:
             duplicates = set(dfL[dfL['sample_id'].isin(dfT['sample_id'].tolist())]['sample_id'].tolist())
             if len(duplicates) == len(set(dfL['sample_id'].tolist())):
-                print('\n\t\t * ALL samples (%s) were already previously processed. All set!' % test_name)
+                print('\n\t\t * ALL samples were already previously processed. All set!')
                 dfN = pd.DataFrame()  ## create empty dataframe, and populate it with reformatted data from original lab dataframe
                 dfL = pd.DataFrame()
 
-                # print('1')
-                # print(dfL.head())
-
                 return dfN, dfL
             else:
-                print('\n\t\t * A total of %s out of %s samples (%s) were already previously processed.' % (str(len(duplicates)), str(len(set(dfL['sample_id'].tolist()))), test_name))
+                print('\n\t\t * A total of %s out of %s samples were already previously processed.' % (str(len(duplicates)), str(len(set(dfL['sample_id'].tolist())))))
                 new_samples = len(set(dfL['sample_id'].tolist())) - len(duplicates)
                 print('\t\t\t - Processing %s new samples...' % (str(new_samples)))
                 dfL = dfL[~dfL['sample_id'].isin(dfT['sample_id'].tolist())]  ## remove duplicates
         else:
             new_samples = len(dfL['sample_id'].tolist())
-            print('\n\t\t\t - Processing %s new samples (%s)...' % (str(new_samples), test_name))
+            print('\n\t\t\t - Processing %s new samples...' % (str(new_samples)))
 
-        # print('2')
-        # print(dfL.head())
         return dfL, dfN
-    # print('Done cache file')
 
     def rename_columns(id, df):
         # print(df.columns.tolist())
@@ -485,7 +480,7 @@ if __name__ == '__main__':
                     continue
 
                 df.insert(0, 'lab_id', id)
-                df = rename_columns(id, df) # fix data points
+                # df = rename_columns(id, df) # fix data points
                 dfT = dfT.reset_index(drop=True)
                 df = df.reset_index(drop=True)
 
@@ -509,7 +504,7 @@ if __name__ == '__main__':
     # print('Done fix tables')
 
     ## reformat dates and get ages
-    dfT['date_testing'] = pd.to_datetime(dfT['date_testing'], )
+    dfT['date_testing'] = pd.to_datetime(dfT['date_testing'])
 
     dfT['epiweek'] = dfT['date_testing'].apply(lambda x: get_epiweeks(x))
 

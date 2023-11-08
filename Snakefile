@@ -66,7 +66,7 @@ rule arguments:
 		index_column = "division_exposure",
 
 		start_date = "2021-11-01",
-		end_date = "2023-09-09" ## update last epidemiological week here
+		end_date = "2023-10-21" ## update last epidemiological week here
 
 arguments = rules.arguments.params
 
@@ -917,10 +917,13 @@ rule flourish:
 		"""
 	params:
 		path_flourish = "figures/flourish",
+		end_date = arguments.end_date,
+
 	shell:
 		"""
 		python scripts/flourish.py \
-			--path_flourish {params.path_flourish}
+			--path_flourish {params.path_flourish} \
+			--end_date {params.end_date}
         """
 
 #rule xxx:
