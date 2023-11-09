@@ -53,7 +53,7 @@ def generate_line_plots():
     lines_piv.to_excel('lineplot/line_full.xlsx', index=False)
     
 def generate_heatmap_positivos():
-    targets = [('FLUA', 'Influenza_A_'), ('SC2', 'SARS-CoV-2_')]
+    targets = [('VSR', 'Virus_Sincicial_Resp'), ('FLUA', 'Influenza_A'), ('SC2', 'SARS-CoV-2')]
     
     for target, rename_target in targets:
         heat = pd.read_csv(f"heatmap/matrix_agegroups_weeks_{target}_posrate.tsv", sep='\t')
@@ -67,7 +67,9 @@ def generate_heatmap_positivos():
         heat_melted['percentual'] = heat_melted['percentual'].apply(lambda x: f'{round(x * 100, 2)}%')
         heat_melted_positivos = heat_melted[heat_melted[f'{target}_test_result'] == 'Pos'].reset_index(drop=True)
 
-        heat_melted_positivos.to_excel(f'heatmap/heatmap_{rename_target}demog.xlsx', index=False)        
+        heat_melted_positivos.to_excel(f'heatmap/heatmap_{rename_target}.xlsx', index=False)
+        heat_melted_positivos.to_csv(f'heatmap/heatmap_{rename_target}.csv', index=False)        
+        
 
 def generate_heatmap_estados():
     heat_ufs = pd.read_csv("heatmap/combined_matrix_state_posrate_full_weeks.tsv", sep='\t')
