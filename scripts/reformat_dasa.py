@@ -152,7 +152,7 @@ def fix_datatable(df):
             if len(row_pathogens) == 4:
                 data['test_kit'] = 'test_4'
             elif len(row_pathogens) == 11:
-                data['test_kit'] = 'test_10'
+                data['test_kit'] = 'test_14'
             else:
                 raise Exception(f"Unexpected number of pathogens when creating test_kit: {len(row_pathogens)} ({row_pathogens})")
             
