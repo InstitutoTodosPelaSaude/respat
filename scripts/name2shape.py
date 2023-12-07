@@ -170,9 +170,13 @@ if __name__ == '__main__':
     if '' in df1['lat'].tolist():
         print('\nSearching coordinates...')
 
+    state_codes = {'AC': 'Acre', 'AL': 'Alagoas', 'AP': 'Amapá', 'AM': 'Amazonas', 'BA': 'Bahia', 'CE': 'Ceará', 'DF': 'Distrito Federal', 'ES': 'Espírito Santo', 'GO': 'Goiás', 'MA': 'Maranhão', 'MT': 'Mato Grosso', 'MS': 'Mato Grosso do Sul', 'MG': 'Minas Gerais', 'PA': 'Pará', 'PB': 'Paraíba', 'PR': 'Paraná', 'PE': 'Pernambuco', 'PI': 'Piauí', 'RJ': 'Rio de Janeiro', 'RN': 'Rio Grande do Norte', 'RS': 'Rio Grande do Sul', 'RO': 'Rondônia', 'RR': 'Roraima', 'SC': 'Santa Catarina', 'SP': 'São Paulo', 'SE': 'Sergipe', 'TO': 'Tocantins'}
+    codes_states = {estado: sigla for sigla, estado in state_codes.items()}
     if 'state' in df1.columns.tolist():
-        state_codes = {'AC': 'Acre', 'AL': 'Alagoas', 'AP': 'Amapá', 'AM': 'Amazonas', 'BA': 'Bahia', 'CE': 'Ceará', 'DF': 'Distrito Federal', 'ES': 'Espírito Santo', 'GO': 'Goiás', 'MA': 'Maranhão', 'MT': 'Mato Grosso', 'MS': 'Mato Grosso do Sul', 'MG': 'Minas Gerais', 'PA': 'Pará', 'PB': 'Paraíba', 'PR': 'Paraná', 'PE': 'Pernambuco', 'PI': 'Piauí', 'RJ': 'Rio de Janeiro', 'RN': 'Rio Grande do Norte', 'RS': 'Rio Grande do Sul', 'RO': 'Rondônia', 'RR': 'Roraima', 'SC': 'Santa Catarina', 'SP': 'São Paulo', 'SE': 'Sergipe', 'TO': 'Tocantins'}
         df1['state'] = df1['state'].apply(lambda x: state_codes[x] if x in state_codes else x)
+        if 'state_code' in target_cols:
+            df1['state_code'] = df1['state'].apply(lambda x: codes_states[x] if x in codes_states else x)
+
     df1 = df1.sort_values(by=geo_cols)
 
     # print(df1['state'])
@@ -258,7 +262,7 @@ if __name__ == '__main__':
             df3 = df3.drop(columns=['place', 'coordinates'])
         df3.to_csv(cache, sep='\t', index=False)
 
-
+    print("Starting to fix projection")
     if fix_projection == 'yes':
         geodf = geodf.to_crs(epsg=4326)
         # get CRS info
@@ -286,6 +290,11 @@ if __name__ == '__main__':
         output_cols = geo_cols + [lat_col, long_col] + target_cols # filter columns
 
     # print(results.head())
+    print("Output cols: ", output_cols)
+    print("Results cols: ", results.columns)
+
+    # output_cols = list( set(output_cols).intersection(set(results.columns)) )
+    output_cols = list(set(output_cols)) # Removendo colunas duplicadas
     results = results[output_cols]
 
     # print(results)
@@ -317,13 +326,66 @@ if __name__ == '__main__':
         for entry in mismatches:
             print('\t' + entry)
 
+
+    results_columns = [
+        'sample_id',
+        'lab_id',
+        'test_id',
+        'test_kit',
+        'date_testing',
+        'epiweek',
+        
+        'patient_id',
+        'sex',
+        'age',
+        'age_group',
+
+        'SC2_test_result',	
+        'FLUA_test_result',
+        'FLUB_test_result',
+        'VSR_test_result',
+        'COVS_test_result',
+        'ADENO_test_result',
+        'BOCA_test_result',
+        'RINO_test_result',
+        'PARA_test_result',
+        'ENTERO_test_result',
+        'META_test_result',
+        'BAC_test_result',
+        
+        'Ct_FluB',
+        'Ct_geneN',
+        'Ct_FluA',
+        'Ct_RDRP',
+        'Ct_geneE',
+        'Ct_geneS',
+        'Ct_VSR',
+        'Ct_ORF1ab',
+        'geneS_detection',	
+
+
+        #'country',
+        'state',
+        'ADM2_PT',
+        'location',
+        'ADM2_PCODE',
+        #'lat',
+        #'long',
+    ]
+
+    if new_cols:
+        results_columns = results_columns + new_cols
+    
+    if 'state_code' in target_cols:
+        results_columns = results_columns + ['state_code']
+
     # output updated dataframe
-    if output_coordinates != 'yes':
-        results = results.drop(columns=['lat', 'long'])
+    if output_coordinates == 'yes':
+        results_columns = results_columns+['lat', 'long']
+
+    results = results[results_columns]
     results.to_csv(output, sep='\t', index=False)
     print('\nLocation names successfully matched to shapefile.\n\t- Output was saved :%s\n' % output)
-
-
 
     # geodf.plot()
     # import matplotlib.pyplot as plt
