@@ -189,6 +189,11 @@ if __name__ == '__main__':
 
     def fix_datatable(dfL, file):
         dfN = dfL
+
+        # Strip result columns
+        dfL['ResultadoLIS'] = dfL['ResultadoLIS'].str.strip()
+        dfL['Resultado'] = dfL['Resultado'].str.strip()
+
         if 'Codigo' in dfL.columns.tolist() and 'RESP4' in dfL['Codigo'].tolist():  ## column with unique row data
             test_name = "test_4"
 
