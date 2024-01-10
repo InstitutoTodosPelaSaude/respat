@@ -499,6 +499,21 @@ if __name__ == "__main__":
 
                 logger.info(f"Loaded {df.shape[0]} rows and {df.shape[1]} columns")
 
+                # Fix new column names to match with the old ones
+                column_names_to_fix = {
+                    'accession': 'ACCESSION',
+                    'sexo': 'SEXO',
+                    'idade': 'IDADE',
+                    'exame': 'EXAME',
+                    'detalhe_exame': 'DETALHE_EXAME',
+                    'dh_coleta': 'DH_COLETA',
+                    'municipio': 'MUNICÍPIO',
+                    'estado': 'ESTADO',
+                    'patogeno': 'PATOGENO',
+                    'resultado': 'RESULTADO',
+                }
+                df = df.rename(columns=column_names_to_fix)
+                
                 # Remove duplicates
                 df = df.drop_duplicates(
                     subset=["ACCESSION", "EXAME", 'DETALHE_EXAME'], 
