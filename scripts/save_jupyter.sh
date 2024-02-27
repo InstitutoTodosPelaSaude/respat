@@ -1,1 +1,0 @@
-cp *.ipynb /media/sf_volume
