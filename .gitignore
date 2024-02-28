@@ -1,5 +1,14 @@
+# Env files and virtual environments
 .venv/
 .env/
-
 .env
 .venv
+
+postgres/.env
+postgres/create_database.sql
+
+# Sensitive files
+data/**/*.xlsx
+data/**/*.tsv
+data/**/*.csv
+data/**/*.xls
