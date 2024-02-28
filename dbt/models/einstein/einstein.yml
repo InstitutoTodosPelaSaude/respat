@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: dagster
+    description: Raw data from Einstein
+    schema: respiratorios
+    tables:
+      - name: einstein_raw
+        meta:
+          dagster:
+            asset_key: ["einstein_raw"]
