@@ -1,7 +1,6 @@
 
-arboviroses:
+respiratorios:
   outputs:
-
     dev:
       type: postgres
       threads: 1
