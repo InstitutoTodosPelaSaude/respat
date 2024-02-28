@@ -10,6 +10,8 @@ postgres/create_database.sql
 dbt/profiles.yml
 
 # Sensitive or unuseful files
+**/__pycache__/
+
 data/**/*.xlsx
 data/**/*.tsv
 data/**/*.csv
@@ -18,3 +20,6 @@ data/**/*.xls
 dbt/dbt_packages/
 dbt/logs/
 dbt/target/
+dbt/package-lock.yml
+
+dagster_home/**/

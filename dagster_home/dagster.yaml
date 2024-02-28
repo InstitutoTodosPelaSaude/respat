@@ -1,0 +1,13 @@
+storage:
+  postgres:
+    postgres_db:
+      username:
+        env: DB_DAGSTER_USER
+      password: 
+        env: DB_DAGSTER_PASSWORD
+      hostname:
+        env: DB_DAGSTER_HOST
+      db_name:
+        env: DB_DAGSTER_NAME
+      port: 
+        env: DB_DAGSTER_PORT

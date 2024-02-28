@@ -1,0 +1,18 @@
+version: '2'
+services:
+  dagster:
+    build: .
+    environment:
+      - DAGSTER_DBT_PARSE_PROJECT_ON_LOAD=1
+      - DAGSTER_HOME=/usr/app/respiratorios/dagster_home
+    ports:
+      - "3007:3000"
+    volumes:
+      - .:/usr/app/respiratorios/
+    entrypoint: ["./entrypoint.sh"]
+    networks:
+      - respatnetwork
+
+networks:
+  respatnetwork:
+    driver: bridge
