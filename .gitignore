@@ -7,8 +7,14 @@
 postgres/.env
 postgres/create_database.sql
 
-# Sensitive files
+dbt/profiles.yml
+
+# Sensitive or unuseful files
 data/**/*.xlsx
 data/**/*.tsv
 data/**/*.csv
 data/**/*.xls
+
+dbt/dbt_packages/
+dbt/logs/
+dbt/target/

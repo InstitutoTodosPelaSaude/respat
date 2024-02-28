@@ -1,0 +1,27 @@
+
+arboviroses:
+  outputs:
+
+    dev:
+      type: postgres
+      threads: 1
+      host: <HOST>
+      port: <PORT>
+      user: <USER>
+      pass: <PASSWORD>
+      dbname: <DB_NAME>
+      schema: <SCHEMA>
+      search_path: <SCHEMA> # same as schema
+
+    prod:
+      type: postgres
+      threads: 1
+      host: <HOST>
+      port: <PORT>
+      user: <USER>
+      pass: <PASSWORD>
+      dbname: <DB_NAME>
+      schema: <SCHEMA>
+      search_path: <SCHEMA> # same as schema
+
+  target: dev
