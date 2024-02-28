@@ -29,3 +29,26 @@ models:
       - name: exame
         tests:
           *not_null_warn_error_if_gt_1000
+
+  - name: einstein_02_fix_values
+    description: wip
+    columns:
+      - name: sample_id
+        tests:
+          - not_null
+      - name: test_kit
+        tests:
+          - not_null
+          - dbt_utils.not_accepted_values:
+              values: ["UNKNOWN"]
+      - name: result
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1] # 0 = negative, 1 = positive
+      - name: age
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 120
+      
