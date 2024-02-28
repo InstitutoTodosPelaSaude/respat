@@ -1,0 +1,15 @@
+version: '2'
+services:
+  respat-postgresdwitps:
+    env_file:
+      - .env
+    build: .
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5437:5432"
+  respat-adminer:
+    image: adminer
+    ports:
+      - "8097:8080"
