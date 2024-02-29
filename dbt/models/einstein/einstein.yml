@@ -59,3 +59,42 @@ models:
           - dbt_utils.expression_is_true:
               expression: "<= current_date"
       
+  - name: einstein_03_pivot_results
+    description: wip
+    tests:
+      - dbt_utils.equal_rowcount:
+          compare_model: ref('einstein_02_fix_values')
+    columns:
+      - name: test_id
+        tests:
+          - not_null
+          - relationship:
+              to: ref('einstein_02_fix_values')
+              field: test_id
+      - name: sample_id
+        tests:
+          - not_null
+          - relationship:
+              to: ref('einstein_02_fix_values')
+              field: sample_id
+      - name: test_kit
+        tests:
+          - not_null
+          - dbt_utils.not_accepted_values:
+              values: ["UNKNOWN"]
+          - accepted_values:
+              values: ["covid_pcr", "covid_antigen", "vsr_antigen", "test_2", "test_3", "test_4"]
+      - name: result
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+      - name: age
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 120
+      - name: date_testing
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "<= current_date"
