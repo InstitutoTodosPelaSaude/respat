@@ -26,7 +26,13 @@ WITH source_data AS (
     sex,
     age,
     exame,
-    detalhe_exame,
+    
+    REGEXP_REPLACE(
+        REGEXP_REPLACE(detalhe_exame, '[.:]', '', 'g'), 
+        '\s+', ' ', 'g'
+    )
+    AS detalhe_exame,
+
     date_testing,
     location,
     state,
