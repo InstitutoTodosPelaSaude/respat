@@ -37,7 +37,7 @@ models:
         tests:
           - not_null
       - name: test_kit
-        tests:
+        tests: &test_kit_tests
           - not_null
           - dbt_utils.not_accepted_values:
               values: ["UNKNOWN"]
@@ -49,7 +49,7 @@ models:
           - accepted_values:
               values: [0, 1] # 0 = negative, 1 = positive
       - name: age
-        tests:
+        tests: &age_tests
           - dbt_utils.accepted_range:
               min_value: 0
               max_value: 120
@@ -80,22 +80,14 @@ models:
               to: ref('einstein_02_fix_values')
               field: sample_id
       - name: test_kit
-        tests:
-          - not_null
-          - dbt_utils.not_accepted_values:
-              values: ["UNKNOWN"]
-          - accepted_values:
-              values: ["covid_pcr", "covid_antigen", "vsr_antigen", "test_2", "test_3", "test_4"]
+        tests: *test_kit_tests
       - name: result
         tests:
           - not_null
           - accepted_values:
               values: [0, 1]
       - name: age
-        tests:
-          - dbt_utils.accepted_range:
-              min_value: 0
-              max_value: 120
+        tests: *age_tests
       - name: date_testing
         tests:
           - dbt_utils.expression_is_true:
@@ -139,3 +131,72 @@ models:
       - name: BAC_test_result
         quote: true
         tests: *test_pivot_test_result_columns
+  - name: einstein_04_fill_results
+    description: wip
+    tests:
+      - at_least_one_test_result_is_present_str
+    columns:
+      - name: test_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('einstein_03_pivot_results')
+              field: test_id
+      - name: sample_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('einstein_03_pivot_results')
+              field: sample_id
+      - name: test_kit
+        tests: *test_kit_tests
+      - name: age
+        tests: *age_tests
+      - name: date_testing
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "<= current_date"
+      - name: qty_original_lines
+        tests:
+          - dbt_expectations.expect_column_to_exist
+          #- qty_original_lines_equals_row_count:
+          #    ref: ref('einstein_03_pivot_results')
+      - name: SC2_test_result
+        quote: true
+        tests: &test_fill_values_test_result_columns
+          - not_null
+          - accepted_values:
+              values: ['Pos', 'Neg', 'NT']
+      - name: FLUA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: FLUB_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: VSR_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: RINO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: META_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: PARA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ADENO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BOCA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: COVS_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ENTERO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BAC_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
