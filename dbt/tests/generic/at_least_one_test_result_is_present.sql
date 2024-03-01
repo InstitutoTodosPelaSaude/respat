@@ -9,6 +9,7 @@
         "FLUB_test_result" = -1 AND
         "VSR_test_result" = -1 AND
         "RINO_test_result" = -1 AND
+        "META_test_result" = -1 AND
         "PARA_test_result" = -1 AND
         "ADENO_test_result" = -1 AND
         "BOCA_test_result" = -1 AND
