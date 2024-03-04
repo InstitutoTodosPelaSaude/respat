@@ -23,3 +23,5 @@ dbt/target/
 dbt/package-lock.yml
 
 dagster_home/**/
+
+*.ipynb
