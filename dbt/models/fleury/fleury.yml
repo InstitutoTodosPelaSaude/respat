@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: dagster
+    description: Raw data from Fleury
+    schema: respiratorios
+    tables:
+      - name: fleury_raw
+        meta:
+          dagster:
+            asset_key: ["fleury_raw"]
