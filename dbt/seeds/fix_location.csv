@@ -1,0 +1,11 @@
+source_location,source_state,target_location,description
+ALPHAVILLE,SAO PAULO,SAO PAULO,district used as city
+GOIANA,GOIAS,GOIANIA,mistake in the name of the city
+MOJI DAS CRUZES,SAO PAULO,MOGI DAS CRUZES,mistake in the name of the city
+SALVADORBA,BAHIA,SALVADOR,mistake in the name of the city
+SANTO AMARO,SAO PAULO,SAO PAULO,district used as city
+UBERBA,MINAS GERAIS,UBERABA,mistake in the name of the city
+EMBUGUACU,SAO PAULO,EMBU GUACU,missing space in the hyphenated name
+JIPARANA,RONDONIA,JI PARANA,missing space in the hyphenated name
+JABOATAO,PERNAMBUCO,JABOATAO DOS GUARARAPES,mistake in the name of the city
+GUARILHOS,SAO PAULO,GUARULHOS,mistake in the name of the city
