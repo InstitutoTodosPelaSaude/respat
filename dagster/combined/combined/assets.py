@@ -24,7 +24,7 @@ dagster_dbt_translator = DagsterDbtTranslator(
 )
 
 ROOT_PATH = pathlib.Path(__file__).parent.parent.parent.parent.absolute()
-HISTORICAL_COMBINED_FILE_FOLDER = ROOT_PATH / "data" / "einstein"
+HISTORICAL_COMBINED_FILE_FOLDER = ROOT_PATH / "data" / "historical_data"
 HISTORICAL_COMBINED_FILE_EXTENSION = '.tsv'
 
 load_dotenv()
@@ -36,7 +36,7 @@ DB_PASSWORD = os.getenv('DB_PASSWORD')
 DB_SCHEMA = os.getenv('DB_SCHEMA')
 
 @asset(compute_kind="python")
-def combined_raw(context):
+def combined_historical_raw(context):
     """
     Import the combined historical data to the database
     """
@@ -51,7 +51,7 @@ def combined_raw(context):
     combined_df = pd.read_csv(HISTORICAL_COMBINED_FILE_FOLDER / combined_file, sep='\t', dtype=str)
 
     # Save to db
-    combined_df.to_sql('combined_history_raw', engine, schema=DB_SCHEMA, if_exists='replace', index=False)
+    combined_df.to_sql('combined_historical_raw', engine, schema=DB_SCHEMA, if_exists='replace', index=False)
     engine.dispose()
 
     n_rows = combined_df.shape[0]

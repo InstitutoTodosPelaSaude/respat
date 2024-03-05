@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: dagster
+    description: Raw historical data from Dagster
+    schema: respiratorios
+    tables:
+      - name: combined_historical_raw
+        meta:
+          dagster:
+            asset_key: ["combined_historical_raw"]
