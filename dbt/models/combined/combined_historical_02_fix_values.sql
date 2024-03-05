@@ -15,7 +15,6 @@ SELECT
         test_kit,
         date_testing,
         state_code,
-        epiweek,
         patient_id,
         sex,
         

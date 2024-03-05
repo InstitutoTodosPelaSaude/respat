@@ -11,7 +11,7 @@ WITH source_data AS (
         --region,
         TO_DATE("date_testing", 'YYYY-MM-DD') AS date_testing,
         state_code,
-        epiweek,
+        -- epiweek,
         patient_id,
         sex,
         age::INT,
