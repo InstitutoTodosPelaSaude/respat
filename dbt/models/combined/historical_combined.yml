@@ -1,0 +1,54 @@
+version: 2
+
+
+models:
+
+  - name: combined_historical_01_fix_types
+    columns:
+      - name: sample_id
+        tests:
+          - not_null
+      - name: age
+        tests: &age_tests
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 120
+      - name: SC2_test_result
+        quote: true
+        tests: &test_pivot_test_result_columns
+          - not_null
+          - accepted_values:
+              values: ['Pos', 'Neg', 'NT']
+      - name: FLUA_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: FLUB_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: VSR_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: RINO_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: META_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: PARA_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: ADENO_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: BOCA_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: COVS_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: ENTERO_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: BAC_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
