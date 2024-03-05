@@ -2,3 +2,6 @@ load_from:
     - python_module:
         module_name: lab_einstein.definitions
         working_directory: dagster/lab_einstein
+    - python_module:
+        module_name: combined.definitions
+        working_directory: dagster/combined
