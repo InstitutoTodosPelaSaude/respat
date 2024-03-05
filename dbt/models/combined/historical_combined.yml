@@ -4,6 +4,9 @@ version: 2
 models:
 
   - name: combined_historical_01_fix_types
+  - name: combined_historical_02_fix_values
+    tests:
+      - at_least_one_test_result_is_present_str
     columns:
       - name: sample_id
         tests:
@@ -13,6 +16,13 @@ models:
           - dbt_utils.accepted_range:
               min_value: 0
               max_value: 120
+      - name: sex
+        tests:
+          - accepted_values:
+              values: ['M', 'F']
+      - name: test_kit
+        tests:
+          - not_null
       - name: SC2_test_result
         quote: true
         tests: &test_pivot_test_result_columns
