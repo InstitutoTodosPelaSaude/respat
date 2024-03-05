@@ -9,3 +9,215 @@ sources:
         meta:
           dagster:
             asset_key: ["fleury_raw"]
+
+
+models:
+  - name: fleury_01_convert_types
+    description: Convert types
+    columns:
+      - name: test_id
+        tests:
+          - not_null
+      - name: date_testing
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "<= current_date"
+
+  - name: fleury_02_fix_values
+    description: Fix values
+    columns:
+      - name: sample_id
+        tests:
+          - unique
+      - name: age
+        tests:
+          - dbt_utils.accepted_range:
+                  min_value: 0
+                  max_value: 150
+      - name: test_kit
+        tests:
+          - dbt_utils.not_accepted_values:
+                  values: ['UNKNOWN']
+
+  - name: fleury_03_explode_fluab_results
+    description: Divide FLU A/B results into two rows, one for each result
+    columns:
+      - name: sample_id
+        tests:
+          - relationships:
+              to: ref('fleury_02_fix_values')
+              field: sample_id
+      - name: result
+        tests:
+          - dbt_utils.not_accepted_values:
+                  values: ['UNKNOWN', 'INFLUENZA A - POSITIVO', 'INFLUENZA B - POSITIVO', 'INFLUENZA A E B - POSITIVO']
+      - name: pathogen
+        tests:
+          - dbt_utils.not_accepted_values:
+                  values: ['INFLUENZA A E B - TESTE RAPIDO']
+
+  - name: fleury_04_fix_result_values
+    description: Map result values to numeric values
+    columns:
+      - name: sample_id
+        tests:
+          - relationships:
+              to: ref('fleury_03_explode_fluab_results')
+              field: sample_id
+      - name: result
+        tests:
+          - accepted_values:
+                  values: [0, 1]
+
+  - name: fleury_05_pivot_results
+    description: Pivot results into columns
+    tests:
+      - at_least_one_test_result_is_present
+      - only_one_test_result_is_present
+    columns:
+      - name: sample_id
+        tests:
+          - relationships:
+              to: ref('fleury_04_fix_result_values')
+              field: sample_id
+      - name: SC2_test_result
+        quote: true
+        tests: &test_pivot_test_result_columns
+          - not_null
+          - accepted_values:
+              values: [0, 1, -1]
+      - name: FLUA_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: FLUB_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: VSR_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: RINO_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: META_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: PARA_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: ADENO_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: BOCA_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: COVS_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: ENTERO_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: BAC_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+
+  - name: fleury_06_fill_results
+    description: Fill results
+    tests:
+      - at_least_one_test_result_is_present_str
+    columns:
+      - name: sample_id
+        tests:
+          - relationships:
+              to: ref('fleury_05_pivot_results')
+              field: sample_id
+      - name: SC2_test_result
+        quote: true
+        tests: &test_fill_values_test_result_columns
+          - not_null
+          - accepted_values:
+              values: ['Pos', 'Neg', 'NT']
+      - name: FLUA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: FLUB_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: VSR_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: RINO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: META_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: PARA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ADENO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BOCA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: COVS_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ENTERO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BAC_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      
+  - name: fleury_07_deduplicate
+    description: Deduplicate rows
+    tests:
+      - at_least_one_test_result_is_present_str
+    columns:
+      - name: sample_id
+        tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('fleury_06_fill_results')
+              field: sample_id
+      - name: SC2_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: FLUA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: FLUB_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: VSR_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: RINO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: META_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: PARA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ADENO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BOCA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: COVS_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ENTERO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BAC_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      
+    

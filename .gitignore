@@ -21,7 +21,10 @@ dbt/dbt_packages/
 dbt/logs/
 dbt/target/
 dbt/package-lock.yml
+dbt/.user.yml
 
 dagster_home/**/
 
 *.ipynb
+
+logs

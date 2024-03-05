@@ -1,7 +1,19 @@
-{{ config(materialized='table') }}
+{{
+    config(
+        materialized='incremental',
+        unique_key='sample_id',
+        incremental_strategy='merge',
+        merge_exclude_columns = ['created_at']
+    )
+}}
 
-WITH source_table AS (
-    SELECT * FROM 
-    {{ source("dagster", "fleury_raw") }}
+WITH source_data AS(
+    SELECT
+    *
+    FROM {{ ref("fleury_07_deduplicate") }}
 )
-SELECT * FROM source_table
+SELECT
+    *,
+    CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo' AS created_at,
+    CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo' AS updated_at
+FROM source_data
