@@ -38,3 +38,4 @@ SELECT
         location,
         state
 FROM source_data
+WHERE date_testing < '2024-01-01'

@@ -23,6 +23,9 @@ models:
       - name: test_kit
         tests:
           - not_null
+      - name: date_testing
+        tests:
+          - not_null
       - name: SC2_test_result
         quote: true
         tests: &test_pivot_test_result_columns
