@@ -1,0 +1,7 @@
+fastapi
+pydantic
+uvicorn
+python-multipart
+jpype1
+aspose-cells
+pandas
