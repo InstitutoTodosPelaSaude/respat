@@ -30,7 +30,7 @@ models:
           *not_null_warn_error_if_gt_1000
 
           
-  - name: sabin_02_convert_types
+  - name: sabin_02_fix_values
     columns:
       - name: sample_id
         tests:
@@ -52,6 +52,10 @@ models:
           - dbt_utils.accepted_range:
               min_value: 0
               max_value: 120
+      - name: sex
+        tests:
+          - accepted_values:
+              values: ["M", "F"]
       - name: date_testing
         tests:
           # date not in the future
