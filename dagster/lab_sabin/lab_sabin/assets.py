@@ -84,7 +84,7 @@ def sabin_raw(context):
     context.log.info(f"Reading file {sabin_files[0]}")
 
     # Save to db
-    sabin_df.to_sql('sabin_raw', engine, schema='arboviroses', if_exists='replace', index=False)
+    sabin_df.to_sql('sabin_raw', engine, schema='respiratorios', if_exists='replace', index=False)
     engine.dispose()
 
     context.add_output_metadata({'num_rows': sabin_df.shape[0]})
