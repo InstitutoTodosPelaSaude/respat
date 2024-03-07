@@ -28,7 +28,7 @@ SELECT
     sex,
     age,
     location,
-    state_code,
+    state,
     test_kit,
     file_name,
     -- Mapping test results

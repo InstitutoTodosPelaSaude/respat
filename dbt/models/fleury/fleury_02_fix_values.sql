@@ -1,5 +1,37 @@
 {{ config(materialized='table') }}
 
+{%
+    set state_code_to_state_name = {
+        'AC': 'Acre',
+        'AL': 'Alagoas',
+        'AP': 'Amapá',
+        'AM': 'Amazonas',
+        'BA': 'Bahia',
+        'CE': 'Ceará',
+        'DF': 'Distrito Federal',
+        'ES': 'Espírito Santo',
+        'GO': 'Goiás',
+        'MA': 'Maranhão',
+        'MT': 'Mato Grosso',
+        'MS': 'Mato Grosso do Sul',
+        'MG': 'Minas Gerais',
+        'PA': 'Pará',
+        'PB': 'Paraíba',
+        'PR': 'Paraná',
+        'PE': 'Pernambuco',
+        'PI': 'Piauí',
+        'RJ': 'Rio de Janeiro',
+        'RN': 'Rio Grande do Norte',
+        'RS': 'Rio Grande do Sul',
+        'RO': 'Rondônia',
+        'RR': 'Roraima',
+        'SC': 'Santa Catarina',
+        'SP': 'São Paulo',
+        'SE': 'Sergipe',
+        'TO': 'Tocantins'
+    }
+%}
+
 WITH source_table AS (
     SELECT * FROM 
     {{ ref('fleury_01_convert_types') }}
@@ -25,7 +57,12 @@ SELECT
         ELSE -1                                                                     -- Avoid missing new formats
     END AS age,
     location,
-    state_code,
+    CASE
+        {% for state_code, state_name in state_code_to_state_name.items() %}
+        WHEN state_code = '{{ state_code }}' THEN regexp_replace(upper(unaccent('{{ state_name }}')), '[^\w\s]', '', 'g')
+        {% endfor %}
+        ELSE NULL
+    END AS state,
     exame,
     CASE exame
         WHEN 'COVIDFLURSVGX'    THEN 'test_4'
