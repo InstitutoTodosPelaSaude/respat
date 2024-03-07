@@ -71,8 +71,8 @@ def combined_historical_raw(context):
 
 @dbt_assets(
     manifest=dbt_manifest_path,
-    select='combined',
+    select='combined_historical',
     dagster_dbt_translator=dagster_dbt_translator
 )
-def respiratorios_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
+def respiratorios_historical_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
     yield from dbt.cli(["build"], context=context).stream()
