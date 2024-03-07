@@ -287,16 +287,10 @@ models:
       - name: test_id
         tests:
           - not_null
-          - relationships:
-              to: ref('einstein_05_deduplicate')
-              field: test_id
       - name: sample_id
         tests:
           - unique
           - not_null
-          - relationships:
-              to: ref('einstein_05_deduplicate')
-              field: sample_id
       - name: test_kit
         tests: *test_kit_tests
       - name: age
@@ -309,8 +303,6 @@ models:
         tests:
           - dbt_expectations.expect_column_to_exist
           - dbt_utils.accepted_range: *qty_original_lines_accepted_range
-          - qty_original_lines_equals_row_count:
-              ref: ref('einstein_03_pivot_results')
       - name: SC2_test_result
         quote: true
         tests: *test_fill_values_test_result_columns

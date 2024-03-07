@@ -16,7 +16,7 @@ SELECT
                 'TMR19RES1',
                 'COVIDECO',
                 'RDRPALVO',
-                'PCRSALIV'
+                'PCRSALIV',
 
                 'RDRPALVO', 
             

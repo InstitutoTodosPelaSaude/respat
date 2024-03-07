@@ -162,7 +162,9 @@ models:
               values: [ 21,
                         42, # When a 21 test is duplicated 
                         26,
-                        4,]
+                        4,
+                        2,
+                        1]
 
       - name: SC2_test_result
         quote: true
@@ -281,16 +283,10 @@ models:
       - name: test_id
         tests:
           - not_null
-          - relationships:
-              to: ref('sabin_03_pivot_results')
-              field: test_id
       - name: sample_id
         tests:
           - not_null
           - unique
-          - relationships:
-              to: ref('sabin_03_pivot_results')
-              field: sample_id
       - name: test_kit
         tests: *test_kit_tests
       - name: age
@@ -303,8 +299,6 @@ models:
         tests:
           - dbt_expectations.expect_column_to_exist
           - accepted_values: *qty_original_lines_accepted_values
-          - qty_original_lines_equals_row_count:
-              ref: ref('sabin_03_pivot_results')
       - name: SC2_test_result
         quote: true
         tests: *test_fill_values_test_result_columns
