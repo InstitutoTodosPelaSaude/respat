@@ -20,10 +20,31 @@ SELECT
     location,
     date_testing,
     birth_date,
-    sex,
+    
+    CASE
+        WHEN sex ILIKE 'F%' THEN 'F'
+        WHEN sex ILIKE 'M%' THEN 'M'
+        ELSE NULL
+    END AS sex,
+    EXTRACT( YEAR FROM AGE(date_testing, birth_date) )::int AS age,
+
     exame,
     detalhe_exame,
-    result,
+    CASE
+        WHEN result ILIKE 'NAO DETECTAD%' THEN 0
+        WHEN result ILIKE 'DETECTAD%' THEN 1
+        ELSE -2
+    END AS result,
+    
+    CASE
+        -- Testes da planilha de exames covid
+        WHEN detalhe_exame IN ('RDRPALVO', 'NALVOSSA', 'NALVO', 'PCRSALIV') THEN 'covid_pcr'
+        WHEN detalhe_exame IN ('TMR19RES1') THEN 'thermo'
+        WHEN detalhe_exame IN ('COVIDECO') THEN 'covid_antigen'
+        -- Testes da planilha de demais patógenos respiratórios
+        ELSE 'UNKNOWN'
+    END AS test_kit,
+
     file_name
 FROM source_table
 WHERE 1=1

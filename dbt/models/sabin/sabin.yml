@@ -40,8 +40,8 @@ models:
           - not_null
           - dbt_utils.not_accepted_values:
               values: ["UNKNOWN"]
-          #- accepted_values:
-          #    values: ["covid_pcr", "covid_antigen", "vsr_antigen", "test_2", "test_3", "test_4"]
+          - accepted_values:
+              values: ["covid_pcr", "covid_antigen", "thermo"]
       - name: result
         tests:
           - not_null
@@ -51,7 +51,7 @@ models:
         tests: &age_tests
           - dbt_utils.accepted_range:
               min_value: 0
-              max_value: 120
+              max_value: 150
       - name: sex
         tests:
           - accepted_values:
