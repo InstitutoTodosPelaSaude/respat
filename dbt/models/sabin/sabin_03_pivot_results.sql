@@ -17,6 +17,14 @@ SELECT
                 'COVIDECO',
                 'RDRPALVO',
                 'PCRSALIV'
+
+                'RDRPALVO', 
+            
+                
+                'PAINSARS', 
+
+                
+                'PCRVRESPBM',  
             ], 
             'detalhe_exame', 
             'result', 
@@ -26,7 +34,16 @@ SELECT
     {{ 
         pivot_pathogen_results(
             [
-                ''
+                
+                'INFLUEH', 
+                'INFLUEN', 
+                'INFLUENZ', 
+
+                
+                'INFLUA','H1N1R', 'H1PDM09', 'H3',
+
+                
+                'PCRVRESPBM2', 
             ], 
             'detalhe_exame', 
             'result', 
@@ -36,17 +53,31 @@ SELECT
     {{ 
         pivot_pathogen_results(
             [
-                ''
+                
+                'INFLUEB', 
+
+                
+                'INFLUB',
+
+                
+                'PCRVRESPBM3', 
             ], 
             'detalhe_exame', 
             'result', 
             'FLUB_test_result'
         )
-    }}, ----
+    }}, 
     {{ 
         pivot_pathogen_results(
             [
-                ''
+                
+                'VSINCICIAL',
+
+                
+                'RSVA', 'RSVB',
+
+                
+                'PCRVRESPBM4',
             ], 
             'detalhe_exame', 
             'result', 
@@ -56,7 +87,11 @@ SELECT
     {{ 
         pivot_pathogen_results(
             [
-                ''
+                
+                'HUMANMET',  
+
+                
+                'MPVR',
             ], 
             'detalhe_exame', 
             'result', 
@@ -66,7 +101,11 @@ SELECT
     {{
         pivot_pathogen_results(
             [
-                ''
+                
+                'HUMANRH',   
+                
+                
+                'HRV',
             ], 
             'detalhe_exame', 
             'result', 
@@ -76,7 +115,11 @@ SELECT
     {{
         pivot_pathogen_results(
             [
-                ''
+                
+                'PARA1','PARA2','PARA3','PARA4',
+
+                
+                'HPIV1', 'HPIV2', 'HPIV3', 'HPIV4'
             ], 
             'detalhe_exame', 
             'result', 
@@ -86,7 +129,11 @@ SELECT
     {{
         pivot_pathogen_results(
             [
-                ''
+                
+                'ADEN', 
+
+                
+                'ADEV',
             ], 
             'detalhe_exame', 
             'result', 
@@ -96,7 +143,8 @@ SELECT
     {{
         pivot_pathogen_results(
             [
-                ''
+                
+                'HBOV',
             ], 
             'detalhe_exame', 
             'result', 
@@ -106,7 +154,14 @@ SELECT
     {{
         pivot_pathogen_results(
             [
-                ''
+                
+                'CORON',       
+                'CORHKU',      
+                'CORNL',       
+                'CORC',        
+
+                
+                'NL63', 'OC43', 'COR229E',
             ], 
             'detalhe_exame', 
             'result', 
@@ -116,7 +171,8 @@ SELECT
     {{
         pivot_pathogen_results(
             [
-                ''
+                
+                'HEVR',
             ], 
             'detalhe_exame', 
             'result', 
@@ -126,7 +182,20 @@ SELECT
     {{
         pivot_pathogen_results(
             [
-                ''
+                
+                'CPNEUMONIAE', 
+                'MYCOPAIN',    
+                'BORDETELLAP', 
+                'RSPAIN',      
+
+                
+                'BPP',	
+                'BP',	
+                'CP',	
+                'MP',	
+                'HI',	
+                'LP',	
+                'SP',	
             ], 
             'detalhe_exame', 
             'result', 
