@@ -62,3 +62,70 @@ models:
           - dbt_utils.expression_is_true:
               expression: "<= current_date"
 
+  - name: sabin_03_pivot_results
+    tests:
+      - dbt_utils.equal_rowcount:
+          compare_model: ref('sabin_02_fix_values')
+      - at_least_one_test_result_is_present
+      - only_one_test_result_is_present
+    columns:
+      - name: sample_id
+        tests:
+          - not_null
+      - name: test_kit
+        tests: *test_kit_tests
+      - name: result
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1] # 0 = negative, 1 = positive
+      - name: age
+        tests: *age_tests
+      - name: sex
+        tests:
+          - accepted_values:
+              values: ["M", "F"]
+      - name: date_testing
+        tests:
+          # date not in the future
+          - dbt_utils.expression_is_true:
+              expression: "<= current_date"
+      - name: SC2_test_result
+        quote: true
+        tests: &test_pivot_test_result_columns
+          - not_null
+          - accepted_values:
+              values: [0, 1, -1]
+      - name: FLUA_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: FLUB_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: VSR_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: RINO_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: META_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: PARA_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: ADENO_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: BOCA_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: COVS_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: ENTERO_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: BAC_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
