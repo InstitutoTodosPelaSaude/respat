@@ -1,2 +1,84 @@
 version: 2
 
+sources:
+  - name: age_groups
+    description: Table to map age groups created by dbt seed
+    schema: arboviroses
+    tables:
+      - name: age_groups
+        description: Seed table with age groups
+        columns:
+          - name: age_group
+            description: The name of the age group, formatted as "min_age-max_age"
+          - name: min_age
+            description: The minimum age of the age group
+          - name: max_age
+            description: The maximum age of the age group
+
+  - name: epiweeks
+    description: Table to map epiweeks created by dbt seed
+    schema: arboviroses
+    tables:
+      - name: epiweeks
+        description: Seed table with epiweeks
+        columns:
+          # year,week_num,end_date,start_date
+          - name: year
+            description: The year of the epiweek
+          - name: week_num
+            description: The week number of the epiweek. It is a number between 1 and 52 or 53.
+          - name: end_date
+            description: The last day of the epiweek. Format YYYY-MM-DD
+          - name: start_date
+            description: The first day of the epiweek. Format YYYY-MM-DD
+            
+  - name: fix_location
+    description: Table to fix locations with mistakes created by dbt seed
+    schema: arboviroses
+    tables:
+      - name: fix_location
+        columns:
+          - name: source_location
+            description: The location name with mistakes
+          - name: source_state
+            description: The state of the location with mistakes
+          - name: target_location
+            description: The correct location name
+          - name: description
+            description: A description of the mistake
+  - name: municipios
+    description: Table to map location created by dbt seed
+    schema: arboviroses
+    tables:
+      - name: municipios
+      # CD_MUN,CD_UF,SIGLA_UF,NM_UF,NM_UF_NORM,NM_MUN,NM_MUN_NORM,REGIAO,lat,long
+        columns:
+          - name: CD_MUN
+            description: The code of the location
+          - name: CD_UF
+            description: The code of the state
+          - name: SIGLA_UF
+            description: The acronym of the state
+          - name: NM_UF
+            description: The name of the state
+          - name: NM_UF_NORM
+            description: The normalized name of the state. It is the same as NM_UF, but without accents and in UPPER CASE. Used to join with other tables.
+          - name: NM_MUN
+            description: The name of the location.
+          - name: NM_MUN_NORM
+            description: The normalized name of the location. It is the same as NM_MUN, but without accents and in UPPER CASE. Used to join with other tables.
+          - name: REGIAO
+            description: The region of the location (NORTE, NORDESTE, CENTRO-OESTE, SUDESTE, SUL)
+          - name: lat
+            description: The latitude of the location
+          - name: long
+            description: The longitude of the location
+
+  - name: macroregions
+    description: Table to map macroregions created by dbt seed
+    schema: arboviroses
+    tables:
+      - name: macroregions
+
+models:
+  - name: combined_01_join_labs.sql
