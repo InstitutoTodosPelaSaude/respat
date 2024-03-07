@@ -163,8 +163,7 @@ models:
                         42, # When a 21 test is duplicated 
                         26,
                         4,]
-          #- qty_original_lines_equals_row_count:
-          #    ref: ref('sabin_03_pivot_results')
+
       - name: SC2_test_result
         quote: true
         tests: &test_fill_values_test_result_columns
@@ -204,3 +203,147 @@ models:
       - name: BAC_test_result
         quote: true
         tests: *test_fill_values_test_result_columns
+
+  - name: sabin_05_deduplicate
+    description: wip
+    tests:
+      - at_least_one_test_result_is_present_str
+    columns:
+      - name: test_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('sabin_03_pivot_results')
+              field: test_id
+      - name: sample_id
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              to: ref('sabin_03_pivot_results')
+              field: sample_id
+      - name: test_kit
+        tests: *test_kit_tests
+      - name: age
+        tests: *age_tests
+      - name: date_testing
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "<= current_date"
+      - name: qty_original_lines
+        tests:
+          - dbt_expectations.expect_column_to_exist
+          - accepted_values: *qty_original_lines_accepted_values
+          - qty_original_lines_equals_row_count:
+              ref: ref('sabin_03_pivot_results')
+      - name: SC2_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: FLUA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: FLUB_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: VSR_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: RINO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: META_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: PARA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ADENO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BOCA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: COVS_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ENTERO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BAC_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+
+  - name: sabin_final
+    description: wip
+    tests:
+      - at_least_one_test_result_is_present_str
+    columns:
+      - name: test_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('sabin_03_pivot_results')
+              field: test_id
+      - name: sample_id
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              to: ref('sabin_03_pivot_results')
+              field: sample_id
+      - name: test_kit
+        tests: *test_kit_tests
+      - name: age
+        tests: *age_tests
+      - name: date_testing
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "<= current_date"
+      - name: qty_original_lines
+        tests:
+          - dbt_expectations.expect_column_to_exist
+          - accepted_values: *qty_original_lines_accepted_values
+          - qty_original_lines_equals_row_count:
+              ref: ref('sabin_03_pivot_results')
+      - name: SC2_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: FLUA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: FLUB_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: VSR_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: RINO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: META_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: PARA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ADENO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BOCA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: COVS_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ENTERO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BAC_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: created_at
+        tests:
+          - dbt_expectations.expect_column_to_exist
+      - name: updated_at
+        tests:
+          - dbt_expectations.expect_column_to_exist
