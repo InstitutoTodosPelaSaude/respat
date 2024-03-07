@@ -55,10 +55,31 @@ SELECT
     
     CASE
         -- Testes da planilha de exames covid
-        WHEN detalhe_exame IN ('RDRPALVO', 'NALVOSSA', 'NALVO', 'PCRSALIV') THEN 'covid_pcr'
-        WHEN detalhe_exame IN ('TMR19RES1') THEN 'thermo'
+        WHEN detalhe_exame IN ('RDRPALVO', 'NALVOSSA', 'NALVO', 'PCRSALIV', 'TMR19RES1') THEN 'covid_pcr'
         WHEN detalhe_exame IN ('COVIDECO') THEN 'covid_antigen'
         -- Testes da planilha de demais patógenos respiratórios
+        WHEN detalhe_exame IN (
+            'PARA1','PARA2', 'PARA3','PARA4',
+            'BORDETELLAP','VSINCICIAL','CPNEUMONIAE',
+            'ADEN','CORON','CORHKU','CORNL','CORC',
+            'HUMANMET','HUMANRH','INFLUEH','INFLUEN','INFLUENZ','INFLUEB',
+            'MYCOPAIN','PAINSARS','RSPAIN'
+        ) 
+        THEN 'test_21'
+        WHEN detalhe_exame IN (
+            'HPIV1', 'HPIV2', 'HPIV3', 'HPIV4',
+            'RSVA', 'RSVB', 'MPVR', 'HRV', 
+            'HBOV', 'HEVR', 'ADEV', 'BPP', 
+            'BP', 'CP', 'MP', 'HI',
+            'LP', 'SP', 'NL63', 'OC43', 'COR229E', 
+            'H1N1R', 'H1PDM09', 'H3', 'INFLUA', 'INFLUB'
+        ) 
+        THEN 'test_24'
+        WHEN detalhe_exame IN (
+            'PCRVRESPBM', 'PCRVRESPBM2', 
+            'PCRVRESPBM3', 'PCRVRESPBM4'
+        ) 
+        THEN 'test_4'
         ELSE 'UNKNOWN'
     END AS test_kit,
 
