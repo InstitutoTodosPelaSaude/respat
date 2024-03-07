@@ -1,5 +1,20 @@
 {{ config(materialized='table') }}
 
+{%
+    set pathogen_list_that_indicates_positive_result = (
+        'SINCICIAL RESPIRATORIO B',
+        'HAEMOPHILUS INFLUENZAE',
+        'CORONAVIRUS OC43',
+        'INFLUENZA A',
+        'PARAINFLUENZA 4',
+        'METAPNEUMOVIRUS',
+        'INFLUENZA A H1PDM09',
+        'STREPTOCOCCUS PNEUMONIAE',
+        'RINOVIRUS',
+        'INFLUENZA A H3N2'
+    )
+%}
+
 WITH source_table AS (
     SELECT * FROM
     {{ ref('sabin_01_convert_types') }}
@@ -33,6 +48,8 @@ SELECT
     CASE
         WHEN result ILIKE 'NAO DETECTAD%' THEN 0
         WHEN result ILIKE 'DETECTAD%' THEN 1
+        WHEN result IN {{ pathogen_list_that_indicates_positive_result }} THEN 1
+        WHEN result = '0' THEN 0
         ELSE -2
     END AS result,
     
