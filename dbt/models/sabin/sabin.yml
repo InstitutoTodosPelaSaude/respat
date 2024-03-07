@@ -158,10 +158,11 @@ models:
       - name: qty_original_lines
         tests:
           - dbt_expectations.expect_column_to_exist
-          - dbt_utils.accepted_range: &qty_original_lines_accepted_range
-              min_value: 1
-              max_value: 5
-              inclusive: true
+          - accepted_values: &qty_original_lines_accepted_values
+              values: [ 21,
+                        42, # When a 21 test is duplicated 
+                        26,
+                        4,]
           #- qty_original_lines_equals_row_count:
           #    ref: ref('sabin_03_pivot_results')
       - name: SC2_test_result

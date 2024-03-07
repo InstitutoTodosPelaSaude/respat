@@ -26,6 +26,12 @@ SELECT
             exame,
             CASE
                 WHEN detalhe_exame IN ('RDRPALVO', 'NALVO') THEN 'NALVO_RDRPALVO'
+                WHEN exame ILIKE 'PAINEL MOLECULAR RAPIDO PARA INFECÇOES RESPIRATORIAS COM SARSCOV2%'
+                THEN 'test_21'
+                WHEN exame ILIKE 'PAINEL MOLECULAR PARA INFECÇÕES RESPIRATÓRIAS%'
+                THEN 'test_24'
+                WHEN exame ILIKE 'PAINEL PARA VÍRUS SARS-CoV-2, INFLUENZA A, B E SINCICIAL RESPIRATÓ%'
+                THEN 'test_4'
                 ELSE detalhe_exame
             END
         )
