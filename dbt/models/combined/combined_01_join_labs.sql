@@ -26,7 +26,7 @@
         '"COVS_test_result"',
         '"ENTERO_test_result"',
         '"BAC_test_result"',
-        '"qty_original_lines"',
+        'qty_original_lines',
         'created_at',
         'updated_at'
     ]
@@ -34,10 +34,19 @@
 
 WITH source_data AS (
 
+    SELECT
+    lab_id,
+    {{ columns | join(', ') }}
+    FROM {{ ref("combined_historical_final") }}
+    WHERE date_testing < '{{ var('combined_threshold_date') }}'
+
+    UNION
+
     SELECT 
     'EINSTEIN' as lab_id,
     {{ columns | join(', ') }}
     FROM {{ ref("einstein_final") }}
+    WHERE date_testing >= '{{ var('combined_threshold_date') }}'
     
     UNION
 
@@ -45,6 +54,7 @@ WITH source_data AS (
     'FLEURY' as lab_id,
     {{ columns | join(', ') }}
     FROM {{ ref("fleury_final") }}
+    WHERE date_testing >= '{{ var('combined_threshold_date') }}'
     
     UNION
     
@@ -52,6 +62,7 @@ WITH source_data AS (
     'SABIN' as lab_id,
     {{ columns | join(', ') }}
     FROM {{ ref("sabin_final") }}
+    WHERE date_testing >= '{{ var('combined_threshold_date') }}'
     
 )
 SELECT
