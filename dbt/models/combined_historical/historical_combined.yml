@@ -129,3 +129,4 @@ models:
       - name: BAC_test_result
         quote: true
         tests: *test_pivot_test_result_columns
+  - name: combined_historical_final

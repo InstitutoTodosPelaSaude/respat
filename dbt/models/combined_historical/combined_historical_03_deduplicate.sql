@@ -1,4 +1,4 @@
-{{ config(materialized='table') }}
+{{ config(materialized='view') }}
 {{ 
     dbt_utils.deduplicate(
         relation=ref('combined_historical_02_fix_values'),
