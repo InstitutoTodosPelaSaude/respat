@@ -6,6 +6,11 @@ name: 'respiratorios'
 version: '1.0.0'
 config-version: 2
 
+vars:
+  # The Lab's processed data will be used from the following date,
+  # before that date, the historical combined data will be used.
+  combined_threshold_date: '2024-01-01'
+
 # This setting configures which "profile" dbt uses for this project.
 profile: 'respiratorios'
 

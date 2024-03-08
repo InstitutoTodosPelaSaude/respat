@@ -40,10 +40,11 @@ SELECT
         "META_test_result",
         "BAC_test_result",
         location,
-        state
+        state,
+        'historical_combined' as file_name
 FROM source_data
 WHERE 1=1
-AND date_testing < '2024-01-01' -- Apenas dados históricos
+AND date_testing < '{{ var('combined_threshold_date') }}' -- Apenas dados históricos
 AND NOT ( 
     -- Filtrar linhas sem nenhum resultado de teste
     "SC2_test_result" = 'NT' AND
