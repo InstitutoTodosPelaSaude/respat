@@ -13,8 +13,8 @@ SELECT
     {{ normalize_text("exame") }} AS exame,
     {{ normalize_text("detalhe_exame") }} AS detalhe_exame,
     TO_DATE("dh_coleta", 'DD/MM/YYYY') AS date_testing,
-    "municipio" AS location,
-    "estado" AS state,
+    {{ normalize_text("municipio") }} AS location,
+    {{ normalize_text("estado") }} AS state,
     "patogeno" AS pathogen,
     {{ normalize_text("resultado") }} AS result,
     file_name

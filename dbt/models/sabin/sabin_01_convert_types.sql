@@ -8,8 +8,8 @@ WITH source_data AS (
 )
 SELECT
     "OS" AS test_id,
-    "Estado" AS state,
-    "Municipio" AS location,
+    {{ normalize_text("Estado") }} AS state,
+    {{ normalize_text("Municipio") }} AS location,
     TO_DATE("DataAtendimento", 'DD/MM/YYYY') AS date_testing, 
     TO_DATE("DataNascimento", 'DD/MM/YYYY') AS birth_date,  
     "Sexo" AS sex,

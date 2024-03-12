@@ -39,8 +39,8 @@ SELECT
         "ENTERO_test_result",
         "META_test_result",
         "BAC_test_result",
-        location,
-        state,
+        {{ normalize_text("location") }} as location,
+        {{ normalize_text("state") }} as state,
         'historical_combined' as file_name
 FROM source_data
 WHERE 1=1
