@@ -11,4 +11,7 @@ load_from:
     - python_module:
         module_name: combined.definitions
         working_directory: dagster/combined
+    - python_module:
+        module_name: lab_dbmol.definitions
+        working_directory: dagster/lab_dbmol
 
