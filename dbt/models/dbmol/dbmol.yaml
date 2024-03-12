@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: dagster
+    description: Raw data from DBMol
+    schema: respiratorios
+    tables:
+      - name: dbmol_raw
+        meta:
+          dagster:
+            asset_key: ["dbmol_raw"]
