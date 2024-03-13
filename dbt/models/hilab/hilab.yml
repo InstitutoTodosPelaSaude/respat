@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: dagster
+    description: Raw data from Sabin
+    schema: respiratorios
+    tables:
+      - name: hilab_raw
+        meta:
+          dagster:
+            asset_key: ["hilab_raw"]
