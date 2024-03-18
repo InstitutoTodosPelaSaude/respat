@@ -61,7 +61,7 @@ def dbmol_raw(context):
     return MaterializeResult(
         metadata={
             "info": MetadataValue.md(dedent(f"""
-            # dbmol Raw
+            # DBmol Raw
 
             Last updated: {pd.Timestamp.now() - pd.Timedelta(hours=3)}
 
