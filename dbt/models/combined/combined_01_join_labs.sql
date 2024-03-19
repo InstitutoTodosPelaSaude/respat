@@ -63,6 +63,14 @@ WITH source_data AS (
     {{ columns | join(', ') }}
     FROM {{ ref("sabin_final") }}
     WHERE date_testing >= '{{ var('combined_threshold_date') }}'
+
+    UNION
+
+    SELECT 
+    'HILAB' as lab_id,
+    {{ columns | join(', ') }}
+    FROM {{ ref("hilab_final") }}
+    WHERE date_testing >= '{{ var('combined_threshold_date') }}'
     
 )
 SELECT
