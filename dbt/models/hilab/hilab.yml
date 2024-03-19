@@ -2,7 +2,7 @@ version: 2
 
 sources:
   - name: dagster
-    description: Raw data from Sabin
+    description: Raw data from Hilab
     schema: respiratorios
     tables:
       - name: hilab_raw
@@ -13,6 +13,7 @@ sources:
 models:
   - name: hilab_01_convert_types
     description: Convert types for hilab_raw
+
   - name: hilab_02_fix_values
     description: Fix values for hilab_raw
     columns:
@@ -52,4 +53,231 @@ models:
               expression: 'is not null'
               config:
                 where: state_code is not null
-  
+
+  - name: hilab_03_pivot_results
+    description: Pivot results for hilab_raw
+    tests:
+      - dbt_utils.equal_rowcount:
+          compare_model: ref('hilab_02_fix_values')
+      - at_least_one_test_result_is_present
+      - only_one_test_result_is_present
+    columns:
+      - name: sample_id
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              to: ref('hilab_02_fix_values')
+              field: sample_id
+      - name: test_id
+        tests:
+          - relationships:
+              to: ref('hilab_02_fix_values')
+              field: test_id
+      - name: SC2_test_result
+        quote: true
+        tests: &test_pivot_test_result_columns
+          - not_null
+          - accepted_values:
+              values: [0, 1, -1]
+      - name: FLUA_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: FLUB_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: VSR_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: RINO_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: META_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: PARA_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: ADENO_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: BOCA_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: COVS_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: ENTERO_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: BAC_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+
+  - name: hilab_04_fill_results
+    description: Fill results for hilab_raw
+    tests:
+      - at_least_one_test_result_is_present_str
+    columns:
+      - name: test_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('hilab_03_pivot_results')
+              field: test_id
+      - name: sample_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('hilab_03_pivot_results')
+              field: sample_id
+      - name: SC2_test_result
+        quote: true
+        tests: &test_fill_values_test_result_columns
+          - not_null
+          - accepted_values:
+              values: ['Pos', 'Neg', 'NT']
+      - name: FLUA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: FLUB_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: VSR_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: RINO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: META_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: PARA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ADENO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BOCA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: COVS_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ENTERO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BAC_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+
+  - name: hilab_05_deduplicate
+    description: Deduplicate for hilab_raw
+    tests:
+      - at_least_one_test_result_is_present_str
+    columns:
+      - name: sample_id
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              to: ref('hilab_04_fill_results')
+              field: sample_id
+      - name: test_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('hilab_04_fill_results')
+              field: test_id
+      - name: SC2_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: FLUA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: FLUB_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: VSR_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: RINO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: META_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: PARA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ADENO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BOCA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: COVS_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ENTERO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BAC_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+
+  - name: hilab_final
+    description: Final model for Hilab
+    tests:
+      - at_least_one_test_result_is_present_str
+    columns:
+      - name: test_id
+        tests:
+          - not_null
+      - name: sample_id
+        tests:
+          - not_null
+          - unique
+      - name: SC2_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: FLUA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: FLUB_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: VSR_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: RINO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: META_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: PARA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ADENO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BOCA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: COVS_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ENTERO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BAC_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: created_at
+        tests:
+          - dbt_expectations.expect_column_to_exist
+      - name: updated_at
+        tests:
+          - dbt_expectations.expect_column_to_exist
+      

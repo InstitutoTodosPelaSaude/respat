@@ -1,0 +1,130 @@
+{{ config(materialized='table') }}
+
+WITH source_data AS (
+    SELECT * FROM
+    {{ ref('hilab_02_fix_values') }}
+)
+SELECT
+    *,
+    {{ 
+        pivot_pathogen_results(
+            [
+                "COVID-19 ANTIGENO"
+            ], 
+            'exame', 
+            'result', 
+            'SC2_test_result'
+        )
+    }},
+    {{ 
+        pivot_pathogen_results(
+            [
+                "INFLUENZA A"
+            ], 
+            'exame', 
+            'result', 
+            'FLUA_test_result'
+        )
+    }},
+    {{ 
+        pivot_pathogen_results(
+            [
+                "INFLUENZA B"
+            ], 
+            'exame', 
+            'result', 
+            'FLUB_test_result'
+        )
+    }}, ----
+    {{ 
+        pivot_pathogen_results(
+            [
+                ''
+            ], 
+            'exame', 
+            'result', 
+            'VSR_test_result'
+        )
+    }},
+    {{ 
+        pivot_pathogen_results(
+            [
+                ''
+            ], 
+            'exame', 
+            'result', 
+            'META_test_result'
+        )
+    }},
+    {{
+        pivot_pathogen_results(
+            [
+                ''
+            ], 
+            'exame', 
+            'result', 
+            'RINO_test_result'
+        )
+    }},
+    {{
+        pivot_pathogen_results(
+            [
+                ''
+            ], 
+            'exame', 
+            'result', 
+            'PARA_test_result'
+        )
+    }},
+    {{
+        pivot_pathogen_results(
+            [
+                ''
+            ], 
+            'exame', 
+            'result', 
+            'ADENO_test_result'
+        )
+    }},
+    {{
+        pivot_pathogen_results(
+            [
+                ''
+            ], 
+            'exame', 
+            'result', 
+            'BOCA_test_result'
+        )
+    }},
+    {{
+        pivot_pathogen_results(
+            [
+                ''
+            ], 
+            'exame', 
+            'result', 
+            'COVS_test_result'
+        )
+    }},
+    {{
+        pivot_pathogen_results(
+            [
+                ''
+            ], 
+            'exame', 
+            'result', 
+            'ENTERO_test_result'
+        )
+    }},
+    {{
+        pivot_pathogen_results(
+            [
+                ''
+            ], 
+            'exame', 
+            'result', 
+            'BAC_test_result'
+        )
+    }}
+
+FROM source_data
