@@ -9,3 +9,47 @@ sources:
         meta:
           dagster:
             asset_key: ["hilab_raw"]
+
+models:
+  - name: hilab_01_convert_types
+    description: Convert types for hilab_raw
+  - name: hilab_02_fix_values
+    description: Fix values for hilab_raw
+    columns:
+      - name: sample_id
+        tests: 
+          - unique
+          - not_null
+      - name: test_id
+        tests:
+          - not_null
+      - name: date_testing
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "<= current_date"
+      - name: age
+        tests:
+          - dbt_utils.accepted_range:
+                min_value: 0
+                max_value: 200
+      - name: result
+        tests:
+          - accepted_values:
+              values: [0, 1, -1]
+      - name: test_kit
+        tests:
+          - not_null
+          - dbt_utils.not_accepted_values:
+              values: ["UNKNOWN"]
+      - name: sex
+        tests:
+          - accepted_values:
+              values: ["M", "F"]
+      - name: state
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: 'is not null'
+              config:
+                where: state_code is not null
+  
