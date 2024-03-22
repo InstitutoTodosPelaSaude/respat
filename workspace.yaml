@@ -12,9 +12,12 @@ load_from:
         module_name: lab_hilab.definitions
         working_directory: dagster/lab_hilab
     - python_module:
-        module_name: combined.definitions
-        working_directory: dagster/combined
-    - python_module:
         module_name: lab_dbmol.definitions
         working_directory: dagster/lab_dbmol
-
+    - python_module:
+        module_name: lab_hlagyn.definitions
+        working_directory: dagster/lab_hlagyn
+    - python_module:
+        module_name: combined.definitions
+        working_directory: dagster/combined
+    

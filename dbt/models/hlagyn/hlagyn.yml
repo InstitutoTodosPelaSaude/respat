@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: dagster
+    description: Raw data from HLAGyn
+    schema: respiratorios
+    tables:
+      - name: hlagyn_raw
+        meta:
+          dagster:
+            asset_key: ["hlagyn_raw"]
