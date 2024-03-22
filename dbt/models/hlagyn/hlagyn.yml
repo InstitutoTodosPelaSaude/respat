@@ -9,3 +9,119 @@ sources:
         meta:
           dagster:
             asset_key: ["hlagyn_raw"]
+
+models:
+  - name: hlagyn_01_convert_types
+    description: Convert types for hlagyn_raw
+    columns:
+      - name: test_id
+        tests:
+          - unique
+          - not_null
+      - name: date_testing
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "<= current_date"
+      - name: detalhe_exame
+        tests:
+          - not_null
+      - name: file_name
+        tests:
+          - not_null
+
+  - name: hlagyn_02_fix_values
+    description: Clean data for hlagyn_raw
+    columns:
+      - name: sample_id
+        tests:
+          - unique
+          - not_null
+      - name: test_id
+        tests:
+          - relationships:
+                to: ref('hlagyn_01_convert_types')
+                field: test_id
+      - name: age
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 150
+      - name: sex
+        tests:
+          - accepted_values:
+              values: ["M", "F"]
+      - name: state
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: 'is not null'
+              config:
+                where: state_code is not null
+      - name: test_kit
+        tests:
+          - not_null
+          - dbt_utils.not_accepted_values:
+              values: ["UNKNOWN"]
+      - name: result_covid
+        tests: &result_int_tests
+          - accepted_values:
+              values: [0, 1, -1]
+          - not_null
+      - name: result_virus_influenza_a
+        tests: *result_int_tests
+      - name: result_virus_influenza_b
+        tests: *result_int_tests
+      - name: result_virus_sincicial_respiratorio
+        tests: *result_int_tests
+      - name: result_virus_sars_cov_2
+        tests: *result_int_tests
+      - name: result_virus_ia
+        tests: *result_int_tests
+      - name: result_virus_h1n1
+        tests: *result_int_tests
+      - name: result_virus_ah3
+        tests: *result_int_tests
+      - name: result_virus_b
+        tests: *result_int_tests
+      - name: result_virus_mh
+        tests: *result_int_tests
+      - name: result_virus_sa
+        tests: *result_int_tests
+      - name: result_virus_sb
+        tests: *result_int_tests
+      - name: result_virus_rh
+        tests: *result_int_tests
+      - name: result_virus_ph
+        tests: *result_int_tests
+      - name: result_virus_ph2
+        tests: *result_int_tests
+      - name: result_virus_ph3
+        tests: *result_int_tests
+      - name: result_virus_ph4
+        tests: *result_int_tests
+      - name: result_virus_ade
+        tests: *result_int_tests
+      - name: result_virus_boc
+        tests: *result_int_tests
+      - name: result_virus_229e
+        tests: *result_int_tests
+      - name: result_virus_hku
+        tests: *result_int_tests
+      - name: result_virus_nl63
+        tests: *result_int_tests
+      - name: result_virus_oc43
+        tests: *result_int_tests
+      - name: result_virus_sars
+        tests: *result_int_tests
+      - name: result_virus_cov2
+        tests: *result_int_tests
+      - name: result_virus_ev
+        tests: *result_int_tests
+      - name: result_bacte_bp
+        tests: *result_int_tests
+      - name: result_bacte_bpar
+        tests: *result_int_tests
+      - name: result_bacte_mp
+        tests: *result_int_tests
+
+
