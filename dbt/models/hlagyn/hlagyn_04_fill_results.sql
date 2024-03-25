@@ -33,6 +33,7 @@ SELECT
     -- state_code,
     state,
     test_kit,
+    NULL as patient_id,
     file_name,
 
     -- Mapping test results
