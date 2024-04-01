@@ -82,3 +82,13 @@ SELECT
     {% endfor %}
     file_name
 FROM source_data
+WHERE
+    {% for column_name in result_column_names %}
+        "{{ column_name }}" NOT IN 
+        (
+            'INCONCLUSIVO' 
+        )
+        {% if not loop.last %}
+        AND
+        {% endif %}
+    {% endfor %}
