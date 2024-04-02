@@ -10,7 +10,7 @@ from .assets import (
 )
 from .constants import dbt_project_dir
 from .schedules import schedules
-from .jobs import combined_all_assets_job
+from .jobs import combined_all_assets_job, combined_historical_all_assets_job
 from .sensors import run_combined_sensor, combined_slack_failure_sensor
 
 defs = Definitions(
@@ -23,6 +23,6 @@ defs = Definitions(
     resources={
         "dbt": DbtCliResource(project_dir=os.fspath(dbt_project_dir)),
     },
-    jobs=[combined_all_assets_job],
+    jobs=[combined_all_assets_job, combined_historical_all_assets_job],
     sensors=[run_combined_sensor, combined_slack_failure_sensor]
 )

@@ -23,11 +23,11 @@ DAGSTER_SLACK_BOT_CHANNEL = os.getenv('DAGSTER_SLACK_BOT_CHANNEL')
 
 @multi_asset_sensor(
     monitored_assets=[
-        AssetKey("einstein_06_final"), 
-        AssetKey("hilab_05_final"), 
-        AssetKey("hlagyn_05_final"), 
-        AssetKey("sabin_07_final"), 
-        AssetKey("fleury_06_final")
+        AssetKey("einstein_final"), 
+        AssetKey("hilab_final"), 
+        AssetKey("hlagyn_final"), 
+        AssetKey("sabin_final"), 
+        AssetKey("fleury_final")
     ],
     job=combined_all_assets_job,
     default_status=DefaultSensorStatus.RUNNING
@@ -52,7 +52,8 @@ def run_combined_sensor(context: SensorEvaluationContext):
         'hilab_all_assets_job', 
         'hlagyn_all_assets_job', 
         'sabin_all_assets_job', 
-        'fleury_all_assets_job'
+        'fleury_all_assets_job',
+        'combined_historical_final'
     ]
     for job in upstream_jobs:
         last_run = context.instance.get_runs(
