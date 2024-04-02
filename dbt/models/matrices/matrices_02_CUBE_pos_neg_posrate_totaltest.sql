@@ -53,7 +53,9 @@ FROM (
             (epiweek_enddate, pathogen, country, state_code, lab_id, test_kit, age_group),
             (epiweek_enddate, pathogen),
             (epiweek_enddate, pathogen, country, age_group),
-            (epiweek_enddate, pathogen, test_kit)
+            (epiweek_enddate, pathogen, test_kit),
+            (epiweek_enddate, country),
+            (epiweek_enddate, country, pathogen)
         )
 ) AS t
 LEFT JOIN (
