@@ -1,5 +1,4 @@
 from dagster import AssetExecutionContext
-from dagster_dbt import DbtCliResource, dbt_assets
 from dagster import (
     AssetExecutionContext,
     asset,
@@ -10,7 +9,8 @@ from dagster_dbt import (
     DbtCliResource, 
     dbt_assets,
     DagsterDbtTranslator,
-    DagsterDbtTranslatorSettings
+    DagsterDbtTranslatorSettings,
+    get_asset_key_for_model
 )
 from .constants import dbt_manifest_path
 from textwrap import dedent
@@ -114,7 +114,10 @@ def generate_matrix(name, aggregate_columns, pivot_column, metrics, filters):
     pivot_df.to_csv(SAVE_PATH / name, sep='\t', index=False)
 
 
-@asset(compute_kind="python")
+@asset(
+    compute_kind="python",
+    deps=[get_asset_key_for_model([respiratorios_dbt_assets], "matrices_03_unpivot_metrics")]
+)
 def generate_matrices(context):
     """
     Generate matrices from the data
