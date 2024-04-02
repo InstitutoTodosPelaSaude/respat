@@ -13,7 +13,7 @@ from dagster.core.storage.dagster_run import FINISHED_STATUSES, DagsterRunStatus
 from dagster_slack import make_slack_on_run_failure_sensor
 
 from .jobs import sabin_all_assets_job
-from .assets import ROOT_PATH, SABIN_FILES_FOLDER, SABIN_RAW_FILES_EXTENSION
+from .assets import ROOT_PATH, SABIN_FILES_FOLDER, SABIN_RAW_FILES_EXTENSION, SABIN_CONVERTED_FILES_EXTENSION
 
 load_dotenv()
 DAGSTER_SLACK_BOT_TOKEN = os.getenv('DAGSTER_SLACK_BOT_TOKEN')
@@ -30,7 +30,7 @@ def new_sabin_file_sensor(context: SensorEvaluationContext):
     """
     # Check if there are new files in the sabin folder
     files = os.listdir(SABIN_FILES_FOLDER)
-    valid_files = [file for file in files if file.endswith(SABIN_RAW_FILES_EXTENSION)]
+    valid_files = [file for file in files if file.endswith(SABIN_RAW_FILES_EXTENSION) or file.endswith(SABIN_CONVERTED_FILES_EXTENSION)]
     if len(valid_files) == 0:
         return
 
