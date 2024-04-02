@@ -1,0 +1,20 @@
+version: 2
+
+
+models:
+  - name: matrices_01_unpivot_combined
+    tests:
+      - dbt_utils.expression_is_true:
+          expression: >
+            (pathogen = 'SC2' AND result = "SC2_test_result" )
+             OR (pathogen = 'FLUA' AND result = "FLUA_test_result" )
+             OR (pathogen = 'FLUB' AND result = "FLUB_test_result" )
+             OR (pathogen = 'VSR' AND result = "VSR_test_result" )
+             OR (pathogen = 'COVS' AND result = "COVS_test_result" )
+             OR (pathogen = 'ADENO' AND result = "ADENO_test_result" )
+             OR (pathogen = 'BOCA' AND result = "BOCA_test_result" )
+             OR (pathogen = 'RINO' AND result = "RINO_test_result" )
+             OR (pathogen = 'PARA' AND result = "PARA_test_result" )
+             OR (pathogen = 'ENTERO' AND result = "ENTERO_test_result" )
+             OR (pathogen = 'META' AND result = "META_test_result" )
+             OR (pathogen = 'BAC' AND result = "BAC_test_result" )
