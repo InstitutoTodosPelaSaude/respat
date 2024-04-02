@@ -9,6 +9,7 @@ from dagster import (
 from dagster.core.storage.pipeline_run import RunsFilter
 from dagster.core.storage.dagster_run import FINISHED_STATUSES
 from dagster_slack import make_slack_on_run_failure_sensor
+import os
 from dotenv import load_dotenv
 
 from .jobs import combined_all_assets_job
