@@ -68,6 +68,7 @@ SELECT
         WHEN 'COVIDFLURSVGX'    THEN 'test_4'
         WHEN 'VIRUSMOL'         THEN 'test_21'
         WHEN '2019NCOV'         THEN 'covid_pcr'
+        WHEN 'COVID19POCT'      THEN 'covid_pcr'
         WHEN 'AGCOVIDNS'        THEN 'covid_antigen'
         WHEN 'AGINFLU'          THEN 'flu_antigen'
         WHEN 'AGSINCURG'        THEN 'vsr_antigen'
@@ -81,3 +82,19 @@ SELECT
     result,
     file_name
 FROM source_table
+WHERE 
+    exame NOT IN (
+        'ZIKAVIGM',
+        'AAFAMARELA',
+        'ZIKAVPCR',
+        'DENGUEMTE',
+        'AACHIKV',
+        'AGDENGUE',
+        'CHIKVPCR',
+        'DENGUEG',
+        'DENGUEGTE',
+        'DENGUEM',
+        'DENGUENS1',
+        'ZIKAVIGG',
+        'ZIKAVPCR'
+    )
