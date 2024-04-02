@@ -20,4 +20,7 @@ load_from:
     - python_module:
         module_name: combined.definitions
         working_directory: dagster/combined
+    - python_module:
+        module_name: matrices.definitions
+        working_directory: dagster/matrices
     
