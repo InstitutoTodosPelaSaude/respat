@@ -87,6 +87,9 @@ def generate_matrix(name, aggregate_columns, pivot_column, metrics, filters):
             AND {' AND '.join([f"{column} IS NOT NULL" for column in all_columns if column not in null_columns])}
     """
 
+    if len(filters) > 0:
+        query += f" AND {' AND '.join(filters)}"
+
     # save query to txt
     with open(SAVE_PATH / f'{name}.txt', 'w') as f:
         f.write(query)
@@ -141,6 +144,15 @@ def generate_matrices(context):
             'age_group',
             ['Pos', 'Neg'],
             [],
+        ),
+        (
+            'matrice04.tsv', 
+            [
+             'pathogen', 'test_kit',
+            ],
+            'epiweek_enddate',
+            ['posrate'],
+            ["pathogen='SC2'"],
         ),
     ]
 
