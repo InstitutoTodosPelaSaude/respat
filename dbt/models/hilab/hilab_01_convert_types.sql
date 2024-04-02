@@ -17,5 +17,5 @@ SELECT
     file_name
 FROM source_data
 WHERE 
-    "Exame" NOT IN ('Zika IgG', 'Zika IgM', 'Dengue IgG', 'Dengue IgM', 'Dengue NS1') AND
+    "Exame" NOT IN ('Zika IgG', 'Zika IgM', 'Dengue IgG', 'Dengue IgM', 'Dengue NS1', 'IgM', 'IgG') AND
     "Resultado" NOT IN ('Inválido')

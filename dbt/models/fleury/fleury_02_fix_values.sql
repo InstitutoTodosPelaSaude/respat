@@ -86,6 +86,7 @@ WHERE
     exame NOT IN (
         'ZIKAVIGM',
         'AAFAMARELA',
+        'FAMARELAPCR',
         'ZIKAVPCR',
         'DENGUEMTE',
         'AACHIKV',
@@ -96,5 +97,7 @@ WHERE
         'DENGUEM',
         'DENGUENS1',
         'ZIKAVIGG',
-        'ZIKAVPCR'
+        'ZIKAVPCR',
+        'MAYAVPCR',
+        'OROVPCR'
     )
