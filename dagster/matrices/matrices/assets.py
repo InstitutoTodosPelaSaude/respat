@@ -96,6 +96,10 @@ def generate_matrix(name, aggregate_columns, pivot_column, metrics, filters):
 
     df = pd.read_sql(query, engine)
 
+    # if posrate not in metrics, turn all values to int
+    if 'posrate' not in metrics:
+        df['result'] = df['result'].astype(int)
+
     pivot_df = df.pivot(
         index=aggregate_columns+['metric'],
         columns=pivot_column,
@@ -103,6 +107,9 @@ def generate_matrix(name, aggregate_columns, pivot_column, metrics, filters):
     ).reset_index()
 
     pivot_df.columns.name = None
+
+    # fill NA with 0
+    pivot_df = pivot_df.fillna(0)
 
     pivot_df.to_csv(SAVE_PATH / name, sep='\t', index=False)
 
