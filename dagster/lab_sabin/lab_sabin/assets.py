@@ -39,6 +39,7 @@ DB_PORT = os.getenv('DB_PORT')
 DB_NAME = os.getenv('DB_NAME')
 DB_USER = os.getenv('DB_USER')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_SCHEMA = os.getenv('DB_SCHEMA')
 DAGSTER_SLACK_BOT_TOKEN = os.getenv('DAGSTER_SLACK_BOT_TOKEN')
 DAGSTER_SLACK_BOT_CHANNEL = os.getenv('DAGSTER_SLACK_BOT_CHANNEL')
 
@@ -84,7 +85,7 @@ def sabin_raw(context):
     context.log.info(f"Reading file {sabin_files[0]}")
 
     # Save to db
-    sabin_df.to_sql('sabin_raw', engine, schema='respiratorios', if_exists='replace', index=False)
+    sabin_df.to_sql('sabin_raw', engine, schema=DB_SCHEMA, if_exists='replace', index=False)
     engine.dispose()
 
     context.add_output_metadata({'num_rows': sabin_df.shape[0]})
@@ -96,3 +97,30 @@ def sabin_raw(context):
 )
 def respiratorios_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
     yield from dbt.cli(["build"], context=context).stream()
+
+@asset(
+    compute_kind="python", 
+    deps=[get_asset_key_for_model([respiratorios_dbt_assets], "sabin_final")]
+)
+def sabin_remove_used_files(context):
+    """
+    Remove the files that were used in the dbt process
+    """
+    raw_data_table = 'sabin_raw'
+    files_in_folder = [file for file in os.listdir(SABIN_FILES_FOLDER) if file.endswith(SABIN_CONVERTED_FILES_EXTENSION)]
+
+    # Get the files that were used in the dbt process
+    engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
+    used_files = pd.read_sql_query(f"SELECT DISTINCT file_name FROM {DB_SCHEMA}.{raw_data_table}", engine).file_name.to_list()
+    engine.dispose()
+
+    # Remove the files that were used
+    path_to_move = SABIN_FILES_FOLDER / "_out"
+    for used_file in used_files:
+        if used_file in files_in_folder:
+            context.log.info(f"Moving file {used_file} to {path_to_move}")
+            shutil.move(SABIN_FILES_FOLDER / used_file, path_to_move / used_file)
+    
+    # Log the unmoved files
+    files_in_folder = os.listdir(SABIN_FILES_FOLDER)
+    context.log.info(f"Files that were not moved: {files_in_folder}")
