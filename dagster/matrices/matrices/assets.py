@@ -91,8 +91,8 @@ def generate_matrix(name, aggregate_columns, pivot_column, metrics, filters):
         query += f" AND {' AND '.join(filters)}"
 
     # save query to txt
-    with open(SAVE_PATH / f'{name}.txt', 'w') as f:
-        f.write(query)
+    # with open(SAVE_PATH / f'{name}.txt', 'w') as f:
+    #    f.write(query)
 
     df = pd.read_sql(query, engine)
 
@@ -121,45 +121,85 @@ def generate_matrices(context):
     """
     matrices = [
         (
-            'matrice01.tsv', 
+            'combined_matrix_country_posneg_allpat_weeks.tsv', 
             [
-             #'epiweek_enddate', 
-             'pathogen', 
-             'country', 'state', 'state_code', 
-             'lab_id', 'test_kit', 'age_group'
+             'country',
             ],
             'epiweek_enddate',
-            ['Pos'],
-            [],
-        ),
-        (
-            'matrice02.tsv', 
-            [
-             #'epiweek_enddate', 
-             'pathogen',
-            ],
-            'epiweek_enddate',
-            ['totaltests'],
-            [],
-        ),
-        (
-            'matrice03.tsv', 
-            [
-             'epiweek_enddate', 
-             'pathogen', 'country', 
-            ],
-            'age_group',
             ['Pos', 'Neg'],
             [],
         ),
         (
-            'matrice04.tsv', 
+            'combined_matrix_country_posneg_full_weeks.tsv', 
             [
-             'pathogen', 'test_kit',
+             'country', 'pathogen',
+            ],
+            'epiweek_enddate',
+            ['Pos', 'Neg'],
+            [],
+        ),
+        (
+            'combined_matrix_country_posneg_panel_weeks.tsv', 
+            [
+             'country', 'pathogen',
+            ],
+            'epiweek_enddate',
+            ['Pos', 'Neg'],
+            [],
+        ),
+        (
+            'matrix_agegroups_weeks_FLUA_posrate.tsv', 
+            [
+             'pathogen', 'age_group', 'country'
+            ],
+            'epiweek_enddate',
+            ['posrate'],
+            ["pathogen='FLUA'"],
+        ),
+        (
+            'matrix_agegroups_weeks_FLUB_posrate.tsv', 
+            [
+             'pathogen', 'age_group', 'country'
+            ],
+            'epiweek_enddate',
+            ['posrate'],
+            ["pathogen='FLUB'"],
+        ),
+        (
+            'matrix_agegroups_weeks_SC2_posrate.tsv', 
+            [
+             'pathogen', 'age_group', 'country'
             ],
             'epiweek_enddate',
             ['posrate'],
             ["pathogen='SC2'"],
+        ),
+        (
+            'matrix_agegroups_weeks_VSR_posrate.tsv', 
+            [
+             'pathogen', 'age_group', 'country'
+            ],
+            'epiweek_enddate',
+            ['posrate'],
+            ["pathogen='VSR'"],
+        ),
+        (
+            'combined_matrix_country_posrate_full_weeks.tsv', 
+            [
+             'country', 'pathogen',
+            ],
+            'epiweek_enddate',
+            ['posrate'],
+            [],
+        ),
+        (
+            'combined_matrix_agegroup.tsv', 
+            [
+             'country', 'pathogen', 'epiweek_enddate'
+            ],
+            'age_group',
+            ['Pos', 'Neg'],
+            [],
         ),
     ]
 
