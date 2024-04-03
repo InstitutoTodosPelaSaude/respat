@@ -99,5 +99,6 @@ WHERE
         'ZIKAVIGG',
         'ZIKAVPCR',
         'MAYAVPCR',
-        'OROVPCR'
+        'OROVPCR',
+        'AAMAYAV'
     )
