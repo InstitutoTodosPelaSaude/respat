@@ -218,3 +218,70 @@ def generate_matrices(context):
             """))
         }
     )
+
+@asset(
+    compute_kind="python",
+    deps=[generate_matrices]
+)
+def adapt_and_rename_matrices(context):
+    """
+    Adapt and rename matrices.
+    The objective is to make the matrices compatible with the plotting scripts.
+    """
+    
+    rename_column_metric_for_test_result = [
+        'combined_matrix_country_posneg_allpat_weeks.tsv',
+        'combined_matrix_country_posneg_full_weeks.tsv',
+        'combined_matrix_country_posneg_panel_weeks.tsv',
+        'combined_matrix_country_posrate_full_weeks.tsv',
+        'combined_matrix_agegroup.tsv'
+    ]
+
+    rename_column_metric_for_pathogen_name = [
+        'matrix_agegroups_weeks_FLUA_posrate.tsv',
+        'matrix_agegroups_weeks_FLUB_posrate.tsv',
+        'matrix_agegroups_weeks_SC2_posrate.tsv',
+        'matrix_agegroups_weeks_VSR_posrate.tsv',
+    ]
+    
+    for matrix in rename_column_metric_for_test_result:
+        df = pd.read_csv(SAVE_PATH / matrix, sep='\t')
+        df = df.rename(columns={'metric': 'test_result'})
+
+        # if 'posrate' is in the name
+        # map all the 'posrate' values in the 'test_result'' column to 'Pos'
+        if 'posrate' in matrix:
+            df['test_result'] = df['test_result'].map({'posrate': 'Pos'})
+
+        df.to_csv(SAVE_PATH / matrix, sep='\t', index=False)
+
+    for matrix in rename_column_metric_for_pathogen_name:
+        df = pd.read_csv(SAVE_PATH / matrix, sep='\t')
+        pathogen_name = matrix.split('_')[3]
+
+        # if 'posrate' is in the name
+        # map all the 'posrate' values in the 'test_result'' column to 'Pos'
+        if 'posrate' in matrix:
+            df['metric'] = df['metric'].map({'posrate': 'Pos'})
+
+        # if patogen name is in columns, drop it
+        if 'pathogen' in df.columns:
+            df = df.drop(columns='pathogen')
+    
+        df = df.rename(columns={'metric': pathogen_name + '_test_result'})
+
+        df.to_csv(SAVE_PATH / matrix, sep='\t', index=False)
+
+
+    return MaterializeResult(
+        metadata={
+            "info": MetadataValue.md(dedent(f"""
+            # Matrices Renamed
+
+            Last updated: {pd.Timestamp.now() - pd.Timedelta(hours=3)}
+            """))
+        }
+    )
+
+
+
