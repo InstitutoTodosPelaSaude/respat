@@ -10,7 +10,11 @@ WITH source_data AS (
 )
 SELECT
         sample_id,
-        lab_id,
+        CASE lab_id
+            WHEN 'DB Mol' THEN 'DBMOL'
+            WHEN 'HLAGyn' THEN 'HLAGYN'
+            ELSE lab_id
+        END AS lab_id,
         test_id,
         test_kit,
         date_testing,
@@ -40,8 +44,7 @@ SELECT
         "META_test_result",
         "BAC_test_result",
         {{ normalize_text("location") }} as location,
-        {{ normalize_text("state") }} as state,
-        'historical_combined' as file_name
+        {{ normalize_text("state") }} as state
 FROM source_data
 WHERE 1=1
 AND date_testing < '{{ var('combined_threshold_date') }}' -- Apenas dados históricos

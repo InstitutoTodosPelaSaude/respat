@@ -11,7 +11,14 @@
         'INFLUENZA A H1PDM09',
         'STREPTOCOCCUS PNEUMONIAE',
         'RINOVIRUS',
-        'INFLUENZA A H3N2'
+        'INFLUENZA A H3N2',
+        'CHLAMYDOPHILA PNEUMONIAE',
+        'PARAINFLUENZA 2',
+        'ENTEROVIRUS',
+        'INFLUENZA B',
+        'CORONAVIRUS NL63',
+        'CORONAVIRUS 229E',
+        'ADENOVIRUS'
     )
 %}
 
