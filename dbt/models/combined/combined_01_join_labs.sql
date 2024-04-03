@@ -38,7 +38,18 @@ WITH source_data AS (
     lab_id,
     {{ columns | join(', ') }}
     FROM {{ ref("combined_historical_final") }}
-    WHERE date_testing < '{{ var('combined_threshold_date') }}'
+    WHERE 
+        date_testing < '{{ var('combined_threshold_date') }}' AND
+        lab_id NOT IN ('DASA', 'DBMOL')
+
+    UNION
+
+    SELECT
+    lab_id,
+    {{ columns | join(', ') }}
+    FROM {{ ref("combined_historical_final") }}
+    WHERE
+        lab_id IN ('DASA', 'DBMOL')
 
     UNION
 
