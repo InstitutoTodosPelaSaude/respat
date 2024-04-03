@@ -44,8 +44,7 @@ SELECT
         "META_test_result",
         "BAC_test_result",
         {{ normalize_text("location") }} as location,
-        {{ normalize_text("state") }} as state,
-        'historical_combined' as file_name
+        {{ normalize_text("state") }} as state
 FROM source_data
 WHERE 1=1
 AND date_testing < '{{ var('combined_threshold_date') }}' -- Apenas dados históricos
