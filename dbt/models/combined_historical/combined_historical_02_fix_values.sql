@@ -10,7 +10,11 @@ WITH source_data AS (
 )
 SELECT
         sample_id,
-        lab_id,
+        CASE lab_id
+            WHEN 'DB Mol' THEN 'DBMOL'
+            WHEN 'HLAGyn' THEN 'HLAGYN'
+            ELSE lab_id
+        END AS lab_id,
         test_id,
         test_kit,
         date_testing,
