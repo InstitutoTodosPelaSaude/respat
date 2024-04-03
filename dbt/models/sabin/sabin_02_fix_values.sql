@@ -15,7 +15,10 @@
         'CHLAMYDOPHILA PNEUMONIAE',
         'PARAINFLUENZA 2',
         'ENTEROVIRUS',
-        'INFLUENZA B'
+        'INFLUENZA B',
+        'CORONAVIRUS NL63',
+        'CORONAVIRUS 229E',
+        'ADENOVIRUS'
     )
 %}
 
