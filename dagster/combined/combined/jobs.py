@@ -13,7 +13,8 @@ combined_all_assets_job = define_asset_job(
         "combined_03_dates",
         "combined_04_fix_location",
         "combined_05_location",
-        "combined_final"
+        "combined_final",
+        "export_to_tsv"
     ]
 )
 
