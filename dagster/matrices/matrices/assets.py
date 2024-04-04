@@ -303,10 +303,11 @@ def query_olap_cube(dimensions, metrics, filters):
 
     engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}') 
 
+    metrics_double_quotes = [f'"{metric}"' for metric in metrics]
     query = f"""
         SELECT
             {', '.join(dimensions)},
-            {', '.join(metrics)}
+            {', '.join(metrics_double_quotes)}
         FROM
             {DB_SCHEMA}.{TABLE}
         WHERE
@@ -357,6 +358,8 @@ def generate_flourish_inputs(context):
                 'semana epidemiológica': lambda x: x['semana epidemiológica'].astype(str),
             }
         )
+        [[f"{pathogen}_test_result", 'faixas etárias', 'semana epidemiológica', 'percentual']]
+        .sort_values(by=['semana epidemiológica', 'faixas etárias'])
     )
 
     cube_slices = [
@@ -408,6 +411,85 @@ def generate_flourish_inputs(context):
             # post processing
             create_post_processing_heatmaps_function('VSR')
         ),
+
+        # Barplot
+        (
+            'bar_posneg',
+            (
+                [
+                    'epiweek_enddate', 'country'
+                ],
+                ['Pos', 'Neg'],
+                []
+            ),
+            lambda df: (
+                df
+                .rename(
+                    columns={
+                        'Pos': 'Positivos',
+                        'Neg': 'Negativos',
+                        'epiweek_enddate': 'semana epidemiológica'
+                    }
+                )
+                .drop(columns=['country'])
+                .assign(
+                    **{
+                        'semana epidemiológica': lambda x: x['semana epidemiológica'].astype(str),
+                    }
+                )
+            )
+        ),
+
+        (
+            'bar_panels',
+            (
+                [
+                    'epiweek_enddate', 'country', 'pathogen'
+                ],
+                ['Pos'],
+                []
+            ),
+            lambda df: (
+                df
+                .rename(
+                    columns={
+                        'epiweek_enddate': 'semana epidemiológica'
+                    }
+                )
+                .drop(columns=['country'])
+                .assign(
+                    **{
+                        'semana epidemiológica': lambda x: x['semana epidemiológica'].astype(str),
+                    }
+                )
+                # pivot pathogen
+                .pivot(
+                    index=['semana epidemiológica'],
+                    columns='pathogen',
+                    values='Pos'
+                    # Rinovírus	Enterovírus	Metapneumovírus	Vírus Parainfluenza	Bocavírus	Coronavírus sazonais	Adenovírus	Bactérias	Influenza A	Influenza B	SARS-CoV-2	Vírus Sincicial Respiratório
+                    # ADENO	BAC	BOCA	COVS	ENTERO	FLUA	FLUB	META	PARA	RINO	SC2	VSR
+                )
+                .reset_index()
+                .rename(
+                    columns={
+                        'FLUA': 'Influenza A',
+                        'FLUB': 'Influenza B',
+                        'SC2': 'SARS-CoV-2',
+                        'VSR': 'Vírus Sincicial Respiratório',
+                        'META': 'Metapneumovírus',
+                        'RINO': 'Rinovírus',
+                        'ENTERO': 'Enterovírus',
+                        'PARA': 'Vírus Parainfluenza',
+                        'BOCA': 'Bocavírus',
+                        'COVS': 'Coronavírus sazonais',
+                        'ADENO': 'Adenovírus',
+                        'BAC': 'Bactérias',
+                    }
+                )
+                .sort_values(by='semana epidemiológica')
+            )
+        )
     ]
 
     for cube_slice_name, cube_slice_parameters, cube_post_processing in cube_slices:
