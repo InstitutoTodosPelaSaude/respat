@@ -8,7 +8,8 @@ from dagster_dbt import (
     DbtCliResource, 
     dbt_assets,
     DagsterDbtTranslator,
-    DagsterDbtTranslatorSettings
+    DagsterDbtTranslatorSettings,
+    get_asset_key_for_model
 )
 from textwrap import dedent
 import pandas as pd
@@ -84,3 +85,24 @@ def respiratorios_combined_dbt_assets(context: AssetExecutionContext, dbt: DbtCl
 )
 def respiratorios_historical_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
     yield from dbt.cli(["build"], context=context).stream()
+
+@asset(
+    compute_kind="python", 
+    deps=[get_asset_key_for_model([respiratorios_combined_dbt_assets], "combined_final")]
+)
+def export_to_tsv(context):
+    """
+    Get the final combined data from the database and export to tsv
+    """
+    # Create data folder if not exists
+    pathlib.Path('data/combined').mkdir(parents=True, exist_ok=True)
+
+    # Export to xlsx
+    engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
+    df = pd.read_sql(f'select * from {DB_SCHEMA}."combined_final"', engine)
+    df.to_csv('data/combined/combined.tsv', sep='\t', index=False)
+    engine.dispose()
+
+    context.add_output_metadata({
+        'num_rows': df.shape[0]
+    })
