@@ -52,10 +52,11 @@ FROM (
         GROUPING SETS (
             (epiweek_enddate, pathogen, country, state_code, lab_id, test_kit, age_group),
             (epiweek_enddate, pathogen),
+            (epiweek_enddate, pathogen, lab_id), -- To validate the results
             (epiweek_enddate, pathogen, country, age_group),
             (epiweek_enddate, pathogen, test_kit),
-            (epiweek_enddate, country),
-            (epiweek_enddate, country, pathogen)
+            (epiweek_enddate, pathogen, country),
+            (epiweek_enddate, country)
         )
 ) AS t
 LEFT JOIN (

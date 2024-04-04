@@ -100,19 +100,19 @@ def generate_matrix(name, aggregate_columns, pivot_column, metrics, filters):
     if 'posrate' not in metrics:
         df['result'] = df['result'].astype(int)
 
-    pivot_df = df.pivot(
-        index=aggregate_columns+['metric'],
-        columns=pivot_column,
-        values='result'
-    ).reset_index()
+    if pivot_column != None:
+        df = df.pivot(
+            index=aggregate_columns+['metric'],
+            columns=pivot_column,
+            values='result'
+        ).reset_index()
 
-    pivot_df.columns.name = None
+    df.columns.name = None
 
     # fill NA with 0
-    pivot_df = pivot_df.fillna(0)
+    df = df.fillna(0)
 
-    pivot_df.to_csv(SAVE_PATH / name, sep='\t', index=False)
-
+    df.to_csv(SAVE_PATH / name, sep='\t', index=False)
 
 @asset(
     compute_kind="python",
@@ -284,4 +284,136 @@ def adapt_and_rename_matrices(context):
     )
 
 
+
+
+
+
+def query_olap_cube(dimensions, metrics, filters):
+
+    TABLE = '"matrices_02_CUBE_pos_neg_posrate_totaltest"'
+    AVAILABE_DIMENSIONS = [
+        'pathogen', 'lab_id', 'test_kit', 'state_code', 'country', 'epiweek_enddate', 'age_group'
+    ]
+    AVAILABLE_METRICS = ['Pos', 'Neg', 'posrate', 'totaltests']
+
+    if not all([dimension in AVAILABE_DIMENSIONS for dimension in dimensions]):
+        raise ValueError(f"Metric not available. Available metrics: {AVAILABLE_METRICS}")
+
+    null_dimensions = [dimension for dimension in AVAILABE_DIMENSIONS if dimension not in dimensions]
+
+    engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}') 
+
+    query = f"""
+        SELECT
+            {', '.join(dimensions)},
+            {', '.join(metrics)}
+        FROM
+            {DB_SCHEMA}.{TABLE}
+        WHERE
+            1=1
+            AND {' AND '.join(
+                [f"{dimension} IS NULL" for dimension in null_dimensions]
+                )
+                if len(null_dimensions) > 0 
+                else '1=1'
+            }
+            AND {' AND '.join([f"{dimension} IS NOT NULL" for dimension in dimensions])}
+    """
+    # save query as txt
+    #with open(SAVE_PATH / 'query.txt', 'w') as f:
+    #   f.write(query)
+
+    if len(filters) > 0:
+        query += f" AND {' AND '.join(filters)}"
+
+    df_cube_slice = pd.read_sql(query, engine)
+
+    return df_cube_slice
+
+
+@asset(
+    compute_kind="python",
+    deps=[get_asset_key_for_model([respiratorios_dbt_assets], "matrices_02_CUBE_pos_neg_posrate_totaltest")]
+)
+def generate_flourish_inputs(context):
+
+    create_post_processing_heatmaps_function = lambda pathogen: lambda df: (
+        df
+        .rename(
+            columns={
+                'posrate': 'percentual',
+                'age_group': 'faixas etárias', 
+                'epiweek_enddate': 'semana epidemiológica'
+            }
+        )
+        .drop(columns=['pathogen', 'country'])
+        .assign(
+            **{
+                "percentual": lambda x: (
+                    x["percentual"]
+                    .apply(lambda x: f'{100*x:.2f}')
+                 ).astype(str) + '%',
+                f"{pathogen}_test_result": lambda _: 'Pos',
+                'semana epidemiológica': lambda x: x['semana epidemiológica'].astype(str),
+            }
+        )
+    )
+
+    cube_slices = [
+        (   
+            'heatmap_SC2demog',
+            (
+                [
+                'pathogen', 'age_group', 'country', 'epiweek_enddate'
+                ],
+                ['posrate'],
+                ["pathogen='SC2'"],
+            ),
+            # post processing
+            create_post_processing_heatmaps_function('SC2')
+        ),
+        (   
+            'heatmap_FLUAdemog',
+            (
+                [
+                'pathogen', 'age_group', 'country', 'epiweek_enddate'
+                ],
+                ['posrate'],
+                ["pathogen='FLUA'"],
+            ),
+            # post processing
+            create_post_processing_heatmaps_function('FLUA')
+        ),
+        (   
+            'heatmap_FLUBdemog',
+            (
+                [
+                'pathogen', 'age_group', 'country', 'epiweek_enddate'
+                ],
+                ['posrate'],
+                ["pathogen='FLUB'"],
+            ),
+            # post processing
+            create_post_processing_heatmaps_function('FLUB')
+        ),
+        (   
+            'heatmap_VSRdemog',
+            (
+                [
+                'pathogen', 'age_group', 'country', 'epiweek_enddate'
+                ],
+                ['posrate'],
+                ["pathogen='VSR'"],
+            ),
+            # post processing
+            create_post_processing_heatmaps_function('VSR')
+        ),
+    ]
+
+    for cube_slice_name, cube_slice_parameters, cube_post_processing in cube_slices:
+
+        df = query_olap_cube(*cube_slice_parameters)
+        df = cube_post_processing(df)
+
+        df.to_excel(SAVE_PATH / f'{cube_slice_name}.xlsx', index=False)
 
