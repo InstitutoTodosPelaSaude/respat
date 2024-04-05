@@ -467,8 +467,60 @@ def generate_flourish_inputs(context):
                     index=['semana epidemiológica'],
                     columns='pathogen',
                     values='Pos'
-                    # Rinovírus	Enterovírus	Metapneumovírus	Vírus Parainfluenza	Bocavírus	Coronavírus sazonais	Adenovírus	Bactérias	Influenza A	Influenza B	SARS-CoV-2	Vírus Sincicial Respiratório
-                    # ADENO	BAC	BOCA	COVS	ENTERO	FLUA	FLUB	META	PARA	RINO	SC2	VSR
+                )
+                .reset_index()
+                .rename(
+                    columns={
+                        'FLUA': 'Influenza A',
+                        'FLUB': 'Influenza B',
+                        'SC2': 'SARS-CoV-2',
+                        'VSR': 'Vírus Sincicial Respiratório',
+                        'META': 'Metapneumovírus',
+                        'RINO': 'Rinovírus',
+                        'ENTERO': 'Enterovírus',
+                        'PARA': 'Vírus Parainfluenza',
+                        'BOCA': 'Bocavírus',
+                        'COVS': 'Coronavírus sazonais',
+                        'ADENO': 'Adenovírus',
+                        'BAC': 'Bactérias',
+                    }
+                )
+                .sort_values(by='semana epidemiológica')
+            )
+        ),
+
+
+        (
+            'line_full',
+            (
+                [
+                    'epiweek_enddate', 'country', 'pathogen'
+                ],
+                ['posrate'],
+                []
+            ),
+            lambda df: (
+                df
+                .rename(
+                    columns={
+                        'epiweek_enddate': 'semana epidemiológica'
+                    }
+                )
+                .drop(columns=['country'])
+                .assign(
+                    **{
+                        'semana epidemiológica': lambda x: x['semana epidemiológica'].astype(str),
+                        'posrate': lambda x: (
+                            x["posrate"]
+                            .apply(lambda x: f'{100*x:.2f}%')
+                        )
+                    }
+                )
+                # pivot pathogen
+                .pivot(
+                    index=['semana epidemiológica'],
+                    columns='pathogen',
+                    values='posrate'
                 )
                 .reset_index()
                 .rename(
