@@ -99,7 +99,8 @@ def export_to_tsv(context):
 
     # Export to xlsx
     engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
-    df = pd.read_sql(f'select * from {DB_SCHEMA}."combined_final"', engine)
+    df_generator = pd.read_sql(f'select * from {DB_SCHEMA}."combined_final"', engine, chunksize=200_000)
+    df = pd.concat(df_generator, ignore_index=True)
     df.to_csv('data/combined/combined.tsv', sep='\t', index=False)
     engine.dispose()
 
