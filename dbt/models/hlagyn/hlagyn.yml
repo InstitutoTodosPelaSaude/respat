@@ -32,6 +32,9 @@ models:
 
   - name: hlagyn_02_fix_values
     description: Clean data for hlagyn_raw
+    tests:
+      - model_has_more_than_x_rows:
+          n_rows: 0
     columns:
       - name: sample_id
         tests:

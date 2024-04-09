@@ -76,6 +76,10 @@ SELECT
         CASE 
             WHEN "{{ column_name }}" ILIKE 'NAO DETECTADO%' THEN 0
             WHEN "{{ column_name }}" ILIKE 'DETECTADO%'     THEN 1
+            WHEN "{{ column_name }}" ILIKE 'INCONCLUSIVO'   THEN -1
+            -- Em outra pipeline, o teste com 'INCONCLUSIVO' poderia simplesmente ser removido
+            -- Nesta, ele precisa se mapeado para -1, já que a linha não pode ser removida
+
             WHEN "{{ column_name }}" IS NULL                THEN -1
             ELSE -2 --UNKNOWN
         END AS "{{ column_name }}",
@@ -84,11 +88,11 @@ SELECT
 FROM source_data
 WHERE
     {% for column_name in result_column_names %}
-        "{{ column_name }}" NOT IN 
         (
-            'INCONCLUSIVO' 
+            "{{ column_name }}" NOT IN ('INCONCLUSIVO')
+            AND "{{ column_name }}" IS NOT NULL
         )
         {% if not loop.last %}
-        AND
+        OR
         {% endif %}
     {% endfor %}
