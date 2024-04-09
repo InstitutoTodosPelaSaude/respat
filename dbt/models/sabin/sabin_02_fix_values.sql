@@ -18,7 +18,9 @@
         'INFLUENZA B',
         'CORONAVIRUS NL63',
         'CORONAVIRUS 229E',
-        'ADENOVIRUS'
+        'ADENOVIRUS',
+        'BOCAVIRUS',
+        'PARAINFLUENZA 3'
     )
 %}
 
