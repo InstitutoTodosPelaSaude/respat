@@ -7,7 +7,7 @@ WITH source_data AS (
 
 )
 SELECT
-    "accession" AS test_id,
+    "accession"::BIGINT AS test_id,
     "sexo" AS sex,
     "idade"::INT AS age,
     {{ normalize_text("exame") }} AS exame,
