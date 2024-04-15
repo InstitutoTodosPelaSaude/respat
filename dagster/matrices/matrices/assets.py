@@ -441,22 +441,74 @@ def generate_flourish_inputs(context):
         ),
 
         (
-            'bar_panels',
+            'bar_panels_sc2_vsr_flua_flub',
             (
                 [
-                    'epiweek_enddate', 'country', 'pathogen'
+                    'epiweek_enddate', 'pathogen', 'test_kit'
                 ],
                 ['Pos'],
-                []
+                [
+                    "test_kit in ('test_14','test_21','test_24','test_3','test_4')",
+                    "pathogen in ('SC2', 'VSR', 'FLUA', 'FLUB')"
+                ]
             ),
             lambda df: (
                 df
+                .groupby(['epiweek_enddate', 'pathogen'])
+                .agg({'Pos': 'sum'})
+                .reset_index()
+
                 .rename(
                     columns={
                         'epiweek_enddate': 'semana epidemiológica'
                     }
                 )
-                .drop(columns=['country'])
+                .assign(
+                    **{
+                        'semana epidemiológica': lambda x: x['semana epidemiológica'].astype(str),
+                    }
+                )
+                # pivot pathogen
+                .pivot(
+                    index=['semana epidemiológica'],
+                    columns='pathogen',
+                    values='Pos'
+                )
+                .reset_index()
+                .rename(
+                    columns={
+                        'FLUA': 'Influenza A',
+                        'FLUB': 'Influenza B',
+                        'SC2': 'SARS-CoV-2',
+                        'VSR': 'Vírus Sincicial Respiratório',
+                    }
+                )
+                .sort_values(by='semana epidemiológica')
+            )
+        ),
+
+        (
+            'bar_panels_demais_patogenos_respiratorios',
+            (
+                [
+                    'epiweek_enddate', 'pathogen', 'test_kit'
+                ],
+                ['Pos'],
+                [
+                    "test_kit in ('test_14', 'test_2', 'test_21','test_24','test_3','test_4')",
+                ]
+            ),
+            lambda df: (
+                df
+                .groupby(['epiweek_enddate', 'pathogen'])
+                .agg({'Pos': 'sum'})
+                .reset_index()
+
+                .rename(
+                    columns={
+                        'epiweek_enddate': 'semana epidemiológica'
+                    }
+                )
                 .assign(
                     **{
                         'semana epidemiológica': lambda x: x['semana epidemiológica'].astype(str),
@@ -488,8 +540,7 @@ def generate_flourish_inputs(context):
                 .sort_values(by='semana epidemiológica')
             )
         ),
-
-
+    
         (
             'line_full',
             (
