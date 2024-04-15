@@ -352,8 +352,8 @@ def generate_flourish_inputs(context):
             **{
                 "percentual": lambda x: (
                     x["percentual"]
-                    .apply(lambda x: f'{100*x:.2f}')
-                 ).astype(str) + '%',
+                    .apply(lambda x: 100*x)
+                 ),
                 f"{pathogen}_test_result": lambda _: 'Pos',
                 'semana epidemiológica': lambda x: x['semana epidemiológica'].astype(str),
             }
@@ -563,7 +563,7 @@ def generate_flourish_inputs(context):
                         'semana epidemiológica': lambda x: x['semana epidemiológica'].astype(str),
                         'posrate': lambda x: (
                             x["posrate"]
-                            .apply(lambda x: f'{100*x:.2f}%')
+                            .apply(lambda x: 100*x)
                         )
                     }
                 )
