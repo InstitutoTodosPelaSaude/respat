@@ -20,7 +20,13 @@
         'CORONAVIRUS 229E',
         'ADENOVIRUS',
         'BOCAVIRUS',
-        'PARAINFLUENZA 3'
+        'PARAINFLUENZA 3',
+        'MP',
+        'MYCOPLASMA PNEUMONIAE',
+        'SINCICIAL RESPIRATORIO A',
+        'RSV A',
+        'SP',
+        'HI'
     )
 %}
 
