@@ -11,6 +11,9 @@ vars:
   # before that date, the historical combined data will be used.
   combined_threshold_date: '2024-01-01'
 
+  # The combined data will be used from the following date.
+  combined_start_date: '2021-10-01'
+
 # This setting configures which "profile" dbt uses for this project.
 profile: 'respiratorios'
 

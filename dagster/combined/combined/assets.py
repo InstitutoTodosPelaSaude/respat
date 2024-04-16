@@ -35,6 +35,7 @@ DB_NAME = os.getenv('DB_NAME')
 DB_USER = os.getenv('DB_USER')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
 DB_SCHEMA = os.getenv('DB_SCHEMA')
+COMBINED_EXPORT_START_DATE = '2021-10-01'
 
 @asset(compute_kind="python")
 def combined_historical_raw(context):
@@ -101,6 +102,10 @@ def export_to_tsv(context):
     engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
     df_generator = pd.read_sql(f'select * from {DB_SCHEMA}."combined_final"', engine, chunksize=200_000)
     df = pd.concat(df_generator, ignore_index=True)
+
+    # Drop created_at, updated_at, file_name columns
+    df.drop(columns=['created_at', 'updated_at', 'file_name'], inplace=True)
+
     df.to_csv('data/combined/combined.tsv', sep='\t', index=False)
     engine.dispose()
 
