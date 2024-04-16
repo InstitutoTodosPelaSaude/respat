@@ -56,6 +56,7 @@ FROM (
             (epiweek_enddate, pathogen, country, age_group),
             (epiweek_enddate, pathogen, test_kit),
             (epiweek_enddate, pathogen, country),
+            (epiweek_enddate, pathogen, state_code),
             (epiweek_enddate, country)
         )
 ) AS t

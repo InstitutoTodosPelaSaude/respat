@@ -338,31 +338,8 @@ def query_olap_cube(dimensions, metrics, filters):
 )
 def generate_flourish_inputs(context):
 
-    create_post_processing_heatmaps_function = lambda pathogen: lambda df: (
-        df
-        .rename(
-            columns={
-                'posrate': 'percentual',
-                'age_group': 'faixas etárias', 
-                'epiweek_enddate': 'semana epidemiológica'
-            }
-        )
-        .drop(columns=['pathogen', 'country'])
-        .assign(
-            **{
-                "percentual": lambda x: (
-                    x["percentual"]
-                    .apply(lambda x: 100*x)
-                 ),
-                f"{pathogen}_test_result": lambda _: 'Pos',
-                'semana epidemiológica': lambda x: x['semana epidemiológica'].astype(str),
-            }
-        )
-        [[f"{pathogen}_test_result", 'faixas etárias', 'semana epidemiológica', 'percentual']]
-        .sort_values(by=['semana epidemiológica', 'faixas etárias'])
-    )
-
     cube_slices = [
+        # Heatmaps Pathogen x Age Group
         (   
             'heatmap_SC2demog',
             (
@@ -373,7 +350,7 @@ def generate_flourish_inputs(context):
                 ["pathogen='SC2'"],
             ),
             # post processing
-            create_post_processing_heatmaps_function('SC2')
+            create_post_process_agegroup_heatmap_function('SC2')
         ),
         (   
             'heatmap_FLUAdemog',
@@ -385,7 +362,7 @@ def generate_flourish_inputs(context):
                 ["pathogen='FLUA'"],
             ),
             # post processing
-            create_post_processing_heatmaps_function('FLUA')
+            create_post_process_agegroup_heatmap_function('FLUA')
         ),
         (   
             'heatmap_FLUBdemog',
@@ -397,7 +374,7 @@ def generate_flourish_inputs(context):
                 ["pathogen='FLUB'"],
             ),
             # post processing
-            create_post_processing_heatmaps_function('FLUB')
+            create_post_process_agegroup_heatmap_function('FLUB')
         ),
         (   
             'heatmap_VSRdemog',
@@ -409,8 +386,67 @@ def generate_flourish_inputs(context):
                 ["pathogen='VSR'"],
             ),
             # post processing
-            create_post_processing_heatmaps_function('VSR')
+            create_post_process_agegroup_heatmap_function('VSR')
         ),
+
+        # Heatmaps Pathogen x State
+        (   
+            'heatmap_SC2_UF',
+            (
+                [
+                    'pathogen', 'state_code', 'epiweek_enddate'
+                ],
+                ['posrate'],
+                [
+                    "pathogen='SC2'",
+                    "state_code !='NOT REPORTED'"
+                ],
+            ),
+            create_post_process_ufs_heatmap_function('SC2')
+        ),
+        (   
+            'heatmap_FLUA_UF',
+            (
+                [
+                    'pathogen', 'state_code', 'epiweek_enddate'
+                ],
+                ['posrate'],
+                [
+                    "pathogen='FLUA'",
+                    "state_code !='NOT REPORTED'"
+                ],
+            ),
+            create_post_process_ufs_heatmap_function('FLUA')
+        ),
+        (   
+            'heatmap_FLUB_UF',
+            (
+                [
+                    'pathogen', 'state_code', 'epiweek_enddate'
+                ],
+                ['posrate'],
+                [
+                    "pathogen='FLUB'",
+                    "state_code !='NOT REPORTED'"
+                ],
+            ),
+            create_post_process_ufs_heatmap_function('FLUB')
+        ),
+        (   
+            'heatmap_VSR_UF',
+            (
+                [
+                    'pathogen', 'state_code', 'epiweek_enddate'
+                ],
+                ['posrate'],
+                [
+                    "pathogen='VSR'",
+                    "state_code !='NOT REPORTED'"
+                ],
+            ),
+            create_post_process_ufs_heatmap_function('VSR')
+        ),
+        
 
         # Barplot
         (
@@ -602,3 +638,83 @@ def generate_flourish_inputs(context):
 
         df.to_excel(SAVE_PATH / f'{cube_slice_name}.xlsx', index=False)
 
+
+def create_post_process_agegroup_heatmap_function(pathogen):
+    return lambda df: (
+        df
+        .rename(
+            columns={
+                'posrate': 'percentual',
+                'age_group': 'faixas etárias', 
+                'epiweek_enddate': 'semana epidemiológica',
+            }
+        )
+        .drop(columns=['pathogen', 'country'])
+        .assign(
+            **{
+                "percentual": lambda x: (
+                    x["percentual"]
+                    .apply(lambda x: 100*x)
+                 ),
+                f"{pathogen}_test_result": lambda _: 'Pos',
+                'semana epidemiológica': lambda x: x['semana epidemiológica'].astype(str),
+            }
+        )
+        [[f"{pathogen}_test_result", 'faixas etárias', 'semana epidemiológica', 'percentual']]
+        .sort_values(by=['semana epidemiológica', 'faixas etárias'])
+    )
+
+
+def create_post_process_ufs_heatmap_function(pathogen):
+
+    UFS = [
+        'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 
+        'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 
+        'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 
+        'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+    ]
+    empty_ufs = {uf: None for uf in UFS}
+
+    return lambda df: (
+        df
+        .rename(
+            columns={
+                'posrate': 'percentual',
+                'state_code': 'UF',
+                'epiweek_enddate': 'semana epidemiológica',
+            }
+        )
+        .drop(columns=['pathogen'])
+        .assign(
+            **{
+                "percentual": lambda x: (
+                    x["percentual"]
+                    .apply(lambda x: 100*x)
+                 ),
+                f"{pathogen}_test_result": lambda _: 'Pos',
+                'semana epidemiológica': lambda x: x['semana epidemiológica'].astype(str),
+            }
+        )
+        [[f"{pathogen}_test_result", 'UF', 'semana epidemiológica', 'percentual']]
+        .sort_values(by=['semana epidemiológica', 'UF'])
+
+        # Add the missing UFs
+        # Group by and create a dict with the values {uf: percentual}
+        .groupby('semana epidemiológica')
+        .apply(
+            lambda x:
+            list(
+                {**empty_ufs, **dict(zip(x['UF'], x['percentual']))}
+                .items()
+            )
+        )
+        .reset_index()
+        .rename(columns={0: 'UF_percentual'})
+        .explode( 'UF_percentual')
+        .assign(
+            **{
+                'UF': lambda x: x['UF_percentual'].apply(lambda x: x[0]),
+                'percentual': lambda x: x['UF_percentual'].apply(lambda x: x[1]),
+            }
+        )
+    )
