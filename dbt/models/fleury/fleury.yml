@@ -27,9 +27,6 @@ models:
   - name: fleury_02_fix_values
     description: Fix values
     columns:
-      - name: sample_id
-        tests:
-          - unique
       - name: age
         tests:
           - dbt_utils.accepted_range:

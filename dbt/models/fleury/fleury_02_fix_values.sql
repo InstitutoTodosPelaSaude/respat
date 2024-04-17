@@ -40,8 +40,7 @@ SELECT
     md5(
         CONCAT(
             test_id,
-            exame,
-            pathogen
+            exame
         )
     ) AS sample_id,
     test_id,
