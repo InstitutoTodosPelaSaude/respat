@@ -3,6 +3,17 @@
 WITH source_data AS (
     SELECT *
     FROM {{ ref("dbmol_01_convert_types") }}
+),
+source_data_and_method AS (
+    SELECT
+        *,
+        MAX(
+            CASE parametro
+                WHEN 'METODO' THEN result
+                ELSE NULL
+            END 
+        ) OVER (PARTITION BY test_id, procedimento) AS method
+    FROM source_data
 )
 SELECT
     MD5(
@@ -49,6 +60,9 @@ SELECT
     codigo_procedimento,
     parametro,
     procedimento,
+    
+    method,
+
     CASE 
         WHEN result = 'DETECTADO' THEN 1
         WHEN result = 'POSITIVO' THEN 1
@@ -83,7 +97,7 @@ SELECT
     location,
     state_code,
     file_name
-FROM source_data
+FROM source_data_and_method
 WHERE 1=1
 AND codigo_procedimento IN
 (
