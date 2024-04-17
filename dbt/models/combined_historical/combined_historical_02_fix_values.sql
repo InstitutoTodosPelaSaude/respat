@@ -47,7 +47,6 @@ SELECT
         {{ normalize_text("state") }} as state
 FROM source_data
 WHERE 1=1
-AND date_testing < '{{ var('combined_threshold_date') }}' -- Apenas dados históricos
 AND NOT ( 
     -- Filtrar linhas sem nenhum resultado de teste
     "SC2_test_result" = 'NT' AND
@@ -63,3 +62,4 @@ AND NOT (
     "ENTERO_test_result" = 'NT' AND
     "BAC_test_result" = 'NT'
 )
+AND NOT "SC2_test_result" = 'Inconclusivo'
