@@ -290,6 +290,11 @@ models:
     description: wip
     tests:
       - at_least_one_test_result_is_present_str
+      - number_of_rows_in_the_last_epiweeks_between:
+          min_value: 500
+          max_value: 3000
+          config:
+            severity: warn
       - freshness_by_pathogen:
           config:
             severity: warn
