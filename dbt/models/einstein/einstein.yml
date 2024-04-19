@@ -58,6 +58,11 @@ models:
               at_least: 0.95
               config:
                 severity: warn
+
+      - name: sex
+        tests:
+          - accepted_values:
+              values: ["M", "F"]
     
       - name: date_testing
         tests:
@@ -299,6 +304,12 @@ models:
           config:
             severity: warn
       - freshness_by_pathogen_sc2_vsr_flua_flub:
+          config:
+            severity: warn
+      - expect_proportion_of_unique_values_in_column_set_to_be_between:
+          columns: []
+          min_value: 0.95
+          max_value: 1
           config:
             severity: warn
     freshness:
