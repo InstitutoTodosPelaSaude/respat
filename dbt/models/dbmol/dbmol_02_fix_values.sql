@@ -3,6 +3,17 @@
 WITH source_data AS (
     SELECT *
     FROM {{ ref("dbmol_01_convert_types") }}
+),
+source_data_and_method AS (
+    SELECT
+        *,
+        MAX(
+            CASE parametro
+                WHEN 'METODO' THEN result
+                ELSE NULL
+            END 
+        ) OVER (PARTITION BY test_id, procedimento) AS method
+    FROM source_data
 )
 SELECT
     MD5(
@@ -49,23 +60,26 @@ SELECT
     codigo_procedimento,
     parametro,
     procedimento,
+    
+    method,
+
     CASE 
         WHEN result = 'DETECTADO' THEN 1
         WHEN result = 'POSITIVO' THEN 1
 
-        WHEN result = 'SUPERIOR A 180.0' THEN 1
-        WHEN result = 'SUPERIOR A 200.0' THEN 1
-        WHEN result = 'SUPERIOR A 27.0' THEN 1
-        WHEN result = 'SUPERIOR A 1800.0' THEN 1
+        WHEN result = 'SUPERIOR A 180.0'  THEN -2
+        WHEN result = 'SUPERIOR A 200.0'  THEN -2
+        WHEN result = 'SUPERIOR A 27.0'   THEN -2
+        WHEN result = 'SUPERIOR A 1800.0' THEN -2
 
-        WHEN result = 'NÃO DETECTADO' THEN 0
-        WHEN result = 'NEGATIVO' THEN 0
+        WHEN result = 'NÃO DETECTADO'     THEN 0
+        WHEN result = 'NEGATIVO'          THEN 0
 
-        WHEN result = 'INFERIOR A 0.1' THEN 0
-        WHEN result = 'INFERIOR A 1.0' THEN 0
-        WHEN result = 'INFERIOR A 2' THEN 0
-        WHEN result = 'INFERIOR A 23' THEN 0
-        WHEN result = 'INFERIOR A 8.0' THEN 0
+        WHEN result = 'INFERIOR A 0.1'    THEN -2
+        WHEN result = 'INFERIOR A 1.0'    THEN -2
+        WHEN result = 'INFERIOR A 2'      THEN -2
+        WHEN result = 'INFERIOR A 23'     THEN -2
+        WHEN result = 'INFERIOR A 8.0'    THEN -2
 
         WHEN result ~ '^[0-9]+[\.]*[0-9]*$' THEN
             CASE 
@@ -83,7 +97,7 @@ SELECT
     location,
     state_code,
     file_name
-FROM source_data
+FROM source_data_and_method
 WHERE 1=1
 AND codigo_procedimento IN
 (
@@ -101,6 +115,10 @@ AND codigo_procedimento IN
     'SINRE', 
     'INFBG', 
     'INFBM',
+    'INFLUA',
+    'INFLUB',
+    'HRSVAB',
+    'SARS',
     'FLUAB', 
     'BORPC', 
     'LEGIO', 
@@ -111,7 +129,34 @@ AND codigo_procedimento IN
     'PVIROC', 
     'MYPNA', 
     'ANSP', 
-    'ADENA'
+    'ADENA',
+    'ADENM',
+
+    -- PAINEL RESPIRATÓRIO - PLUS (24 PATÓGENOS INCLUINDO SARS COV-2)
+	'ADENO',
+	'BOCAV',
+	'BPARAP',
+	'BPERTU',
+	'COR0C4',
+	'COR229',
+	'CORHK',
+	'CORNL',
+	'ENTERO',
+	'INFLH3',
+	'INFLU1',
+	'INFLUA',
+	'INFLUB',
+	'METAP',
+	'MYCOP',
+	'PARA1',
+	'PARA2',
+	'PARA3',
+	'PARA4',
+	'RINOV',
+	'SARSC',
+	'SINCIA',
+	'SINCIB'
+
 )
 AND parametro NOT IN ('MAT', 'MATERIAL', 'METODO', 'SOROTI', 'TITU', 'TIT', 'TITULO', 'LEGPG')
 AND parametro IS NOT NULL

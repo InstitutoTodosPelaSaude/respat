@@ -16,6 +16,7 @@ import os
 import pathlib
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
+from io import StringIO
 
 from .constants import dbt_manifest_path
 
@@ -50,10 +51,30 @@ def dbmol_raw(context):
     dbmol_df = pd.read_csv(DBMOL_FILES_FOLDER / dbmol_files[0])
     dbmol_df['file_name'] = dbmol_files[0]
     context.log.info(f"Reading file {dbmol_files[0]}")
-        
+
+    buffer_df = StringIO()
     # Save to db
-    dbmol_df.to_sql('dbmol_raw', engine, schema=DB_SCHEMA, if_exists='replace', index=False)
-    engine.dispose()
+    dbmol_df.to_csv(buffer_df, index=False, header=True)
+    buffer_df.seek(0)
+
+    cursor = engine.raw_connection().cursor()
+    # drop table if exists
+    cursor.execute(f"DROP TABLE IF EXISTS {DB_SCHEMA}.dbmol_raw")
+    columns = ', '.join([f'"{col}" TEXT' for col in dbmol_df.columns])
+    cursor.execute(f"CREATE TABLE {DB_SCHEMA}.dbmol_raw ({columns})")
+
+    # Split the dataframe into chunks of 1,000,000 rows
+    chunk_size = 1_000_000
+    for i in range(0, len(dbmol_df), chunk_size):
+        chunk = dbmol_df[i:i+chunk_size]
+        chunk_buffer = StringIO()
+        chunk.to_csv(chunk_buffer, index=False, header=False)
+        chunk_buffer.seek(0)
+        cursor.copy_expert(f"COPY {DB_SCHEMA}.dbmol_raw FROM STDIN WITH CSV", chunk_buffer)
+
+    cursor.connection.commit()
+    cursor.close()
+
 
     n_rows = dbmol_df.shape[0]
     context.add_output_metadata({'num_rows': n_rows})
