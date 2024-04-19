@@ -226,6 +226,13 @@ models:
     description: wip
     tests:
       - at_least_one_test_result_is_present_str
+      - expect_proportion_of_unique_values_in_column_set_to_be_between:
+          columns: test_id, test_kit
+          min_value: 0.99
+          max_value: 1.01
+      - expect_number_of_repeated_lines_in_column_set_to_be_less_than:
+          columns: test_id, test_kit
+          max_value: 100
     columns:
       - name: test_id
         tests:
@@ -304,12 +311,6 @@ models:
           config:
             severity: warn
       - freshness_by_pathogen_sc2_vsr_flua_flub:
-          config:
-            severity: warn
-      - expect_proportion_of_unique_values_in_column_set_to_be_between:
-          columns: []
-          min_value: 0.95
-          max_value: 1
           config:
             severity: warn
     freshness:
