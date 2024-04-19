@@ -240,6 +240,9 @@ models:
           - relationships:
               to: ref('einstein_04_fill_results')
               field: test_id
+          - number_of_repetitions_of_values_between:
+              min_value: 1
+              max_value: 3
       - name: sample_id
         tests:
           - unique
