@@ -19,6 +19,7 @@ from sqlalchemy import create_engine
 from dotenv import load_dotenv
 
 from .constants import dbt_manifest_path
+from .utils import send_email_with_file
 
 dagster_dbt_translator = DagsterDbtTranslator(
     settings=DagsterDbtTranslatorSettings(enable_asset_checks=True)
@@ -31,6 +32,8 @@ DB_NAME = os.getenv('DB_NAME')
 DB_USER = os.getenv('DB_USER')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
 DB_SCHEMA = os.getenv('DB_SCHEMA')
+
+EXTERNAL_REPORTS_RIO_RECIPIENTS = os.getenv('EXTERNAL_REPORTS_RIO_RECIPIENTS').split(',')
 
 ROOT_PATH = pathlib.Path(__file__).parent.parent.parent.parent.absolute()
 
@@ -67,3 +70,20 @@ def external_report_rio_export_to_tsv(context: AssetExecutionContext):
     context.add_output_metadata({
         'num_rows': df.shape[0]
     })
+
+@asset(
+    compute_kind="python", 
+    deps=[external_report_rio_export_to_tsv]
+)
+def external_report_rio_send_email(context: AssetExecutionContext):
+    # Get the file path
+    file_path = ROOT_PATH / 'data' / 'external_reports' / 'rio' / 'external_reports_rio.tsv'
+
+    # Send the email
+    send_email_with_file(
+        recipient_emails=EXTERNAL_REPORTS_RIO_RECIPIENTS,
+        subject='External Report Rio',
+        body='This is the external report for Rio.',
+        file_paths=[file_path]
+    )
+
