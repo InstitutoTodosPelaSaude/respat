@@ -23,4 +23,7 @@ load_from:
     - python_module:
         module_name: matrices.definitions
         working_directory: dagster/matrices
+    - python_module:
+        module_name: external_reports.definitions
+        working_directory: dagster/external_reports
     
