@@ -6,7 +6,7 @@ WITH source_data AS (
     {{ source("dagster", "einstein_raw") }}
 
 )
-SELECT
+SELECT DISTINCT
     "accession"::BIGINT::TEXT AS test_id,
     "sexo" AS sex,
     "idade"::INT AS age,
