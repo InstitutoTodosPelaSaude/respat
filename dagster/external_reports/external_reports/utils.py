@@ -5,6 +5,7 @@ from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 import os
 import pathlib
+from datetime import date
 
 load_dotenv()
 EMAIL_HOST = os.getenv('EMAIL_HOST')
@@ -69,5 +70,25 @@ def send_email_with_file(
     except Exception as e:
         raise Exception(f'Failed to send email "{subject}". Error: {e}')
     
+def add_date_to_text(
+        text: str, 
+        substring_to_replace: str = '{date}'
+    ) -> str:
+    """
+    Add the current date to a text, replacing all the 
+    'substring_to_replace' in the 'text' with the current date.
 
+    Args:
+        text (str): Text to add the date to.
+        substring_to_replace (str): Substring to replace with the date. Default is '{date}'.
 
+    Returns:
+        str: Text with the current date.
+    """
+    # Get today's date
+    todays_date = str(date.today())
+
+    # Replace the substring with the date
+    text = text.replace(substring_to_replace, todays_date)
+
+    return text
