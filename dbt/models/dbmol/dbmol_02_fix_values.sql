@@ -73,28 +73,26 @@ source_data_fix_values AS (
         exame,
 
         CASE 
-            WHEN codigo_exame IN ('RESP4') 
+            WHEN codigo_exame IN ('RESP4', 'INFAM') 
             THEN
                 CASE
-                    WHEN result IN ('NAO DETECTADO') THEN 0
-                    WHEN result IN ('DETECTADO') THEN 1
+                    WHEN result IN ('NAO DETECTADO', 'NEGATIVO') THEN 0
+                    WHEN result IN ('DETECTADO',     'POSITIVO') THEN 1
                     ELSE {{INDETERMINADO}}
                 END 
 
             -- ADENO (ENZIMAIMUNOENSAIO)
-            WHEN
-                codigo_exame IN ('ADENO')
-            THEN
-                CASE 
-                    WHEN {{ result_is_numeric }} THEN
-                        CASE
-                            WHEN result::FLOAT <= 8.0 THEN 0
-                            WHEN result::FLOAT > 8.0 AND result::FLOAT <= 10.0 THEN {{INDETERMINADO}}
-                            WHEN result::FLOAT > 10.0 THEN 1
-                        END
+            WHEN codigo_exame IN ('ADENO')
+            THEN {{ map_result_values_to_negative_positive_and_undefined(8.0, 10.0, INDETERMINADO, NAO_RECONHECIDO) }}
+            
+            WHEN codigo_exame IN ('INFAG')
+            THEN {{ map_result_values_to_negative_positive_and_undefined(0.8, 1.1, INDETERMINADO, NAO_RECONHECIDO) }}
+            
+            WHEN codigo_exame IN ('COVI19Q')
+            -- replace 'INFERIOR A 23' with 23 in result
+            THEN {{ map_result_values_to_negative_and_positive("REPLACE(result, 'INFERIOR A ', '')", 30.0, NAO_RECONHECIDO) }}
 
-                    ELSE {{ NAO_RECONHECIDO }}
-                END
+
 
             ELSE {{INDETERMINADO}}
         END AS result,
