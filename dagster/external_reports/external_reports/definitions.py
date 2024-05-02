@@ -11,6 +11,7 @@ from .report_epirio.assets import (
     report_epirio_export_to_tsv,
     report_epirio_send_email
 )
+from .report_epirio.jobs import report_epirio_assets_job
 
 defs = Definitions(
     assets=[
@@ -24,4 +25,8 @@ defs = Definitions(
     resources={
         "dbt": DbtCliResource(project_dir=os.fspath(dbt_project_dir)),
     },
+    jobs=[
+        # EPIRIO
+        report_epirio_assets_job,
+    ],
 )
