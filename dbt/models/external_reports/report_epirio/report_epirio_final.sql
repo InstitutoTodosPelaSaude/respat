@@ -2,7 +2,7 @@
 
 WITH source_data AS(
     SELECT * 
-    FROM {{ ref("external_reports_rio_02_group_values") }}
+    FROM {{ ref("report_epirio_02_group_values") }}
 )
 SELECT
     *

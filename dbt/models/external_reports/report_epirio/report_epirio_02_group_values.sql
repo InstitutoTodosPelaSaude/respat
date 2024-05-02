@@ -2,7 +2,7 @@
 
 WITH source_data AS(
     SELECT * 
-    FROM {{ ref("external_reports_rio_01_filter_and_pivot") }}
+    FROM {{ ref("report_epirio_01_filter_and_pivot") }}
 )
 SELECT
     -- Create the CUBE
