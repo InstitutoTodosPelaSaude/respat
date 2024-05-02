@@ -2,12 +2,11 @@
     map_result_values_to_negative_and_positive(
         column_name,
         threshold,
-        NAO_RECONHECIDO,
-        result_is_numeric = "result ~ '[0-9]+[.]*[0-9]*' AND result ~ '^[0-9]'"
+        NAO_RECONHECIDO
     ) 
 %}
     CASE 
-        WHEN {{ result_is_numeric }} THEN
+        WHEN {{column_name}} ~ '[0-9]+[.]*[0-9]*' AND {{column_name}} ~ '^[0-9]' THEN
             CASE
                 WHEN {{column_name}}::FLOAT < {{ threshold }} THEN 0
                 ELSE 1

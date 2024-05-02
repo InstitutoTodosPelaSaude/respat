@@ -1,5 +1,6 @@
 {{ config(materialized='table') }}
 {% set result_is_numeric = "result ~ '[0-9]+[.]*[0-9]*' AND result ~ '^[0-9]'" %}
+{% set result_removido_termos_INFERIOR_SUPERIOR_A = "REPLACE(REPLACE(result, 'INFERIOR A ', ''), 'SUPERIOR A ', '')" %}
 {% set INDETERMINADO   = -3 %}
 {% set NAO_RECONHECIDO = -2 %}
 
@@ -83,18 +84,43 @@ source_data_fix_values AS (
 
             -- ADENO (ENZIMAIMUNOENSAIO)
             WHEN codigo_exame IN ('ADENO')
-            THEN {{ map_result_values_to_negative_positive_and_undefined(8.0, 10.0, INDETERMINADO, NAO_RECONHECIDO) }}
+            THEN {{ map_result_values_to_negative_positive_and_undefined(
+                    result_removido_termos_INFERIOR_SUPERIOR_A,
+                    8.0, 10.0, 
+                    INDETERMINADO, NAO_RECONHECIDO
+            ) }}
             
             WHEN codigo_exame IN ('INFAG')
-            THEN {{ map_result_values_to_negative_positive_and_undefined(0.8, 1.1, INDETERMINADO, NAO_RECONHECIDO) }}
+            THEN {{ map_result_values_to_negative_positive_and_undefined(
+                    'result', 
+                    0.8, 1.1, 
+                    INDETERMINADO, NAO_RECONHECIDO
+            ) }}
             
             WHEN codigo_exame IN ('COVI19Q')
-            -- replace 'INFERIOR A 23' with 23 in result
-            THEN {{ map_result_values_to_negative_and_positive("REPLACE(result, 'INFERIOR A ', '')", 30.0, NAO_RECONHECIDO) }}
+            THEN {{ map_result_values_to_negative_and_positive(
+                    result_removido_termos_INFERIOR_SUPERIOR_A, 
+                    30.0, 
+                    NAO_RECONHECIDO
+            ) }}
 
 
+            WHEN codigo_exame IN ('NEUCOV')
+            THEN {{ map_result_values_to_negative_and_positive(
+                    result_removido_termos_INFERIOR_SUPERIOR_A, 
+                    30.0, 
+                    NAO_RECONHECIDO
+            ) }}
 
-            ELSE {{INDETERMINADO}}
+
+            WHEN codigo_exame IN ('COV19A')
+            THEN {{ map_result_values_to_negative_positive_and_undefined(
+                    result_removido_termos_INFERIOR_SUPERIOR_A,
+                    0.8, 1.09, 
+                    INDETERMINADO, NAO_RECONHECIDO
+            ) }}
+
+            ELSE {{NAO_RECONHECIDO}}
         END AS result,
 
         CASE sex
