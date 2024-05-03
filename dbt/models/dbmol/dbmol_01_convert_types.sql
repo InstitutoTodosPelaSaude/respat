@@ -8,14 +8,14 @@ WITH source_data AS (
 )
 SELECT
     "NumeroPedido" as test_id,
-    TO_DATE("DataCadastro", 'YYYY-MM-DD') as date_testing,
-    TO_DATE("DataNascimento", 'YYYY-MM-DD') as data_nascimento, 
-    {{ normalize_text("CodigoProcedimento") }} as codigo_procedimento,
-    {{ normalize_text("Parametro") }} as parametro,
-    {{ normalize_text("Procedimento") }} as procedimento,
-    UPPER("Resultado")::text as result,
     "Sexo" as sex,
-    {{ normalize_text("Cidade") }} as location,
-    "UF" as state_code,
+    {{ normalize_text("Procedimento") }}       AS exame,
+    {{ normalize_text("CodigoProcedimento") }} AS codigo_exame,
+    {{ normalize_text("Parametro") }}          AS detalhe_exame,
+    TO_DATE("DataCadastro", 'YYYY-MM-DD')      AS date_testing,
+    TO_DATE("DataNascimento", 'YYYY-MM-DD')    AS data_nascimento, 
+    {{ normalize_text("Cidade") }}             AS location,
+    {{ normalize_text("UF") }}                 AS state_code,
+    {{ normalize_text("Resultado") }}::text    AS result,
     file_name
 FROM source_data

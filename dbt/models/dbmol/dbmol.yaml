@@ -12,14 +12,52 @@ sources:
 
 models:
   - name: dbmol_01_convert_types
-    description: Convert types for dbmol_raw
+    description: Convert types
+    columns:
+      - name: test_id
+        tests: &not_null_warn_error_if_gt_1000
+          - not_null:
+              config:
+                severity: warn
+                error_if: ">3000"
+      - name: date_testing
+        tests:
+          *not_null_warn_error_if_gt_1000
+      - name: detalhe_exame
+        tests:
+          *not_null_warn_error_if_gt_1000
+      - name: exame
+        tests:
+          *not_null_warn_error_if_gt_1000
+
   - name: dbmol_02_fix_values
     description: Fix values for dbmol_raw
+    tests:
+      - expect_proportion_of_unique_values_in_column_set_to_be_between:
+          columns: test_id, detalhe_exame
+          min_value: 0.98
+          max_value: 1.01
+      - expect_number_of_repeated_lines_in_column_set_to_be_less_than:
+          columns: test_id, detalhe_exame
+          max_value: 100
+      - unique:
+          column_name: "test_id || '-' || detalhe_exame"
+          name: unique_test_id_detalhe_exame
+          config:
+            severity: warn
     columns:
       - name: sample_id
         tests: 
           - unique
           - not_null
+      - name: test_kit
+        tests: &test_kit_tests
+          - not_null
+          - dbt_utils.not_accepted_values:
+              values: ["UNKNOWN"]
+          - accepted_values:
+              name: test_kit_accepted_values
+              values: ["test_2", "test_4", "covid_pcr", "covid_antigen"]
       - name: test_id
         tests:
           - not_null
