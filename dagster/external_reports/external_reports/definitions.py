@@ -12,6 +12,7 @@ from .report_epirio.assets import (
     report_epirio_send_email
 )
 from .report_epirio.jobs import report_epirio_assets_job
+from .report_epirio.sensors import run_report_epirio_sensor, report_epirio_slack_failure_sensor
 
 defs = Definitions(
     assets=[
@@ -29,4 +30,9 @@ defs = Definitions(
         # EPIRIO
         report_epirio_assets_job,
     ],
+    sensors=[
+        # EPIRIO
+        run_report_epirio_sensor,
+        report_epirio_slack_failure_sensor,
+    ]
 )
