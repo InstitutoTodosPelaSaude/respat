@@ -43,7 +43,7 @@ source_data_fix_values AS (
             WHEN exame = 'ADENOVIRUS - ANTICORPOS IGG'                            THEN 'adeno_igg'
             WHEN exame = 'ADENOVIRUS - PESQUISA'                                  THEN 'adeno_test'
             WHEN exame = 'ADENOVIRUS'                                             THEN 'adeno_test'
-            WHEN exame = 'ANTICORPOS IGA ANTI ADENOVIRUS'                         THEN 'bac_antigen'
+            WHEN exame = 'ANTICORPOS IGA ANTI ADENOVIRUS'                         THEN 'adeno_antigen'
             WHEN exame = 'ANTICORPOS IGA ANTI MYCOPLASMA PNEUMONIAE'              THEN 'bac_antigen'
             WHEN exame = 'ANTICORPOS IGG ANTI LEGIONELLA PNEUMOPHILA'             THEN 'bac_igg'
             WHEN exame = 'ANTICORPOS IGG ANTI VIRUS SINCICIAL RESPIRATORIO (VSR)' THEN 'vsr_igg'
@@ -76,10 +76,15 @@ source_data_fix_values AS (
         CASE 
             WHEN codigo_exame IN (
                 'RESP4', 
-                'INFAM', 'ADENF', 
+                'INFAM', 
                 'INFBG', 'INFBM',
                 'FLUAB', -- Influezna A e B
-                'PRESP'  -- Test 24
+                'PRESP',  -- Test 24
+                
+                -- Adenovirus
+                'ADENF', 'DNADE', 'ADENA', 'ADENM',
+                -- VSR
+                'SINRE'
             ) 
             THEN
                 CASE
