@@ -26,7 +26,7 @@ source_data_fix_values AS (
                 test_id,
                 exame,
                 CASE 
-                    WHEN codigo_exame IN ('RESP4') 
+                    WHEN codigo_exame IN ('RESP4', 'PRESP') -- Esses testes devem ser agrupados em uma única linha
                     THEN codigo_exame
                     ELSE detalhe_exame
                 END
@@ -74,12 +74,24 @@ source_data_fix_values AS (
         exame,
 
         CASE 
-            WHEN codigo_exame IN ('RESP4', 'INFAM') 
+            WHEN codigo_exame IN (
+                'RESP4', 
+                'INFAM', 'ADENF', 
+                'INFBG', 'INFBM',
+                'FLUAB', -- Influezna A e B
+                'PRESP'  -- Test 24
+            ) 
             THEN
                 CASE
-                    WHEN result IN ('NAO DETECTADO', 'NEGATIVO') THEN 0
-                    WHEN result IN ('DETECTADO',     'POSITIVO') THEN 1
-                    ELSE {{INDETERMINADO}}
+                    WHEN 
+                        result IN ('NAO DETECTADO', 'NEGATIVO') 
+                        OR result ILIKE 'INFERIOR A%' 
+                    THEN 0
+                    WHEN 
+                        result IN ('DETECTADO', 'POSITIVO') 
+                        OR result ILIKE 'DETECTADO %' -- Para testes de Infleunza A e B
+                    THEN 1
+                    ELSE {{NAO_RECONHECIDO}}
                 END 
 
             -- ADENO (ENZIMAIMUNOENSAIO)
