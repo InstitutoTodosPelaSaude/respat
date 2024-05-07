@@ -289,6 +289,14 @@ def adapt_and_rename_matrices(context):
 
 
 def query_olap_cube(dimensions, metrics, filters):
+    """
+        Function to query the OLAP cube.
+        Define the metrics and dimensions you want to query on.
+
+        The set of dimensions defines the granularity of the metrics.
+        For example, if you want to know the quantity of positive and negative tests per laboratory and per epidemiological week,
+        the dimensions would be ['lab_id', 'epiweek_enddate'] and the metrics ['Pos', 'Neg'].
+    """
 
     TABLE = '"matrices_02_CUBE_pos_neg_posrate_totaltest"'
     AVAILABE_DIMENSIONS = [
@@ -297,6 +305,9 @@ def query_olap_cube(dimensions, metrics, filters):
     AVAILABLE_METRICS = ['Pos', 'Neg', 'posrate', 'totaltests']
 
     if not all([dimension in AVAILABE_DIMENSIONS for dimension in dimensions]):
+        raise ValueError(f"Metric not available. Available dimension: {AVAILABE_DIMENSIONS}")
+
+    if not all([metric in AVAILABLE_METRICS for metric in metrics]):
         raise ValueError(f"Metric not available. Available metrics: {AVAILABLE_METRICS}")
 
     null_dimensions = [dimension for dimension in AVAILABE_DIMENSIONS if dimension not in dimensions]
@@ -337,6 +348,11 @@ def query_olap_cube(dimensions, metrics, filters):
     deps=[get_asset_key_for_model([respiratorios_dbt_assets], "matrices_02_CUBE_pos_neg_posrate_totaltest")]
 )
 def generate_flourish_inputs(context):
+    """
+    Generate the input files for the flourish visualizations.
+
+    Query the OLAP cube and post process the data to generate the input files.
+    """
 
     cube_slices = [
         # Heatmaps Pathogen x Age Group
