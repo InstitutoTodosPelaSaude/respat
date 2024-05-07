@@ -84,7 +84,12 @@ source_data_fix_values AS (
                 -- Adenovirus
                 'ADENF', 'DNADE', 'ADENA', 'ADENM',
                 -- VSR
-                'SINRE'
+                'SINRE',
+
+                -- BACTERIA
+                -- 'MYPNA','MYPNE',
+                'LEGPG','LEGIO','LEGPN',
+                'BORPC','ANSP'
             ) 
             THEN
                 CASE
@@ -137,6 +142,20 @@ source_data_fix_values AS (
                     INDETERMINADO, NAO_RECONHECIDO
             ) }}
 
+            WHEN codigo_exame IN ('MYPNG')
+            THEN {{ map_result_values_to_negative_and_positive(
+                    result_removido_termos_INFERIOR_SUPERIOR_A, 
+                    10.0, 
+                    NAO_RECONHECIDO
+            ) }}
+
+            WHEN codigo_exame IN ('MYPNM')
+            THEN {{ map_result_values_to_negative_and_positive(
+                    result_removido_termos_INFERIOR_SUPERIOR_A, 
+                    10.0, 
+                    NAO_RECONHECIDO
+            ) }}
+
             ELSE {{NAO_RECONHECIDO}}
         END AS result,
 
@@ -162,7 +181,6 @@ source_data_fix_values AS (
         'NEUCOV', 
         'COV19A', 
         'ADENF', 
-        'MYPNE', 
         'SINRE', 
         'INFBG', 
         'INFBM',
@@ -177,8 +195,9 @@ source_data_fix_values AS (
         'LEGPN', 
         'PRESP', 
         'DNADE',
-        'PVIROC', 
-        'MYPNA', 
+        --'PVIROC', 
+        --'MYPNE', 
+        --'MYPNA', 
         'ANSP', 
         'ADENA',
         'ADENM',
