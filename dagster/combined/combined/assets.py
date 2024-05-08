@@ -73,7 +73,7 @@ def combined_historical_raw(context):
 
 @dbt_assets(
     manifest=dbt_manifest_path,
-    select='combined +epiweeks +municipios +age_groups +fix_location +macroregions',
+    select='combined +epiweeks +municipios +age_groups +fix_location +fix_state +macroregions',
     dagster_dbt_translator=dagster_dbt_translator
 )
 def respiratorios_combined_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):

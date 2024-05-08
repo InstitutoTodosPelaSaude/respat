@@ -6,6 +6,7 @@ combined_all_assets_job = define_asset_job(
         "age_groups",
         "epiweeks",
         "fix_location",
+        "fix_state",
         "macroregions",
         "municipios",
         "combined_01_join_labs",
