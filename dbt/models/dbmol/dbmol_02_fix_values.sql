@@ -4,6 +4,7 @@
 {% set INDETERMINADO   = -3 %}
 {% set NAO_RECONHECIDO = -2 %}
 
+
 WITH source_data AS (
     SELECT *
     FROM {{ ref("dbmol_01_convert_types") }}
@@ -170,6 +171,9 @@ source_data_fix_values AS (
         END AS sex,
         location,
         state_code,
+
+        {{ map_state_code_to_state_name('state_code', 'NULL') }} AS state,
+
         file_name
     FROM source_data_and_method
     WHERE 1=1
