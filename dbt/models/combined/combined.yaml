@@ -46,6 +46,20 @@ sources:
             description: The correct location name
           - name: description
             description: A description of the mistake
+
+  - name: fix_state
+    description: Table created by dbt seed to fix states with mistakes
+    schema: arboviroses
+    tables:
+      - name: fix_state
+        columns:
+          - name: source_state
+            description: The state name with mistakes
+          - name: target_state
+            description: The correct state
+          - name: description
+            description: A description of the mistake
+
   - name: municipios
     description: Table to map location created by dbt seed
     schema: arboviroses
