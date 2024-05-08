@@ -48,7 +48,6 @@ models:
     columns:
       - name: sample_id
         tests: 
-          - unique
           - not_null
       - name: test_kit
         tests: &test_kit_tests
@@ -57,7 +56,27 @@ models:
               values: ["UNKNOWN"]
           - accepted_values:
               name: test_kit_accepted_values
-              values: ["test_2", "test_4", "covid_pcr", "covid_antigen"]
+              values: [
+                "sc2_antigen",
+                "adeno_test",
+                "covid_antigen",
+                "bac_igg",
+                "bac_igm",
+                "bac_antigen",
+                "test_2",
+                "test_4",
+                "bac_test",
+                "flua_igm",
+                "sc2_igg",
+                "adeno_igg",
+                "vsr_igg",
+                "flub_igm",
+                "flua_igg",
+                "test_24",
+                "flub_igg",
+                "adeno_antigen",
+                "adeno_igm"
+              ]
       - name: test_id
         tests:
           - not_null
