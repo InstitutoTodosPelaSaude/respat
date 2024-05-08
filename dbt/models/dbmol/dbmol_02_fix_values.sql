@@ -26,7 +26,7 @@ source_data_fix_values AS (
                 test_id,
                 exame,
                 CASE 
-                    WHEN codigo_exame IN ('RESP4', 'PRESP') -- Esses testes devem ser agrupados em uma única linha
+                    WHEN codigo_exame IN ('RESP4', 'PRESP', 'FLUAB', 'BORPC') -- Esses testes devem ser agrupados em uma única linha
                     THEN codigo_exame
                     ELSE detalhe_exame
                 END
@@ -60,16 +60,17 @@ source_data_fix_values AS (
             WHEN exame = 'INFLUENZA A VIRUS ANTICORPOS IGM'                       THEN 'flua_igm'
             WHEN exame = 'INFLUENZA B VIRUS ANTICORPOS IGG'                       THEN 'flub_igg'
             WHEN exame = 'INFLUENZA B VIRUS ANTICORPOS IGM'                       THEN 'flub_igm'
-            
-            WHEN exame = 'INFLUENZA A E B - DETECCAO POR PCR'                                                 THEN 'test_2'
+            WHEN exame = 'INFLUENZA A E B - DETECCAO POR PCR'                     THEN 'flu_pcr'
+
             WHEN exame = 'PAINEL DE VIRUS RESPIRATORIO SARS-COV-2, VIRUS SINCICIAL, INFLUENZA A, INFLUENZA B' THEN 'test_4'
             WHEN exame = 'PAINEL MOLECULAR PARA DETECCAO DE VIRUS'                                            THEN 'test_11'
             WHEN exame = 'PAINEL RESPIRATORIO - PLUS (24 PATOGENOS INCLUINDO SARS COV-2)'                     THEN 'test_24'
 
-            WHEN exame = 'ANTICORPOS IGG ANTI VIRUS SINCICIAL RESPIRATORIO (VSR)'              THEN 'vsr_igg'
-            WHEN exame = 'CORONAVIRUS 2019 - SARS-COV-2 IGG QUANTITATIVO'                      THEN 'sc2_igg'
-            WHEN exame = 'TESTE DE NEUTRALIZACAO SARS-COV-2/COVID19, ANTICORPOS TOTAIS - SORO' THEN 'sc2_antigen'
-            WHEN exame = 'CORONAVIRUS 2019 ANTICORPOS IGA (COVID19)'                           THEN 'covid_antigen'
+            WHEN exame = 'ANTICORPOS IGG ANTI VIRUS SINCICIAL RESPIRATORIO (VSR)'                             THEN 'vsr_igg'
+            WHEN exame = 'CORONAVIRUS 2019 - SARS-COV-2 IGG QUANTITATIVO'                                     THEN 'sc2_igg'
+            WHEN exame = 'TESTE DE NEUTRALIZACAO SARS-COV-2/COVID19, ANTICORPOS TOTAIS - SORO'                THEN 'sc2_antigen'
+            WHEN exame = 'CORONAVIRUS 2019 ANTICORPOS IGA (COVID19)'                                          THEN 'covid_antigen'
+            
             ELSE 'UNKNOWN'
         END AS test_kit,
         codigo_exame,
@@ -189,10 +190,10 @@ source_data_fix_values AS (
         'INFBM',
         'INFLUA',
         'INFLUB',
-        'HRSVAB',
+        -- 'HRSVAB',
         'SARS',
         'FLUAB', 
-        'BORPC', 
+        'BORPC', -- PARAPE e PERTUS
         'LEGIO', 
         'LEGPG', 
         'LEGPN', 
@@ -203,32 +204,8 @@ source_data_fix_values AS (
         --'MYPNA', 
         'ANSP', 
         'ADENA',
-        'ADENM',
+        'ADENM'
 
-        -- PAINEL RESPIRATÓRIO - PLUS (24 PATÓGENOS INCLUINDO SARS COV-2)
-        'ADENO',
-        'BOCAV',
-        'BPARAP',
-        'BPERTU',
-        'COR0C4',
-        'COR229',
-        'CORHK',
-        'CORNL',
-        'ENTERO',
-        'INFLH3',
-        'INFLU1',
-        'INFLUA',
-        'INFLUB',
-        'METAP',
-        'MYCOP',
-        'PARA1',
-        'PARA2',
-        'PARA3',
-        'PARA4',
-        'RINOV',
-        'SARSC',
-        'SINCIA',
-        'SINCIB'
     )
     AND detalhe_exame NOT IN ('MAT', 'MATERIAL', 'METODO', 'SOROTI', 'TITU', 'TIT', 'TITULO', 'LEGPG')
     AND detalhe_exame IS NOT NULL
