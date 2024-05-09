@@ -98,6 +98,22 @@ models:
                 error_if: ">100"
                 warn_if: ">10"
                 where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+      - name: state
+        tests: &state_tests
+          - accepted_uf_names
+          - not_null:
+              name: state_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+          - not_null:
+              name: state_not_null
+              config:
+                severity: error
+                error_if: ">1000"
+                warn_if: ">100"
       - name: result
         tests: &result_tests
           - accepted_values:
@@ -146,6 +162,8 @@ models:
         tests: *date_testing_tests
       - name: age
         tests: *age_tests
+      - name: state
+        tests: *state_tests
       - name: result
         tests: *result_tests
       - name: sex
@@ -194,18 +212,6 @@ models:
   - name: dbmol_04_fill_results
     description: Pivot results for dbmol [wip]
     tests:
-      # - expect_proportion_of_unique_values_in_column_set_to_be_between:
-      #     columns: test_id, test_kit
-      #     min_value: 0.98
-      #     max_value: 1.01
-      # - expect_number_of_repeated_lines_in_column_set_to_be_less_than:
-      #     columns: test_id, test_kit
-      #     max_value: 100
-      # - unique:
-      #     column_name: "test_id || '-' || test_kit"
-      #     name: unique_test_id_test_kit
-      #     config:
-      #       severity: warn
       - dbt_utils.equal_rowcount:
           compare_model: ref('dbmol_03_pivot_results')
       - at_least_one_test_result_is_present_str
@@ -227,6 +233,8 @@ models:
         tests: *date_testing_tests
       - name: age
         tests: *age_tests
+      - name: state
+        tests: *state_tests
       - name: result
         tests: *result_tests
       - name: sex
@@ -321,6 +329,8 @@ models:
         tests: *date_testing_tests
       - name: age
         tests: *age_tests
+      - name: state
+        tests: *state_tests
       - name: result
         tests: *result_tests
       - name: sex
@@ -405,6 +415,8 @@ models:
         tests: *date_testing_tests
       - name: age
         tests: *age_tests
+      - name: state
+        tests: *state_tests
       - name: result
         tests: *result_tests
       - name: sex
