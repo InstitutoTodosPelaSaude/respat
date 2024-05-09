@@ -99,7 +99,6 @@ SELECT
         pivot_pathogen_results(
             [
                 'ADENO',
-                'ANSP', 
                 'ADENA',
                 'ADENM',
                 'DNADE',
@@ -146,6 +145,7 @@ SELECT
     {{
         pivot_pathogen_results(
             [
+                'ANSP',
                 'BPARAP',
                 'BPERTU',
                 'MYCOP',    
