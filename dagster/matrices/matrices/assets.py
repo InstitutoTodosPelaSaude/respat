@@ -689,6 +689,37 @@ def create_post_process_ufs_heatmap_function(pathogen):
         'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 
         'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
     ]
+
+    UF_TO_REGION = {
+        'AC': 'Norte',
+        'AL': 'Nordeste',
+        'AP': 'Norte',
+        'AM': 'Norte',
+        'BA': 'Nordeste',
+        'CE': 'Nordeste',
+        'DF': 'Centro-Oeste',
+        'ES': 'Sudeste',
+        'GO': 'Centro-Oeste',
+        'MA': 'Nordeste',
+        'MT': 'Centro-Oeste',
+        'MS': 'Centro-Oeste',
+        'MG': 'Sudeste',
+        'PA': 'Norte',
+        'PB': 'Nordeste',
+        'PR': 'Sul',
+        'PE': 'Nordeste',
+        'PI': 'Nordeste',
+        'RJ': 'Sudeste',
+        'RN': 'Nordeste',
+        'RS': 'Sul',
+        'RO': 'Norte',
+        'RR': 'Norte',
+        'SC': 'Sul',
+        'SP': 'Sudeste',
+        'SE': 'Nordeste',
+        'TO': 'Norte'
+    }
+    
     empty_ufs = {uf: None for uf in UFS}
 
     return lambda df: (
@@ -731,6 +762,12 @@ def create_post_process_ufs_heatmap_function(pathogen):
             **{
                 'UF': lambda x: x['UF_percentual'].apply(lambda x: x[0]),
                 'percentual': lambda x: x['UF_percentual'].apply(lambda x: x[1]),
+            }
+        )
+        .drop(columns=['UF_percentual'])
+        .assign(
+            **{
+                'Região': lambda x: x['UF'].map(UF_TO_REGION)
             }
         )
     )
