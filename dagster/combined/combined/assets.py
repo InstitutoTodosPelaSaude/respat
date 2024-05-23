@@ -17,6 +17,7 @@ import os
 import pathlib
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
+from io import StringIO
 
 from .constants import dbt_manifest_path
 
@@ -37,6 +38,7 @@ DB_PASSWORD = os.getenv('DB_PASSWORD')
 DB_SCHEMA = os.getenv('DB_SCHEMA')
 COMBINED_EXPORT_START_DATE = '2021-10-01'
 
+
 @asset(compute_kind="python")
 def combined_historical_raw(context):
     """
@@ -50,14 +52,33 @@ def combined_historical_raw(context):
     assert len(combined_files) > 0, f"No files found in the folder {HISTORICAL_COMBINED_FILE_FOLDER} with extension {HISTORICAL_COMBINED_FILE_EXTENSION}"
 
     combined_file = combined_files[0]
-    combined_df = pd.read_csv(HISTORICAL_COMBINED_FILE_FOLDER / combined_file, sep='\t', dtype=str)
+    file_path = HISTORICAL_COMBINED_FILE_FOLDER / combined_file
 
-    # Save to db
-    combined_df.to_sql('combined_historical_raw', engine, schema=DB_SCHEMA, if_exists='replace', index=False)
-    engine.dispose()
+    # Get a sample of data to retrieve the column names
+    sample_chunk = pd.read_csv(file_path, chunksize=1, sep='\t', dtype=str)
+    combined_df = next(sample_chunk)
+    columns = ', '.join([f'"{col}" TEXT' for col in combined_df.columns])
 
-    n_rows = combined_df.shape[0]
-    context.add_output_metadata({'num_rows': n_rows})
+    cursor = engine.raw_connection().cursor()
+    # drop table if exists
+    cursor.execute(f"DROP TABLE IF EXISTS {DB_SCHEMA}.combined_historical_raw")
+    cursor.execute(f"CREATE TABLE {DB_SCHEMA}.combined_historical_raw ({columns})")
+
+    # Process the data by chunks of 1,000,000 rows
+    total_rows = 0
+    chunk_size = 1_000_000
+    for chunk in pd.read_csv(file_path, chunksize=chunk_size, sep='\t', dtype=str):
+        total_rows += len(chunk)
+        chunk_buffer = StringIO()
+        chunk.to_csv(chunk_buffer, index=False, header=False)
+        chunk_buffer.seek(0)
+    
+        cursor.copy_expert(f"COPY {DB_SCHEMA}.combined_historical_raw FROM STDIN WITH CSV", chunk_buffer)
+        cursor.connection.commit()
+
+
+    cursor.close()
+    context.add_output_metadata({'num_rows': total_rows})
 
     return MaterializeResult(
         metadata={
@@ -66,7 +87,7 @@ def combined_historical_raw(context):
 
             Last updated: {pd.Timestamp.now() - pd.Timedelta(hours=3)}
 
-            Number of rows processed: {n_rows}
+            Number of rows processed: {total_rows}
             """))
         }
     )
