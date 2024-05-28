@@ -4,16 +4,18 @@
         proportion_of_unique_values
     FROM
     (
-        SELECT 
+        SELECT
+            CASE WHEN COUNT(*) = 0 THEN -1 ELSE -- avoid division by zero when there are no rows
             (
                 SELECT COUNT(*)
                 FROM (
                     SELECT DISTINCT {{ columns }} 
                     FROM {{ model }}
                 )
-            )::FLOAT / COUNT(*)::FLOAT AS proportion_of_unique_values
+            )::FLOAT / COUNT(*)::FLOAT 
+            END AS proportion_of_unique_values
         FROM {{ model }}
     )
-    WHERE proportion_of_unique_values < {{ min_value }} OR proportion_of_unique_values > {{ max_value }}
+    WHERE (proportion_of_unique_values < {{ min_value }} OR proportion_of_unique_values > {{ max_value }}) AND proportion_of_unique_values <> -1
 
 {% endtest %}
