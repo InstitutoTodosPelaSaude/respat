@@ -7,7 +7,7 @@ WITH source_data AS (
 
 )
 SELECT
-    "NumeroPedido" as test_id,
+    "NumeroPedido"::BIGINT::TEXT as test_id,
     "Sexo" as sex,
     {{ normalize_text("Procedimento") }}       AS exame,
     {{ normalize_text("CodigoProcedimento") }} AS codigo_exame,
