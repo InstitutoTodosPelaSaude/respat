@@ -40,7 +40,7 @@ WITH source_data AS (
     FROM {{ ref("combined_historical_final") }}
     WHERE 
         date_testing < '{{ var('combined_threshold_date') }}' AND
-        lab_id NOT IN ('DASA', 'DBMOL')
+        lab_id NOT IN ('DASA')
 
     UNION
 
@@ -49,7 +49,7 @@ WITH source_data AS (
     {{ columns | join(', ') }}
     FROM {{ ref("combined_historical_final") }}
     WHERE
-        lab_id IN ('DASA', 'DBMOL')
+        lab_id IN ('DASA')
 
     UNION
 
@@ -89,6 +89,14 @@ WITH source_data AS (
     'HLAGYN' as lab_id,
     {{ columns | join(', ') }}
     FROM {{ ref("hlagyn_final") }}
+    WHERE date_testing >= '{{ var('combined_threshold_date') }}'
+
+    UNION
+
+    SELECT
+    'DBMOL' as lab_id,
+    {{ columns | join(', ') }}
+    FROM {{ ref("dbmol_final") }}
     WHERE date_testing >= '{{ var('combined_threshold_date') }}'
     
 )

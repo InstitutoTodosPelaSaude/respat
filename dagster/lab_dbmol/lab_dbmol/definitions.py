@@ -6,6 +6,7 @@ from dagster_dbt import DbtCliResource
 from .assets import respiratorios_dbt_assets, dbmol_raw
 from .constants import dbt_project_dir
 from .schedules import schedules
+from .jobs import dbmol_all_assets_job
 
 defs = Definitions(
     assets=[respiratorios_dbt_assets, dbmol_raw],
@@ -13,4 +14,5 @@ defs = Definitions(
     resources={
         "dbt": DbtCliResource(project_dir=os.fspath(dbt_project_dir)),
     },
+    jobs=[dbmol_all_assets_job],
 )

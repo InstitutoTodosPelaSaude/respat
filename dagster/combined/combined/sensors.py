@@ -28,7 +28,8 @@ TIME_CHECKING_RUNNING_ASSETS = 40 # 45 seconds
         AssetKey("hilab_final"), 
         AssetKey("hlagyn_final"), 
         AssetKey("sabin_final"), 
-        AssetKey("fleury_final")
+        AssetKey("fleury_final"),
+        AssetKey("dbmol_final")
     ],
     job=combined_all_assets_job,
     default_status=DefaultSensorStatus.RUNNING,
@@ -55,6 +56,7 @@ def run_combined_sensor(context: SensorEvaluationContext):
         'hlagyn_all_assets_job', 
         'sabin_all_assets_job', 
         'fleury_all_assets_job',
+        'dbmol_all_assets_job',
         'combined_historical_final'
     ]
 
