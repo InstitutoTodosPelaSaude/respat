@@ -99,7 +99,7 @@ source_data_fix_values AS (
             THEN
                 CASE
                     WHEN 
-                        result IN ('NAO DETECTADO', 'NEGATIVO') 
+                        result IN ('NAO DETECTADO', 'NEGATIVO', 'NAO DETECTATDO') 
                         OR result ILIKE 'INFERIOR A%' 
                     THEN 0
                     WHEN 
@@ -117,7 +117,10 @@ source_data_fix_values AS (
                     INDETERMINADO, NAO_RECONHECIDO
             ) }}
             
-            WHEN codigo_exame IN ('INFAG')
+            WHEN codigo_exame IN ('INFAG') AND result ILIKE 'INFERIOR A%'
+            THEN 0
+
+            WHEN codigo_exame IN ('INFAG') AND NOT (result ILIKE 'INFERIOR A%')
             THEN {{ map_result_values_to_negative_positive_and_undefined(
                     'result', 
                     0.8, 1.1, 
