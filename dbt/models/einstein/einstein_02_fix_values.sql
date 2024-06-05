@@ -83,8 +83,12 @@ WITH source_data AS (
     {{ ref("einstein_01_convert_types") }}
 
 )
+
+-- This query selects data from the source table with specific filters to remove out-of-context cases
 SELECT
     *
 FROM source_data
 WHERE 1=1
+AND REGEXP_SUBSTR(date_testing::TEXT, '\d{4}')::INT >= 2023 
+AND age != 182
 AND NOT (exame ILIKE 'ZZ%')
