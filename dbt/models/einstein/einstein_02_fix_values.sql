@@ -82,13 +82,19 @@ WITH source_data AS (
     FROM
     {{ ref("einstein_01_convert_types") }}
 
+),
+
+-- This query selects data from the source table with specific filters to remove out-of-context cases (year < 2023 and age = 182)
+rows_to_delete as (
+    SELECT *
+    FROM source_data
+    WHERE REGEXP_SUBSTR(date_testing::TEXT, '\d{4}')::INT < 2023 
+    AND age = 182
 )
 
--- This query selects data from the source table with specific filters to remove out-of-context cases
 SELECT
     *
 FROM source_data
 WHERE 1=1
-AND REGEXP_SUBSTR(date_testing::TEXT, '\d{4}')::INT >= 2023 
-AND age != 182
+AND sample_id NOT IN (SELECT sample_id FROM rows_to_delete)
 AND NOT (exame ILIKE 'ZZ%')
