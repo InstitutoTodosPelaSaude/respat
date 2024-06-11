@@ -44,6 +44,30 @@ SAVE_PATH = ROOT_PATH / "data" / "matrices"
 def respiratorios_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
     yield from dbt.cli(["build"], context=context).stream()
 
+@asset(
+    compute_kind="python",
+    deps=[
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_NEW_SC2_posrate_by_epiweek_state"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_NEW_SC2_posrate_by_epiweek_state_filtered"),
+    ]
+)
+def export_matrices_to_xlsx(context):
+    # Map all the db matrix tables that need to be exported to its file name
+    matrices_name_map = {
+        "matrix_NEW_SC2_posrate_by_epiweek_state": "matrix_NEW_SC2_posrate_by_epiweek_state",
+        "matrix_NEW_SC2_posrate_by_epiweek_state_filtered": "matrix_NEW_SC2_posrate_by_epiweek_state_filtered",
+    }
+
+    # Get each matrix table and export it to a xlsx file
+    engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
+    for matrix_name, new_name in matrices_name_map.items():
+        matrix_df = pd.read_sql_query(f'SELECT * FROM {DB_SCHEMA}."{matrix_name}"', engine, dtype='str')
+        
+        matrix_df = matrix_df.fillna('0')
+        matrix_df = matrix_df.fillna('0.0')
+
+        matrix_df.to_excel(f'{SAVE_PATH}/{new_name}.xlsx', index=False)
+
 
 def generate_matrix(name, aggregate_columns, pivot_column, metrics, filters):
     
