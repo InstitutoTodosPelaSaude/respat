@@ -97,4 +97,5 @@ SELECT
 FROM source_data
 WHERE 1=1
 AND sample_id NOT IN (SELECT sample_id FROM rows_to_delete)
+AND NOT (date_testing = '2024-05-10' AND age = 124)
 AND NOT (exame ILIKE 'ZZ%')
