@@ -18,6 +18,7 @@ import pathlib
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
 from io import StringIO
+import zipfile
 
 from .constants import dbt_manifest_path
 
@@ -133,3 +134,18 @@ def export_to_tsv(context):
     context.add_output_metadata({
         'num_rows': df.shape[0]
     })
+
+@asset(
+    compute_kind="python", 
+    deps=[export_to_tsv]
+)
+def zip_exported_file(context):
+    """
+    Zip the combined exported file
+    """
+    with zipfile.ZipFile('data/combined/combined.zip', 'w',
+                         compression=zipfile.ZIP_DEFLATED,
+                         compresslevel=9) as zf:
+        zf.write('data/combined/combined.tsv', arcname='combined.tsv')
+
+

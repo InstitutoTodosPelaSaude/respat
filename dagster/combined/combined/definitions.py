@@ -7,7 +7,8 @@ from .assets import (
     respiratorios_historical_dbt_assets,
     respiratorios_combined_dbt_assets,
     combined_historical_raw,
-    export_to_tsv
+    export_to_tsv,
+    zip_exported_file
 )
 from .constants import dbt_project_dir
 from .schedules import schedules
@@ -19,7 +20,8 @@ defs = Definitions(
         respiratorios_historical_dbt_assets, 
         respiratorios_combined_dbt_assets,
         combined_historical_raw,
-        export_to_tsv
+        export_to_tsv,
+        zip_exported_file
     ],
     schedules=schedules,
     resources={

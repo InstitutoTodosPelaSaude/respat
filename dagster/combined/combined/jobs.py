@@ -15,7 +15,8 @@ combined_all_assets_job = define_asset_job(
         "combined_04_fix_location",
         "combined_05_location",
         "combined_final",
-        "export_to_tsv"
+        "export_to_tsv",
+        "zip_exported_file"
     ]
 )
 
