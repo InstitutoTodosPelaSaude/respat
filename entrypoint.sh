@@ -13,4 +13,4 @@ cmd="dagster-daemon run";
 _evalBg "${cmd}";
 
 # Start dagster-webserver
-dagster-webserver -h 0.0.0.0 -p 3000 #--path-prefix /dagster
+dagster-webserver -h 0.0.0.0 -p 3000 --path-prefix /dagster-respat

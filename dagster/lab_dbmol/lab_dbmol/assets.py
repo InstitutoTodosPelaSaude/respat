@@ -49,37 +49,36 @@ def dbmol_raw(context):
     dbmol_files = [file for file in os.listdir(DBMOL_FILES_FOLDER) if file.endswith(DBMOL_FILES_EXTENSION)]
     assert len(dbmol_files) > 0, f"No files found in the folder {DBMOL_FILES_FOLDER} with extension {DBMOL_FILES_EXTENSION}"
 
-    # Read the sheets 'itps_covid', 'itps_influenza' and 'itps_vsr' from the file
-    dbmol_df = pd.read_csv(DBMOL_FILES_FOLDER / dbmol_files[0])
-    dbmol_df['file_name'] = dbmol_files[0]
-    context.log.info(f"Reading file {dbmol_files[0]}")
-
-    buffer_df = StringIO()
-    # Save to db
-    dbmol_df.to_csv(buffer_df, index=False, header=True)
-    buffer_df.seek(0)
+    dbmol_file = dbmol_files[0]
+    file_path = DBMOL_FILES_FOLDER / dbmol_file
+    
+    # Get a sample of data to retrieve the column names
+    sample_chunk = pd.read_csv(file_path, chunksize=1, index=False)
+    dbmol_df = next(sample_chunk)
+    columns_file = ', '.join([f'"{col}" TEXT' for col in dbmol_df.columns])
+    new_column = f'"file_name" TEXT'
+    columns = f"{columns_file}, {new_column}"
 
     cursor = engine.raw_connection().cursor()
     # drop table if exists
     cursor.execute(f"DROP TABLE IF EXISTS {DB_SCHEMA}.dbmol_raw")
-    columns = ', '.join([f'"{col}" TEXT' for col in dbmol_df.columns])
     cursor.execute(f"CREATE TABLE {DB_SCHEMA}.dbmol_raw ({columns})")
 
-    # Split the dataframe into chunks of 1,000,000 rows
+    # Process the data by chunks of 1,000,000 rows
+    total_rows = 0
     chunk_size = 1_000_000
-    for i in range(0, len(dbmol_df), chunk_size):
-        chunk = dbmol_df[i:i+chunk_size]
+    for chunk in pd.read_csv(file_path, chunksize=chunk_size):
+        total_rows += len(chunk)
+        chunk['file_name'] = dbmol_file
         chunk_buffer = StringIO()
         chunk.to_csv(chunk_buffer, index=False, header=False)
         chunk_buffer.seek(0)
+    
         cursor.copy_expert(f"COPY {DB_SCHEMA}.dbmol_raw FROM STDIN WITH CSV", chunk_buffer)
+        cursor.connection.commit()
 
-    cursor.connection.commit()
     cursor.close()
-
-
-    n_rows = dbmol_df.shape[0]
-    context.add_output_metadata({'num_rows': n_rows})
+    context.add_output_metadata({'num_rows': total_rows})
 
     return MaterializeResult(
         metadata={
@@ -88,10 +87,11 @@ def dbmol_raw(context):
 
             Last updated: {pd.Timestamp.now() - pd.Timedelta(hours=3)}
 
-            Number of rows processed: {n_rows}
+            Number of rows processed: {total_rows}
             """))
         }
     )
+
 
 @dbt_assets(
     manifest=dbt_manifest_path,
