@@ -1,0 +1,33 @@
+name: Deploy code to server
+on: 
+  push:
+    branches:
+      - main
+      - dev-ci
+  workflow_dispatch:
+  
+jobs:
+  deploy-ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      SSH_HOST: ${{ secrets.HOST_IP }}
+      SSH_USER: ${{ secrets.HOST_USER }}
+      REPOSITORY_PATH: ${{ secrets.HOST_REPOSITORY_PATH }}
+    steps:
+      - name: configure SSH credentials
+        run: echo "Configuring SSH credentials "
+      - run: echo -e '\x1dclose\x0d' | telnet $SSH_HOST 80
+      - run: sleep 5
+      - run: |
+          mkdir ~/.ssh/
+          touch ~/.ssh/known_hosts
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
+          sudo chmod 600 ~/.ssh/id_rsa
+          echo "Host $SSH_HOST\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+          ssh-keyscan -H $SSH_HOST > ~/.ssh/known_hosts
+      - run: ssh $SSH_USER@$SSH_HOST "echo 'Testing SSH connection'"
+      - run: ssh $SSH_USER@$SSH_HOST -T 'cd ~/monit-frontend/data/respat; git pull; docker compose down; docker compose up --build -d'
+      - run: ssh $SSH_USER@$SSH_HOST   "cd ~/monit-frontend/data/respat/; echo \$(git rev-parse --short HEAD) \$(git show -s --format=%cd --date=format:'%Y-%m-%d' HEAD) > version.txt" 
+      
