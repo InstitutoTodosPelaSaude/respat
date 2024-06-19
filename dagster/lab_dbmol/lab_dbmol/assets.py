@@ -53,7 +53,7 @@ def dbmol_raw(context):
     file_path = DBMOL_FILES_FOLDER / dbmol_file
     
     # Get a sample of data to retrieve the column names
-    sample_chunk = pd.read_csv(file_path, chunksize=1, index=False)
+    sample_chunk = pd.read_csv(file_path, chunksize=1)
     dbmol_df = next(sample_chunk)
     columns_file = ', '.join([f'"{col}" TEXT' for col in dbmol_df.columns])
     new_column = f'"file_name" TEXT'
