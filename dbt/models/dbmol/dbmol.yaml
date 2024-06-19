@@ -235,8 +235,6 @@ models:
         tests: *age_tests
       - name: state
         tests: *state_tests
-      - name: result
-        tests: *result_tests
       - name: sex
         tests: *sex_tests
       - name: qty_original_lines
@@ -331,8 +329,6 @@ models:
         tests: *age_tests
       - name: state
         tests: *state_tests
-      - name: result
-        tests: *result_tests
       - name: sex
         tests: *sex_tests
       - name: qty_original_lines
@@ -418,8 +414,6 @@ models:
         tests: *age_tests
       - name: state
         tests: *state_tests
-      - name: result
-        tests: *result_tests
       - name: sex
         tests: *sex_tests
       - name: qty_original_lines

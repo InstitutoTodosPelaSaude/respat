@@ -23,7 +23,6 @@ WITH source_data AS (
         age,
         location,
         state,
-        result,
         date_testing,
         file_name,
 
