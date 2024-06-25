@@ -51,6 +51,7 @@ def respiratorios_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_NEW_SC2_posrate_by_epiweek_state_filtered"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_NEW_ALL_posrate_pos_neg_by_epiweek"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_NEW_ALL_pos_by_epiweek_agegroup"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_NEW_ALL_posrate_by_epiweek"),
     ]
 )
 def export_matrices_to_xlsx(context):
@@ -60,6 +61,7 @@ def export_matrices_to_xlsx(context):
         "matrix_NEW_SC2_posrate_by_epiweek_state_filtered": "03_SC2_heat_posrate_week_state",
         "matrix_NEW_ALL_posrate_pos_neg_by_epiweek": "00_Resp_line_bar_posrate_posneg_week_country",
         "matrix_NEW_ALL_pos_by_epiweek_agegroup": "09_Resp_pyr_pos_agegroups_panel_week_country",
+        "matrix_NEW_ALL_posrate_by_epiweek": "01_Resp_line_posrate_panel4_week_country"
     }
 
     # Get each matrix table and export it to a xlsx file
