@@ -15,6 +15,5 @@ SELECT
     "pos" as "Positivos",
     "neg" as  "Negativos"
 FROM source_data
-WHERE epiweek_enddate >= '2022-01-01'
 ORDER BY epiweek_enddate
     

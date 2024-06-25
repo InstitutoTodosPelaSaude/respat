@@ -16,7 +16,7 @@ WITH source_data AS (
         SUM(CASE WHEN pathogen = 'ENTERO' THEN "Pos" ELSE 0 END) AS "ENTERO",
         SUM(CASE WHEN pathogen = 'META' THEN "Pos" ELSE 0 END) AS "META",
         SUM(CASE WHEN pathogen = 'BAC' THEN "Pos" ELSE 0 END) AS "BAC"
-    FROM {{ ref("matrix_02_epiweek_agegroup") }}
+    FROM {{ ref("matrix_02_epiweek_pathogen_agegroup") }}
     GROUP BY epiweek_enddate, age_group
 )
 SELECT
@@ -35,6 +35,5 @@ SELECT
     "META" AS "Metapneumovírus",
     "BAC" AS "Bactérias"
 FROM source_data
-WHERE epiweek_enddate >= '2022-01-01'
 ORDER BY epiweek_enddate, age_group
     

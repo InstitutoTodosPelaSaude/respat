@@ -6,8 +6,8 @@ WITH source_data AS (
     SELECT
         epiweek_enddate,
         state_code,
-        MAX(CASE WHEN pathogen = 'SC2' THEN "posrate" ELSE 0 END) * 100 AS "SC2"
-    FROM {{ ref("matrix_02_epiweek_state") }}
+        MAX(CASE WHEN pathogen = 'SC2' THEN "posrate" * 100 ELSE NULL END) AS "SC2"
+    FROM {{ ref("matrix_02_epiweek_pathogen_state") }}
     WHERE state_code IN 
     --------------------------------------------------------------
     -- select all states with fill rates above the threshold
@@ -19,8 +19,8 @@ WITH source_data AS (
                     MAX(total) as total,
                     COUNT(CASE WHEN "posrate" IS NOT NULL AND "posrate" > 0 THEN 1 ELSE NULL END) AS filled
                 FROM 
-                    {{ ref("matrix_02_epiweek_state") }}, 
-                    (SELECT COUNT(DISTINCT epiweek_enddate) as total FROM {{ ref("matrix_02_epiweek_state") }})
+                    {{ ref("matrix_02_epiweek_pathogen_state") }}, 
+                    (SELECT COUNT(DISTINCT epiweek_enddate) as total FROM {{ ref("matrix_02_epiweek_pathogen_state") }})
                 WHERE pathogen = 'SC2'
                 GROUP BY state_code
             ) AS state_fill_rates
@@ -34,6 +34,6 @@ SELECT
     state_code as "UF",
     "SC2" as "percentual"
 FROM source_data
-WHERE "SC2" > 0
+WHERE "SC2" is not null
 ORDER BY epiweek_enddate, state_code
     
