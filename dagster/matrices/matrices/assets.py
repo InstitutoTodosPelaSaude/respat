@@ -47,31 +47,31 @@ def respiratorios_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource
 @asset(
     compute_kind="python",
     deps=[
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_NEW_SC2_posrate_by_epiweek_state"),
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_NEW_SC2_posrate_by_epiweek_state_filtered"),
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_NEW_ALL_posrate_pos_neg_by_epiweek"),
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_NEW_ALL_pos_by_epiweek_agegroup"),
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_NEW_ALL_posrate_by_epiweek"),
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_NEW_FLUA_FLUB_SC2_VSR_pos_by_epiweek_PANEL"),
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_NEW_SC2_posrate_by_epiweek_agegroup"),
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_NEW_FLUA_posrate_by_epiweek_agegroup"),
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_NEW_ALL_posrate_by_epiweek_PANEL"),
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_NEW_ALL_pos_by_epiweek_PANEL"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_SC2_posrate_by_epiweek_state"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_SC2_posrate_by_epiweek_state_filtered"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_ALL_posrate_pos_neg_by_epiweek"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_ALL_pos_by_epiweek_agegroup"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_ALL_posrate_by_epiweek"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_FLUA_FLUB_SC2_VSR_pos_by_epiweek_PANEL"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_SC2_posrate_by_epiweek_agegroup"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_FLUA_posrate_by_epiweek_agegroup"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_ALL_posrate_by_epiweek_PANEL"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_ALL_pos_by_epiweek_PANEL"),
     ]
 )
 def export_matrices_to_xlsx(context):
     # Map all the db matrix tables that need to be exported to its file name
     matrices_name_map = {
-        "matrix_NEW_ALL_posrate_by_epiweek":                    "01_Resp_line_posrate_panel4_week_country",
-        "matrix_NEW_FLUA_FLUB_SC2_VSR_pos_by_epiweek_PANEL":    "02_Resp_bar_pos_panel4_week_country",
-        "matrix_NEW_SC2_posrate_by_epiweek_state_filtered":     "03_SC2_heat_posrate_week_state",
-        "matrix_NEW_SC2_posrate_by_epiweek_agegroup":           "04_SC2_heat_posrate_agegroups_week_country",
-        "matrix_NEW_FLUA_posrate_by_epiweek_agegroup":          "05_FLUA_heat_posrate_agegroups_week_country",
-        "matrix_NEW_ALL_posrate_by_epiweek_PANEL":              "06_Resp_line_posrate_panel_week_country",
-        "matrix_NEW_ALL_pos_by_epiweek_PANEL":                  "07_Resp_bar_pos_panel_week_country",
-        "matrix_NEW_ALL_posrate_pos_neg_by_epiweek":            "08_Resp_line_bar_posrate_posneg_week_country",
-        "matrix_NEW_ALL_pos_by_epiweek_agegroup":               "09_Resp_pyr_pos_agegroups_panel_week_country",
-        "matrix_NEW_SC2_posrate_by_epiweek_state":              "matrix_NEW_SC2_posrate_by_epiweek_state",
+        "matrix_ALL_posrate_by_epiweek":                    "01_Resp_line_posrate_panel4_week_country",
+        "matrix_FLUA_FLUB_SC2_VSR_pos_by_epiweek_PANEL":    "02_Resp_bar_pos_panel4_week_country",
+        "matrix_SC2_posrate_by_epiweek_state_filtered":     "03_SC2_heat_posrate_week_state",
+        "matrix_SC2_posrate_by_epiweek_agegroup":           "04_SC2_heat_posrate_agegroups_week_country",
+        "matrix_FLUA_posrate_by_epiweek_agegroup":          "05_FLUA_heat_posrate_agegroups_week_country",
+        "matrix_ALL_posrate_by_epiweek_PANEL":              "06_Resp_line_posrate_panel_week_country",
+        "matrix_ALL_pos_by_epiweek_PANEL":                  "07_Resp_bar_pos_panel_week_country",
+        "matrix_ALL_posrate_pos_neg_by_epiweek":            "08_Resp_line_bar_posrate_posneg_week_country",
+        "matrix_ALL_pos_by_epiweek_agegroup":               "09_Resp_pyr_pos_agegroups_panel_week_country",
+        "matrix_SC2_posrate_by_epiweek_state":              "matrix_SC2_posrate_by_epiweek_state",
     }
 
     # Get each matrix table and export it to a xlsx file
