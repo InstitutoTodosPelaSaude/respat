@@ -62,25 +62,22 @@ def respiratorios_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource
 def export_matrices_to_xlsx(context):
     # Map all the db matrix tables that need to be exported to its file name
     matrices_name_map = {
-        "matrix_NEW_SC2_posrate_by_epiweek_state": "matrix_NEW_SC2_posrate_by_epiweek_state",
-        "matrix_NEW_SC2_posrate_by_epiweek_state_filtered": "03_SC2_heat_posrate_week_state",
-        "matrix_NEW_ALL_posrate_pos_neg_by_epiweek": "08_Resp_line_bar_posrate_posneg_week_country",
-        "matrix_NEW_ALL_pos_by_epiweek_agegroup": "09_Resp_pyr_pos_agegroups_panel_week_country",
-        "matrix_NEW_ALL_posrate_by_epiweek": "01_Resp_line_posrate_panel4_week_country",
-        "matrix_NEW_FLUA_FLUB_SC2_VSR_pos_by_epiweek_PANEL": "02_Resp_bar_pos_panel4_week_country",
-        "matrix_NEW_SC2_posrate_by_epiweek_agegroup": "04_SC2_heat_posrate_agegroups_week_country",
-        "matrix_NEW_FLUA_posrate_by_epiweek_agegroup": "05_FLUA_heat_posrate_agegroups_week_country",
-        "matrix_NEW_ALL_posrate_by_epiweek_PANEL": "06_Resp_line_posrate_panel_week_country",
-        "matrix_NEW_ALL_pos_by_epiweek_PANEL": "07_Resp_bar_pos_panel_week_country"
+        "matrix_NEW_ALL_posrate_by_epiweek":                    "01_Resp_line_posrate_panel4_week_country",
+        "matrix_NEW_FLUA_FLUB_SC2_VSR_pos_by_epiweek_PANEL":    "02_Resp_bar_pos_panel4_week_country",
+        "matrix_NEW_SC2_posrate_by_epiweek_state_filtered":     "03_SC2_heat_posrate_week_state",
+        "matrix_NEW_SC2_posrate_by_epiweek_agegroup":           "04_SC2_heat_posrate_agegroups_week_country",
+        "matrix_NEW_FLUA_posrate_by_epiweek_agegroup":          "05_FLUA_heat_posrate_agegroups_week_country",
+        "matrix_NEW_ALL_posrate_by_epiweek_PANEL":              "06_Resp_line_posrate_panel_week_country",
+        "matrix_NEW_ALL_pos_by_epiweek_PANEL":                  "07_Resp_bar_pos_panel_week_country",
+        "matrix_NEW_ALL_posrate_pos_neg_by_epiweek":            "08_Resp_line_bar_posrate_posneg_week_country",
+        "matrix_NEW_ALL_pos_by_epiweek_agegroup":               "09_Resp_pyr_pos_agegroups_panel_week_country",
+        "matrix_NEW_SC2_posrate_by_epiweek_state":              "matrix_NEW_SC2_posrate_by_epiweek_state",
     }
 
     # Get each matrix table and export it to a xlsx file
     engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
     for matrix_name, new_name in matrices_name_map.items():
         matrix_df = pd.read_sql_query(f'SELECT * FROM {DB_SCHEMA}."{matrix_name}"', engine, dtype='str')
-        
-        matrix_df = matrix_df.fillna('0')
-        matrix_df = matrix_df.fillna('0.0')
 
         matrix_df.to_excel(f'{SAVE_PATH}/{new_name}.xlsx', index=False)
 
