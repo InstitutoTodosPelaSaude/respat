@@ -15,7 +15,7 @@ WITH source_data AS (
         SUM(CASE WHEN pathogen = 'ENTERO' THEN "Pos" ELSE 0 END) AS "ENTERO",
         SUM(CASE WHEN pathogen = 'META' THEN "Pos" ELSE 0 END) AS "META",
         SUM(CASE WHEN pathogen = 'BAC' THEN "Pos" ELSE 0 END) AS "BAC"
-    FROM {{ ref("matrix_02_epiweek_pathogen_PANELOUTROS") }}
+    FROM {{ ref("matrix_02_epiweek_pathogen_PANELOUTROSv2") }}
     GROUP BY epiweek_enddate
 )
 SELECT
