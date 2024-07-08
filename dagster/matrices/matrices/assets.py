@@ -57,6 +57,8 @@ def respiratorios_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_FLUA_posrate_by_epiweek_agegroup"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_ALL_posrate_by_epiweek_PANEL"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_ALL_pos_by_epiweek_PANEL"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_13_SC2_map_pos_direct_states"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_13_SC2_map_pos_direct_cities"),
     ]
 )
 def export_matrices_to_xlsx(context):
@@ -71,6 +73,8 @@ def export_matrices_to_xlsx(context):
         "matrix_ALL_pos_by_epiweek_PANEL":                  "07_Resp_bar_pos_panel_week_country",
         "matrix_ALL_posrate_pos_neg_by_epiweek":            "08_Resp_line_bar_posrate_posneg_all_week_country",
         "matrix_ALL_pos_by_epiweek_agegroup":               "09_Resp_pyr_pos_agegroups_all_week_country",
+        "matrix_13_SC2_map_pos_direct_states":              "13_SC2_map_pos_direct_states",
+        "matrix_13_SC2_map_pos_direct_cities":              "13_SC2_map_pos_direct_cities",
         "matrix_SC2_posrate_by_epiweek_state":              "matrix_SC2_posrate_by_epiweek_state",
     }
 

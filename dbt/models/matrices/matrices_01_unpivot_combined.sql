@@ -12,6 +12,8 @@ WITH source_data AS (
         CASE WHEN state_code IS NULL THEN 'NOT REPORTED' ELSE state_code END AS state_code,
         CASE WHEN country IS NULL THEN 'NOT REPORTED' ELSE country END AS country,
         CASE WHEN age_group IS NULL THEN 'NOT REPORTED' ELSE age_group END AS age_group,
+        lat,
+        long,
         "SC2_test_result",
         "FLUA_test_result",
         "FLUB_test_result",
