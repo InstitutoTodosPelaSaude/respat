@@ -18,14 +18,24 @@ WITH source_data AS (
     ORDER BY epiweek_enddate, state_code
 )
 SELECT
-    epiweek_enddate as "semanas epidemiologicas",
-    location_ibge_code as "location_ibge_code",
-    location as "location",
-    state_code as "state",
-    lat as "lat",
-    long as "long",
-    SUM(CASE WHEN pathogen = 'SC2' THEN "Pos" ELSE 0 END) as "cases"
-FROM source_data
-WHERE location IS NOT NULL
-GROUP BY epiweek_enddate, state_code, location_ibge_code, location, lat, long
-ORDER BY epiweek_enddate, state_code, location
+    "semanas epidemiologicas",
+    "location_ibge_code",
+    "location",
+    "state",
+    "lat",
+    "long",
+    SUM("cases") OVER (PARTITION BY "location_ibge_code" ORDER BY "semanas epidemiologicas") as "cases"
+FROM (
+    SELECT
+        epiweek_enddate as "semanas epidemiologicas",
+        location_ibge_code as "location_ibge_code",
+        location as "location",
+        state_code as "state",
+        lat as "lat",
+        long as "long",
+        SUM(CASE WHEN pathogen = 'SC2' THEN "Pos" ELSE 0 END) as "cases"
+    FROM source_data
+    WHERE location IS NOT NULL
+    GROUP BY epiweek_enddate, state_code, location_ibge_code, location, lat, long
+)
+ORDER BY "semanas epidemiologicas", "state", "location"
