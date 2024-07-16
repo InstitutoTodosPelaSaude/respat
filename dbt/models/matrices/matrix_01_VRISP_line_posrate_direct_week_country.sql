@@ -19,9 +19,9 @@ WITH source_data AS (
 )
 SELECT
     epiweek_enddate as "semana epidemiológica",
-    MAX(CASE WHEN pathogen = 'SC2' THEN "posrate" * 100 ELSE NULL END) AS "SARS-CoV-2",
     MAX(CASE WHEN pathogen = 'FLUA' THEN "posrate" * 100 ELSE NULL END) AS "Influenza A",
     MAX(CASE WHEN pathogen = 'FLUB' THEN "posrate" * 100 ELSE NULL END) AS "Influenza B",
+    MAX(CASE WHEN pathogen = 'SC2' THEN "posrate" * 100 ELSE NULL END) AS "SARS-CoV-2",
     MAX(CASE WHEN pathogen = 'VSR' THEN "posrate" * 100 ELSE NULL END) AS "Vírus Sincicial Respiratório"
 FROM source_data
 GROUP BY epiweek_enddate
