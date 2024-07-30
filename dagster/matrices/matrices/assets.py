@@ -53,7 +53,6 @@ def respiratorios_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_ALL_pos_by_epiweek_agegroup"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_SC2_posrate_by_epiweek_agegroup"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_FLUA_posrate_by_epiweek_agegroup"),
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_ALL_posrate_by_epiweek_PANEL"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_ALL_pos_by_epiweek_PANEL"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_01_VRISP_line_posrate_direct_week_country"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_02_Resp_bar_pos_panel4_week_country"),
