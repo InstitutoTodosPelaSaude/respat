@@ -65,7 +65,7 @@ def export_matrices_to_xlsx(context):
     # Map all the db matrix tables that need to be exported to its file name
     matrices_name_map = {
         "matrix_01_VRISP_line_posrate_direct_week_country": "01_VRISP_line_posrate_direct_week_country",
-        "matrix_FLUA_FLUB_SC2_VSR_pos_by_epiweek_PANEL":    "02_Resp_bar_pos_panel4_week_country",
+        "matrix_02_Resp_bar_pos_panel4_week_country":       "02_Resp_bar_pos_panel4_week_country",
         "matrix_SC2_posrate_by_epiweek_state_filtered":     "03_SC2_heat_posrate_all_week_state",
         "matrix_SC2_posrate_by_epiweek_agegroup":           "04_SC2_heat_posrate_all_agegroups_week_country",
         "matrix_FLUA_posrate_by_epiweek_agegroup":          "05_FLUA_heat_posrate_all_agegroups_week_country",
