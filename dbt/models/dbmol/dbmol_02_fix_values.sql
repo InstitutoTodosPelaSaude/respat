@@ -43,17 +43,17 @@ source_data_fix_values AS (
         CASE 
             WHEN exame = 'ADENOVIRUS - ANTICORPOS IGG'                            THEN 'adeno_igg'
             WHEN exame = 'ANTICORPOS IGM ANTI ADENOVIRUS'                         THEN 'adeno_igm'
-            WHEN exame = 'ADENOVIRUS - PESQUISA'                                  THEN 'adeno_test'
-            WHEN exame = 'ADENOVIRUS'                                             THEN 'adeno_test'
-            WHEN exame = 'ANTICORPOS IGA ANTI ADENOVIRUS'                         THEN 'adeno_antigen'
+            WHEN exame = 'ADENOVIRUS - PESQUISA'                                  THEN 'adeno_antigen'
+            WHEN exame = 'ADENOVIRUS'                                             THEN 'adeno_pcr'
+            WHEN exame = 'ANTICORPOS IGA ANTI ADENOVIRUS'                         THEN 'adeno_iga'
 
-            WHEN exame = 'ANTICORPOS IGA ANTI MYCOPLASMA PNEUMONIAE'              THEN 'bac_antigen'
+            WHEN exame = 'ANTICORPOS IGA ANTI MYCOPLASMA PNEUMONIAE'              THEN 'bac_iga'
             WHEN exame = 'ANTICORPOS IGG ANTI LEGIONELLA PNEUMOPHILA'             THEN 'bac_igg'
             WHEN exame = 'ANTIGENO DE STREPTOCOCCUS PNEUMONIAE'                   THEN 'bac_antigen'
             WHEN exame = 'ANTIGENO LEGIONELLA PNEUMOPHILA'                        THEN 'bac_antigen'
-            WHEN exame = 'DETECCAO DE BORDETELLA PERTUSSIS E PARAPERTUSSIS'       THEN 'bac_test'
-            WHEN exame = 'DETECCAO DE LEGIONELLA PNEUMOPHILA'                     THEN 'bac_test'
-            WHEN exame = 'MYCOPLASMA PNEUMONIAE - ANTICORPOS IGG E IGM'           THEN 'bac_test_2'
+            WHEN exame = 'DETECCAO DE BORDETELLA PERTUSSIS E PARAPERTUSSIS'       THEN 'bac_pcr'
+            WHEN exame = 'DETECCAO DE LEGIONELLA PNEUMOPHILA'                     THEN 'bac_pcr'
+            WHEN exame = 'MYCOPLASMA PNEUMONIAE - ANTICORPOS IGG E IGM'           THEN 'bac_antibodies'
             WHEN exame = 'MYCOPLASMA PNEUMONIAE - ANTICORPOS IGG'                 THEN 'bac_igg'
             WHEN exame = 'MYCOPLASMA PNEUMONIAE - ANTICORPOS IGM'                 THEN 'bac_igm'
             
@@ -69,8 +69,8 @@ source_data_fix_values AS (
 
             WHEN exame = 'ANTICORPOS IGG ANTI VIRUS SINCICIAL RESPIRATORIO (VSR)'                             THEN 'vsr_igg'
             WHEN exame = 'CORONAVIRUS 2019 - SARS-COV-2 IGG QUANTITATIVO'                                     THEN 'sc2_igg'
-            WHEN exame = 'TESTE DE NEUTRALIZACAO SARS-COV-2/COVID19, ANTICORPOS TOTAIS - SORO'                THEN 'sc2_antigen'
-            WHEN exame = 'CORONAVIRUS 2019 ANTICORPOS IGA (COVID19)'                                          THEN 'covid_antigen'
+            WHEN exame = 'TESTE DE NEUTRALIZACAO SARS-COV-2/COVID19, ANTICORPOS TOTAIS - SORO'                THEN 'covid_antibodies'
+            WHEN exame = 'CORONAVIRUS 2019 ANTICORPOS IGA (COVID19)'                                          THEN 'covid_iga'
             
             ELSE 'UNKNOWN'
         END AS test_kit,
