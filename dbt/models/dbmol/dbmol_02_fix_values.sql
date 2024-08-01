@@ -43,9 +43,9 @@ source_data_fix_values AS (
         CASE 
             WHEN exame = 'ADENOVIRUS - ANTICORPOS IGG'                            THEN 'adeno_igg'
             WHEN exame = 'ANTICORPOS IGM ANTI ADENOVIRUS'                         THEN 'adeno_igm'
-            WHEN exame = 'ADENOVIRUS - PESQUISA'                                  THEN 'adeno_test'
-            WHEN exame = 'ADENOVIRUS'                                             THEN 'adeno_test'
-            WHEN exame = 'ANTICORPOS IGA ANTI ADENOVIRUS'                         THEN 'adeno_antigen'
+            WHEN exame = 'ADENOVIRUS - PESQUISA'                                  THEN 'adeno_antigen'
+            WHEN exame = 'ADENOVIRUS'                                             THEN 'adeno_pcr'
+            WHEN exame = 'ANTICORPOS IGA ANTI ADENOVIRUS'                         THEN 'adeno_iga'
 
             WHEN exame = 'ANTICORPOS IGA ANTI MYCOPLASMA PNEUMONIAE'              THEN 'bac_antigen'
             WHEN exame = 'ANTICORPOS IGG ANTI LEGIONELLA PNEUMOPHILA'             THEN 'bac_igg'
