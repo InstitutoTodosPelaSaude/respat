@@ -43,7 +43,6 @@ source_data_fix_values AS (
         CASE 
             WHEN exame = 'ADENOVIRUS - ANTICORPOS IGG'                            THEN 'adeno_igg'
             WHEN exame = 'ANTICORPOS IGM ANTI ADENOVIRUS'                         THEN 'adeno_igm'
-            WHEN exame = 'ADENOVIRUS - PESQUISA'                                  THEN 'adeno_antigen'
             WHEN exame = 'ADENOVIRUS'                                             THEN 'adeno_pcr'
             WHEN exame = 'ANTICORPOS IGA ANTI ADENOVIRUS'                         THEN 'adeno_iga'
 
@@ -211,8 +210,8 @@ source_data_fix_values AS (
         --'MYPNA', 
         'ANSP', 
         'ADENA',
-        'ADENM'
-
+        'ADENM',
+        'ADENF'
     )
     AND detalhe_exame NOT IN ('MAT', 'MATERIAL', 'METODO', 'SOROTI', 'TITU', 'TIT', 'TITULO', 'LEGPG')
     AND detalhe_exame IS NOT NULL
