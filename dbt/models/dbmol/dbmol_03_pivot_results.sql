@@ -101,8 +101,7 @@ SELECT
                 'ADENO',
                 'ADENA',
                 'ADENM',
-                'DNADE',
-                'ADENF'
+                'DNADE'
             ], 
             'detalhe_exame', 
             'result', 

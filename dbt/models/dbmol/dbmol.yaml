@@ -76,7 +76,14 @@ models:
                 "test_24",
                 "flub_igg",
                 "adeno_antigen",
-                "adeno_igm"
+                "adeno_igm",
+                "bac_iga",
+                "bac_pcr",
+                "bac_antibodies",
+                "adeno_pcr",
+                "adeno_iga",
+                "covid_antibodies",
+                "covid_iga"
               ]
       - name: test_id
         tests:
