@@ -190,7 +190,6 @@ source_data_fix_values AS (
         'COVI19Q',
         'NEUCOV', 
         'COV19A', 
-        'ADENF', 
         'SINRE', 
         'INFBG', 
         'INFBM',
@@ -210,8 +209,7 @@ source_data_fix_values AS (
         --'MYPNA', 
         'ANSP', 
         'ADENA',
-        'ADENM',
-        'ADENF'
+        'ADENM'
     )
     AND detalhe_exame NOT IN ('MAT', 'MATERIAL', 'METODO', 'SOROTI', 'TITU', 'TIT', 'TITULO', 'LEGPG')
     AND detalhe_exame IS NOT NULL
