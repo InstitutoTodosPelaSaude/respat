@@ -14,7 +14,7 @@ WITH source_data AS (
         -- epiweek,
         patient_id,
         sex,
-        age::INT,
+        age::numeric::INT,
         --age_group,	
         "SC2_test_result",
         "FLUA_test_result",
