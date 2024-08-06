@@ -71,4 +71,5 @@ SELECT
     "state",
     "cases"
 FROM source_data_cumulative_sum
+WHERE "cases" > 0
 ORDER BY "semanas epidemiologicas", "state"
