@@ -43,7 +43,7 @@ models:
           - dbt_utils.not_accepted_values:
               values: ["UNKNOWN"]
           - accepted_values:
-              values: ["covid_pcr", "covid_antigen", "vsr_antigen", "test_2", "test_3", "test_4"]
+              values: ["covid_pcr", "covid_antigen", "vsr_antigen", "test_3", "test_4", "flu_antigen"]
       - name: result
         tests:
           - not_null
