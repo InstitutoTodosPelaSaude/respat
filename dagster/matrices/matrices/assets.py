@@ -70,7 +70,7 @@ def export_matrices_to_xlsx(context):
         "matrix_SC2_posrate_by_epiweek_agegroup":           "04_SC2_heat_posrate_all_agegroups_week_country",
         "matrix_FLUA_posrate_by_epiweek_agegroup":          "05_FLUA_heat_posrate_all_agegroups_week_country",
         "matrix_06_Resp_line_posrate_direct_week_country":  "06_Resp_line_posrate_direct_week_country",
-        "matrix_07_Resp_bar_pos_panel20PLUS_week_country":  "07_Resp_bar_pos_panel20PLUS_week_country",
+        "matrix_07_Resp_bar_pos_panel20PLUS_week_country":  "07_Resp_bar_pos_panel20+_week_country",
         "matrix_ALL_posrate_pos_neg_by_epiweek":            "08_Resp_line_bar_posrate_posneg_all_week_country",
         "matrix_ALL_pos_by_epiweek_agegroup":               "09_Resp_pyr_pos_agegroups_all_week_country",
         "matrix_13_SC2_map_pos_direct_states":              "13_SC2_map_pos_direct_states",
