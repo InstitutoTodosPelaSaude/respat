@@ -48,15 +48,15 @@ def respiratorios_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource
     compute_kind="python",
     deps=[
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_SC2_posrate_by_epiweek_state"),
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_SC2_posrate_by_epiweek_state_filtered"),
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_ALL_posrate_pos_neg_by_epiweek"),
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_ALL_pos_by_epiweek_agegroup"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_SC2_posrate_by_epiweek_agegroup"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_FLUA_posrate_by_epiweek_agegroup"),
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_ALL_pos_by_epiweek_PANEL"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_01_VRISP_line_posrate_direct_week_country"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_02_Resp_bar_pos_panel4_week_country"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_03_SC2_heat_posrate_week_state"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_06_Resp_line_posrate_direct_week_country"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_07_Resp_bar_pos_panel20PLUS_week_country"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_08_Resp_line_bar_posrate_posneg_week_country"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_09_Resp_pyr_pos_agegroups_all_week_country"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_13_SC2_map_pos_direct_states"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_13_SC2_map_pos_direct_cities"),
     ]
@@ -64,18 +64,18 @@ def respiratorios_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource
 def export_matrices_to_xlsx(context):
     # Map all the db matrix tables that need to be exported to its file name
     matrices_name_map = {
-        "matrix_01_VRISP_line_posrate_direct_week_country": "01_VRISP_line_posrate_direct_week_country",
-        "matrix_02_Resp_bar_pos_panel4_week_country":       "02_Resp_bar_pos_panel4_week_country",
-        "matrix_SC2_posrate_by_epiweek_state_filtered":     "03_SC2_heat_posrate_all_week_state",
-        "matrix_SC2_posrate_by_epiweek_agegroup":           "04_SC2_heat_posrate_all_agegroups_week_country",
-        "matrix_FLUA_posrate_by_epiweek_agegroup":          "05_FLUA_heat_posrate_all_agegroups_week_country",
-        "matrix_06_Resp_line_posrate_direct_week_country":  "06_Resp_line_posrate_direct_week_country",
-        "matrix_ALL_pos_by_epiweek_PANEL":                  "07_Resp_bar_pos_panel_week_country",
-        "matrix_ALL_posrate_pos_neg_by_epiweek":            "08_Resp_line_bar_posrate_posneg_all_week_country",
-        "matrix_ALL_pos_by_epiweek_agegroup":               "09_Resp_pyr_pos_agegroups_all_week_country",
-        "matrix_13_SC2_map_pos_direct_states":              "13_SC2_map_pos_direct_states",
-        "matrix_13_SC2_map_pos_direct_cities":              "13_SC2_map_pos_direct_cities",
-        "matrix_SC2_posrate_by_epiweek_state":              "matrix_SC2_posrate_by_epiweek_state",
+        "matrix_01_VRISP_line_posrate_direct_week_country":     "01_VRISP_line_posrate_direct_week_country",
+        "matrix_02_Resp_bar_pos_panel4_week_country":           "02_Resp_bar_pos_panel4_week_country",
+        "matrix_03_SC2_heat_posrate_week_state":                "03_SC2_heat_posrate_week_state",
+        "matrix_SC2_posrate_by_epiweek_agegroup":               "04_SC2_heat_posrate_all_agegroups_week_country",
+        "matrix_FLUA_posrate_by_epiweek_agegroup":              "05_FLUA_heat_posrate_all_agegroups_week_country",
+        "matrix_06_Resp_line_posrate_direct_week_country":      "06_Resp_line_posrate_direct_week_country",
+        "matrix_07_Resp_bar_pos_panel20PLUS_week_country":      "07_Resp_bar_pos_panel20+_week_country",
+        "matrix_08_Resp_line_bar_posrate_posneg_week_country":  "08_Resp_line_bar_posrate_posneg_week_country",
+        "matrix_09_Resp_pyr_pos_agegroups_all_week_country":    "09_Resp_pyr_pos_agegroups_all_week_country",
+        "matrix_13_SC2_map_pos_direct_states":                  "13_SC2_map_pos_direct_states",
+        "matrix_13_SC2_map_pos_direct_cities":                  "13_SC2_map_pos_direct_cities",
+        "matrix_SC2_posrate_by_epiweek_state":                  "matrix_SC2_posrate_by_epiweek_state",
     }
 
     # Get each matrix table and export it to a xlsx file
