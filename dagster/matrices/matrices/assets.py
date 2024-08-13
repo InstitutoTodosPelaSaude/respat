@@ -62,6 +62,12 @@ def respiratorios_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource
     ]
 )
 def export_matrices_to_xlsx(context):
+    # Delete all the files in the folder, ignoring the .gitkeep file
+    for file in os.listdir(SAVE_PATH):
+        if file != ".gitkeep":
+            os.remove(f'{SAVE_PATH}/{file}')
+            context.log.info(f"Deleted file: {file}")
+
     # Map all the db matrix tables that need to be exported to its file name
     matrices_name_map = {
         "matrix_01_VRISP_line_posrate_direct_week_country":     "01_VRISP_line_posrate_direct_week_country",
