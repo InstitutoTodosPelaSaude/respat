@@ -47,28 +47,34 @@ def respiratorios_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource
 @asset(
     compute_kind="python",
     deps=[
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_SC2_posrate_by_epiweek_state"),
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_SC2_posrate_by_epiweek_agegroup"),
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_FLUA_posrate_by_epiweek_agegroup"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_01_VRISP_line_posrate_direct_week_country"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_02_Resp_bar_pos_panel4_week_country"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_03_SC2_heat_posrate_week_state"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_04_SC2_heat_posrate_agegroups_week_country"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_06_Resp_line_posrate_direct_week_country"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_05_FLUA_heat_posrate_agegroups_week_country"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_07_Resp_bar_pos_panel20PLUS_week_country"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_08_Resp_line_bar_posrate_posneg_week_country"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_09_Resp_pyr_pos_agegroups_all_week_country"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_13_SC2_map_pos_direct_states"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_13_SC2_map_pos_direct_cities"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_SC2_posrate_by_epiweek_state"),
     ]
 )
 def export_matrices_to_xlsx(context):
+    # Delete all the files in the folder, ignoring the .gitkeep file
+    for file in os.listdir(SAVE_PATH):
+        if file != ".gitkeep":
+            os.remove(f'{SAVE_PATH}/{file}')
+            context.log.info(f"Deleted file: {file}")
+
     # Map all the db matrix tables that need to be exported to its file name
     matrices_name_map = {
         "matrix_01_VRISP_line_posrate_direct_week_country":     "01_VRISP_line_posrate_direct_week_country",
         "matrix_02_Resp_bar_pos_panel4_week_country":           "02_Resp_bar_pos_panel4_week_country",
         "matrix_03_SC2_heat_posrate_week_state":                "03_SC2_heat_posrate_week_state",
-        "matrix_SC2_posrate_by_epiweek_agegroup":               "04_SC2_heat_posrate_all_agegroups_week_country",
-        "matrix_FLUA_posrate_by_epiweek_agegroup":              "05_FLUA_heat_posrate_all_agegroups_week_country",
+        "matrix_04_SC2_heat_posrate_agegroups_week_country":    "04_SC2_heat_posrate_agegroups_week_country",
+        "matrix_05_FLUA_heat_posrate_agegroups_week_country":   "05_FLUA_heat_posrate_agegroups_week_country",
         "matrix_06_Resp_line_posrate_direct_week_country":      "06_Resp_line_posrate_direct_week_country",
         "matrix_07_Resp_bar_pos_panel20PLUS_week_country":      "07_Resp_bar_pos_panel20+_week_country",
         "matrix_08_Resp_line_bar_posrate_posneg_week_country":  "08_Resp_line_bar_posrate_posneg_week_country",
