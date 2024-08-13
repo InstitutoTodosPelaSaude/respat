@@ -28,6 +28,7 @@
             ['test_24',       [['SC2','FLUA','FLUB','VSR','META','RINO','PARA','ADENO','BOCA','COVS','ENTERO','BAC']] ],
             ['test_4',        [['SC2','FLUA','FLUB','VSR']] ],
             ['vsr_igg',       [['VSR']] ],
+            ['test_23',       [['SC2','FLUA','FLUB','VSR','META','RINO','PARA','ADENO','BOCA','COVS','BAC']] ],
         ]
     %}
 

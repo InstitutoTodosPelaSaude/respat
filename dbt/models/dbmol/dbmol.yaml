@@ -42,7 +42,6 @@ models:
           max_value: 100
       - unique:
           column_name: "test_id || '-' || detalhe_exame"
-          name: unique_test_id_detalhe_exame
           config:
             severity: warn
     columns:
@@ -144,7 +143,6 @@ models:
           max_value: 100
       - unique:
           column_name: "test_id || '-' || detalhe_exame"
-          name: unique_test_id_detalhe_exame
           config:
             severity: warn
       - dbt_utils.equal_rowcount:
@@ -311,7 +309,6 @@ models:
           max_value: 100
       - unique:
           column_name: "test_id || '-' || test_kit"
-          name: unique_test_id_test_kit
           config:
             severity: warn
       - at_least_one_test_result_is_present_str
@@ -323,7 +320,7 @@ models:
           - not_null
           - unique
           - relationships:
-              to: ref('dbmol_03_pivot_results')
+              to: ref('dbmol_04_fill_results')
               field: sample_id
       - name: test_kit
         tests: *test_kit_tests
@@ -342,7 +339,7 @@ models:
         tests:
           - dbt_utils.accepted_range: *qty_original_lines_accepted_range
           - qty_original_lines_equals_row_count:
-              ref: ref('dbmol_03_pivot_results')
+              ref: ref('dbmol_04_fill_results')
           - accepted_values:
               values: [1, 2, 4, 23]
               config:
