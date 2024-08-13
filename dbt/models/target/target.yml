@@ -1,0 +1,441 @@
+version: 2
+
+sources:
+    - name: dagster
+      description: Raw data from target
+      schema: respiratorios
+      tables:
+        - name: target_raw
+          meta: 
+            dagster:
+              asset_key: ["target_raw"]
+
+models:
+  - name: target_01_convert_types
+    description: Convert data types and rename columns
+    columns:
+      - name: test_id
+        tests: &not_null_warn_error_if_gt_1000
+          - not_null:
+              config:
+                severity: warn
+                error_if: ">1000"
+      - name: date_testing
+        tests: 
+          - not_null:
+              config:
+                severity: warn
+                error_if: ">1000"
+          - dbt_utils.expression_is_true:
+              expression: "<= current_date"
+      - name: detalhe_exame
+        tests:
+          *not_null_warn_error_if_gt_1000
+      - name: exame
+        tests:
+          *not_null_warn_error_if_gt_1000  
+      - name: file_name
+        tests:
+          - not_null
+          
+  
+  - name: target_02_fix_values
+    description: Fix values
+    tests:
+      - unique:
+          column_name: "test_id || '-' || detalhe_exame"
+          config:
+            severity: warn
+    columns:
+      - name: sample_id
+        tests:
+          - not_null
+      - name: test_id
+        tests:
+          - not_null
+      - name: date_testing
+        tests: &date_testing_tests
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "<= current_date"
+      - name: result
+        tests: &result_tests
+          - not_null
+          - accepted_values:
+              values: [0, 1] # 0 = negative, 1 = positive
+      - name: age
+        tests: &age_tests
+          - dbt_utils.accepted_range:
+                min_value: 0
+                max_value: 200
+          - not_null:
+              name: age_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+          - not_null:
+              name: age_not_null
+              config:
+                severity: error
+                error_if: ">1000"
+                warn_if: ">100"
+      - name: sex
+        tests: &sex_tests
+          - accepted_values:
+              values: ["M", "F"]
+      - name: state
+        tests: &state_tests
+          - not_null:
+              name: state_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+          - not_null:
+              name: state_not_null
+              config:
+                severity: error
+                error_if: ">1000"
+                warn_if: ">100"
+      - name: test_kit
+        tests: &test_kit_tests
+          - not_null
+          - dbt_utils.not_accepted_values:
+              values: ["UNKNOWN"]
+          - accepted_values:
+              name: test_kit_accepted_values
+              values: ["test_23"]     
+
+
+  - name: target_03_pivot_results 
+    description: Pivot results for target [wip]
+    tests:
+      - unique:
+          column_name: "test_id || '-' || detalhe_exame"
+          config:
+            severity: warn
+      - dbt_utils.equal_rowcount:
+          compare_model: ref('target_02_fix_values')
+      - at_least_one_test_result_is_present
+      - only_one_test_result_is_present
+      - model_has_more_than_x_rows:
+          n_rows: 0
+    columns:
+      - name: sample_id
+        tests: 
+          - not_null
+          - relationships:
+              to: ref('target_02_fix_values')
+              field: sample_id
+      - name: test_kit
+        tests: *test_kit_tests
+      - name: test_id
+        tests:
+          - not_null
+      - name: date_testing
+        tests: *date_testing_tests
+      - name: age
+        tests: *age_tests
+      - name: state
+        tests: *state_tests
+      - name: result
+        tests: *result_tests
+      - name: sex
+        tests: *sex_tests
+      - name: SC2_test_result
+        quote: true
+        tests: &test_pivot_test_result_columns
+          - not_null
+          - accepted_values:
+              values: [0, 1, -1]
+      - name: FLUA_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: FLUB_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: VSR_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: RINO_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: META_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: PARA_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: ADENO_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: BOCA_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: COVS_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: ENTERO_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+      - name: BAC_test_result
+        quote: true
+        tests: *test_pivot_test_result_columns
+
+  - name: target_04_fill_results
+    description: wip
+    tests:
+      - dbt_utils.equal_rowcount:
+          compare_model: ref('target_03_pivot_results')
+      - at_least_one_test_result_is_present_str
+      - model_has_more_than_x_rows:
+          n_rows: 0
+    columns:
+      - name: sample_id
+        tests: 
+          - not_null
+          - relationships:
+              to: ref('target_03_pivot_results')
+              field: sample_id
+      - name: test_kit
+        tests: *test_kit_tests
+      - name: test_id
+        tests:
+          - not_null
+      - name: date_testing
+        tests: *date_testing_tests
+      - name: age
+        tests: *age_tests
+      - name: state
+        tests: *state_tests
+      - name: sex
+        tests: *sex_tests
+      - name: qty_original_lines
+        tests:
+          - dbt_expectations.expect_column_to_exist
+          - dbt_utils.accepted_range: &qty_original_lines_accepted_range
+              min_value: 1
+              max_value: 23
+              inclusive: true
+          # - qty_original_lines_equals_row_count:
+          #     ref: ref('target_03_pivot_results')
+          - accepted_values:
+              values: [1, 23]
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+      - name: SC2_test_result
+        quote: true
+        tests: &test_fill_values_test_result_columns
+          - not_null
+          - accepted_values:
+              values: ['Pos', 'Neg', 'NT']
+      - name: FLUA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: FLUB_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: VSR_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: RINO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: META_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: PARA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ADENO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BOCA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: COVS_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ENTERO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BAC_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+
+
+  - name: target_05_deduplicate
+    description: wip
+    tests:
+      - expect_proportion_of_unique_values_in_column_set_to_be_between:
+          columns: test_id, test_kit
+          min_value: 0.99
+          max_value: 1.01
+      - expect_number_of_repeated_lines_in_column_set_to_be_less_than:
+          columns: test_id, test_kit
+          max_value: 100
+      - unique:
+          column_name: "test_id || '-' || test_kit"
+          config:
+            severity: warn
+      - at_least_one_test_result_is_present_str
+      - model_has_more_than_x_rows:
+          n_rows: 0
+    columns:
+      - name: sample_id
+        tests: 
+          - not_null
+          - unique
+          - relationships:
+              to: ref('target_04_fill_results')
+              field: sample_id
+      - name: test_kit
+        tests: *test_kit_tests
+      - name: test_id
+        tests:
+          - not_null
+      - name: date_testing
+        tests: *date_testing_tests
+      - name: age
+        tests: *age_tests
+      - name: state
+        tests: *state_tests
+      - name: sex
+        tests: *sex_tests
+      - name: qty_original_lines
+        tests:
+          - dbt_utils.accepted_range: *qty_original_lines_accepted_range
+          - qty_original_lines_equals_row_count:
+              ref: ref('target_04_fill_results')
+          - accepted_values:
+              values: [1, 23]
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+      - name: SC2_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: FLUA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: FLUB_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: VSR_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: RINO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: META_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: PARA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ADENO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BOCA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: COVS_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ENTERO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BAC_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+
+
+  - name: target_final
+    description: wip
+    tests:
+      - at_least_one_test_result_is_present_str
+      - number_of_rows_in_the_last_epiweeks_between:
+          min_value: 500
+          max_value: 3000
+          config:
+            severity: warn
+      - freshness_by_pathogen:
+          config:
+            severity: warn
+      - freshness_by_pathogen_sc2_vsr_flua_flub:
+          config:
+            severity: warn
+      - test_kit_contains_the_correct_pathogen_results
+    freshness:
+      warn_after: {count: 5, period: days}
+    loaded_at_field: "date_testing::timestamp"
+    columns:
+      - name: sample_id
+        tests: 
+          - not_null
+          - unique
+      - name: test_kit
+        tests: *test_kit_tests
+      - name: test_id
+        tests:
+          - not_null
+      - name: date_testing
+        tests: *date_testing_tests
+      - name: age
+        tests: *age_tests
+      - name: state
+        tests: *state_tests
+      - name: sex
+        tests: *sex_tests
+      - name: qty_original_lines
+        tests:
+          - dbt_expectations.expect_column_to_exist
+          - dbt_utils.accepted_range: *qty_original_lines_accepted_range
+      - name: SC2_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: FLUA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: FLUB_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: VSR_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: RINO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: META_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: PARA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ADENO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BOCA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: COVS_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ENTERO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BAC_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: created_at
+        tests:
+          - dbt_expectations.expect_column_to_exist
+      - name: updated_at
+        tests:
+          - dbt_expectations.expect_column_to_exist
