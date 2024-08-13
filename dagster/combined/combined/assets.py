@@ -62,7 +62,7 @@ def combined_historical_raw(context):
 
     cursor = engine.raw_connection().cursor()
     # drop table if exists
-    cursor.execute(f"DROP TABLE IF EXISTS {DB_SCHEMA}.combined_historical_raw")
+    cursor.execute(f"DROP TABLE IF EXISTS {DB_SCHEMA}.combined_historical_raw CASCADE")
     cursor.execute(f"CREATE TABLE {DB_SCHEMA}.combined_historical_raw ({columns})")
 
     # Process the data by chunks of 1,000,000 rows
