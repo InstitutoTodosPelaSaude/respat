@@ -122,18 +122,13 @@ def export_to_tsv(context):
 
     # Export to xlsx
     engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
-    df_generator = pd.read_sql(f'select * from {DB_SCHEMA}."combined_final"', engine, chunksize=200_000)
-    df = pd.concat(df_generator, ignore_index=True)
+    cursor = engine.raw_connection().cursor()
 
-    # Drop created_at, updated_at, file_name columns
-    df.drop(columns=['created_at', 'updated_at', 'file_name'], inplace=True)
+    # Export data
+    with open('data/combined/combined.tsv', 'w') as file:
+        cursor.copy_expert(f'COPY (SELECT * FROM {DB_SCHEMA}."combined_final") TO STDOUT WITH CSV DELIMITER E\'\t\' HEADER', file)
 
-    df.to_csv('data/combined/combined.tsv', sep='\t', index=False)
     engine.dispose()
-
-    context.add_output_metadata({
-        'num_rows': df.shape[0]
-    })
 
 @asset(
     compute_kind="python", 
