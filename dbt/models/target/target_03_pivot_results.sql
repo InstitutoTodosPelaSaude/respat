@@ -11,8 +11,7 @@ SELECT
     {{ 
         pivot_pathogen_results(
             [
-                'CVNCOV',
-                'SARS'
+                'CVNCOV'
             ], 
             'detalhe_exame', 
             'result', 
@@ -111,7 +110,8 @@ SELECT
                 'COR229',
                 'CVOC43',
                 'HEV',
-                'CVHKU1'
+                'CVHKU1',
+                'SARS'
             ], 
             'detalhe_exame', 
             'result', 
