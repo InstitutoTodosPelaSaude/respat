@@ -79,7 +79,8 @@ source_data_cumulative_sum AS (
         "state",
         "lat",
         "long",
-        SUM("cases") OVER (PARTITION BY "location_ibge_code" ORDER BY "semanas epidemiologicas") as "cases"
+        "cases" AS "epiweek_cases",
+        SUM("cases") OVER (PARTITION BY "location_ibge_code" ORDER BY "semanas epidemiologicas") as "cumulative_cases"
     FROM source_data_sum
     ORDER BY "semanas epidemiologicas", "state", "location"
 )
@@ -92,7 +93,8 @@ SELECT
     "state",
     "lat",
     "long",
-    "cases"
+    "epiweek_cases",
+    "cumulative_cases"
 FROM source_data_cumulative_sum
-WHERE "cases" > 0
+WHERE "cumulative_cases" > 0
 ORDER BY "semanas epidemiologicas", "state", "location"

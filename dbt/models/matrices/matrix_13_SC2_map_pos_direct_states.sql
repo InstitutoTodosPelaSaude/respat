@@ -60,7 +60,8 @@ source_data_cumulative_sum AS (
     SELECT
         "semanas epidemiologicas",
         "state",
-        SUM("cases") OVER (PARTITION BY "state" ORDER BY "semanas epidemiologicas") as "cases"
+        "cases" AS "epiweek_cases",
+        SUM("cases") OVER (PARTITION BY "state" ORDER BY "semanas epidemiologicas") as "cumulative_cases"
     FROM source_data_sum
     ORDER BY "semanas epidemiologicas", "state"
 )
@@ -69,6 +70,8 @@ source_data_cumulative_sum AS (
 SELECT
     "semanas epidemiologicas",
     "state",
-    "cases"
+    "epiweek_cases",
+    "cumulative_cases"
 FROM source_data_cumulative_sum
+WHERE "cumulative_cases" > 0
 ORDER BY "semanas epidemiologicas", "state"
