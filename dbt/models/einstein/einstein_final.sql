@@ -11,6 +11,13 @@
 
 {% set column_names = dbt_utils.get_filtered_columns_in_relation(from=ref('einstein_05_deduplicate'), except=["SC2_test_result", "FLUA_test_result", "FLUB_test_result", "VSR_test_result", "META_test_result", "RINO_test_result", "PARA_test_result", "ADENO_test_result", "BOCA_test_result", "COVS_test_result", "ENTERO_test_result", "BAC_test_result"]) %}
 
+/*
+    This query incrementally merges new test results into the existing table. 
+For columns like SC2_test_result, FLUB_test_result, and FLUA_test_result, updates
+occur only if the current value is 'NT'. This ensures that valid existing results are 
+not overwritten, while still capturing new data where applicable.
+*/
+
 SELECT
     -- COLUMNS FROM SOURCE DATA
     {% for column in column_names %}
