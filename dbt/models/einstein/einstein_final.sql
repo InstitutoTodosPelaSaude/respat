@@ -28,6 +28,7 @@ SELECT
     {% for column in test_result_columns %}
         CASE
             WHEN target."{{ column }}" = 'NT' THEN source_data."{{ column }}"
+            WHEN target."{{ column }}" IS NULL THEN source_data."{{ column }}"
             ELSE target."{{ column }}"
         END AS "{{ column }}",
     {% endfor %}
