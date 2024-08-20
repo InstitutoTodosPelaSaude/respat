@@ -23,7 +23,7 @@ source_data AS (
         {{ matrices_metrics('result') }}
     FROM {{ ref("matrices_01_unpivot_combined") }}
     WHERE 
-        test_kit NOT IN ('sc2_igg') AND
+        test_kit IN ('thermo', 'covid_antigen', 'covid_pcr', 'sc2_antigen', 'test_4', 'test_14', 'test_21', 'test_24') AND
         epiweek_enddate >= '{{ epiweek_start }}'
     GROUP BY epiweek_enddate, state_code, location, location_ibge_code, lat, long, pathogen
     ORDER BY epiweek_enddate, state_code
