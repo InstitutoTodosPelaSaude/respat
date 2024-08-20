@@ -73,7 +73,8 @@ SELECT
     END AS test_kit,
     CASE 
         WHEN result = 'NAO DETECTADO' THEN 0
-        WHEN result = 'DETECTADO' THEN 1
+        WHEN result = 'DETECTADO'     THEN 1
+        WHEN result ILIKE 'DETECTADO (PRESENCA DO RNA DE CORONAVIRUS SARS-COV-2%' THEN 1
     END AS result,
     file_name
 FROM source_table
