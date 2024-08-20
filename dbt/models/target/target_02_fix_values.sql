@@ -64,7 +64,12 @@ SELECT
     detalhe_exame,
     pathogen,
     CASE
-        WHEN exame = 'PAINEL RESPIRATORIO VIRAL + MYCOPLASMA E BORDETELLA' THEN 'test_23'
+        -- PAINEL RESPIRATORIO VIRAL + MYCOPLASMA E BORDETELLA
+        WHEN exame IN ('RESCAP02') THEN 'test_23'
+        -- RT-PCR CORONAVÍRUS SARS-COV ...
+        WHEN exame IN ('COV19SWI','COVID19','COVID19U') THEN 'covid_pcr'
+        -- PAINEL TRIVIRAL PARA COVID, FLU E RSV
+        WHEN exame IN ('RESCAP04') THEN 'test_4'
     END AS test_kit,
     CASE 
         WHEN result = 'NAO DETECTADO' THEN 0
@@ -72,3 +77,4 @@ SELECT
     END AS result,
     file_name
 FROM source_table
+WHERE exame NOT IN ('DENVQL', 'CHIKVQL', 'ZIKVQL') -- REMOVE ARBO-RELATED TESTS

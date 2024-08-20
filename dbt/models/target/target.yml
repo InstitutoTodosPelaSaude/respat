@@ -107,7 +107,7 @@ models:
               values: ["UNKNOWN"]
           - accepted_values:
               name: test_kit_accepted_values
-              values: ["test_23"]     
+              values: ["covid_pcr", "test_4", "test_23"]     
 
 
   - name: target_03_pivot_results 
