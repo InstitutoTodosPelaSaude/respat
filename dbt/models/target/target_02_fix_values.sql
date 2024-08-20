@@ -72,3 +72,4 @@ SELECT
     END AS result,
     file_name
 FROM source_table
+WHERE test_id != '638745' -- Test with future date in 19/08/2024
