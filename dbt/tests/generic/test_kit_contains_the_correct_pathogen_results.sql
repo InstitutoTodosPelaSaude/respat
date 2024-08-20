@@ -25,6 +25,7 @@
             ['sc2_igg',       [['SC2']] ],
             ['covid_antibodies', [['SC2']] ],
             ['covid_iga',     [['SC2']] ],
+            ['covid_pcr',     [['SC2']] ],
             ['test_24',       [['SC2','FLUA','FLUB','VSR','META','RINO','PARA','ADENO','BOCA','COVS','ENTERO','BAC']] ],
             ['test_4',        [['SC2','FLUA','FLUB','VSR']] ],
             ['vsr_igg',       [['VSR']] ],
