@@ -11,7 +11,8 @@ SELECT
     {{ 
         pivot_pathogen_results(
             [
-                'CVNCOV'
+                'CVNCOV',
+                'RCOVID'
             ], 
             'detalhe_exame', 
             'result', 
@@ -43,7 +44,8 @@ SELECT
      {{ 
         pivot_pathogen_results(
             [
-                'RSVB'
+                'RSVB',
+                'RSVAB'
             ], 
             'detalhe_exame', 
             'result', 
