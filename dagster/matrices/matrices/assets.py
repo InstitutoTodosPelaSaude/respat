@@ -61,6 +61,7 @@ def respiratorios_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_13_SC2_map_pos_direct_cities"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_14_FLUB_map_pos_direct_states"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_14_FLUB_map_pos_direct_cities"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_ALL_count_by_labid_testkit_pathogen_result"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_SC2_posrate_by_epiweek_state"),
     ]
 )
@@ -87,6 +88,7 @@ def export_matrices_to_xlsx(context):
         "matrix_13_SC2_map_pos_direct_cities":                  "13_SC2_map_pos_direct_cities",
         "matrix_14_FLUB_map_pos_direct_states":                 "14_FLUB_map_pos_direct_states",
         "matrix_14_FLUB_map_pos_direct_cities":                 "14_FLUB_map_pos_direct_cities",
+        "matrix_ALL_count_by_labid_testkit_pathogen_result":    "matrix_ALL_count_by_labid_testkit_pathogen_result",
         "matrix_SC2_posrate_by_epiweek_state":                  "matrix_SC2_posrate_by_epiweek_state",
     }
 
