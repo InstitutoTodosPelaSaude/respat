@@ -18,6 +18,9 @@ load_from:
         module_name: lab_hlagyn.definitions
         working_directory: dagster/lab_hlagyn
     - python_module:
+        module_name: lab_target.definitions
+        working_directory: dagster/lab_target
+    - python_module:
         module_name: combined.definitions
         working_directory: dagster/combined
     - python_module:
