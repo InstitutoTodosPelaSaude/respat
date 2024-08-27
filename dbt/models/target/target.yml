@@ -1,89 +1,55 @@
 version: 2
 
 sources:
-  - name: dagster
-    description: Raw data from DBMol
-    schema: respiratorios
-    tables:
-      - name: dbmol_raw
-        meta:
-          dagster:
-            asset_key: ["dbmol_raw"]
+    - name: dagster
+      description: Raw data from target
+      schema: respiratorios
+      tables:
+        - name: target_raw
+          meta: 
+            dagster:
+              asset_key: ["target_raw"]
 
 models:
-  - name: dbmol_01_convert_types
-    description: Convert types
+  - name: target_01_convert_types
+    description: Convert data types and rename columns
     columns:
       - name: test_id
         tests: &not_null_warn_error_if_gt_1000
           - not_null:
               config:
                 severity: warn
-                error_if: ">3000"
+                error_if: ">1000"
       - name: date_testing
-        tests:
-          *not_null_warn_error_if_gt_1000
+        tests: 
+          - not_null:
+              config:
+                severity: warn
+                error_if: ">1000"
+          - dbt_utils.expression_is_true:
+              expression: "<= current_date"
       - name: detalhe_exame
         tests:
           *not_null_warn_error_if_gt_1000
       - name: exame
         tests:
-          *not_null_warn_error_if_gt_1000
-
-  - name: dbmol_02_fix_values
-    description: Fix values for dbmol_raw
+          *not_null_warn_error_if_gt_1000  
+      - name: file_name
+        tests:
+          - not_null
+          
+  
+  - name: target_02_fix_values
+    description: Fix values
     tests:
-      - expect_proportion_of_unique_values_in_column_set_to_be_between:
-          columns: test_id, detalhe_exame
-          min_value: 0.98
-          max_value: 1.01
-      - expect_number_of_repeated_lines_in_column_set_to_be_less_than:
-          columns: test_id, detalhe_exame
-          max_value: 100
       - unique:
           column_name: "test_id || '-' || detalhe_exame"
           config:
             severity: warn
     columns:
       - name: sample_id
-        tests: 
+        tests:
           - not_null
-      - name: test_kit
-        tests: &test_kit_tests
-          - not_null
-          - dbt_utils.not_accepted_values:
-              values: ["UNKNOWN"]
-          - accepted_values:
-              name: test_kit_accepted_values
-              values: [
-                "sc2_antigen",
-                "adeno_test",
-                "covid_antigen",
-                "bac_igg",
-                "bac_igm",
-                "bac_antigen",
-                "test_2",
-                "test_4",
-                "bac_test",
-                "flua_igm",
-                "sc2_igg",
-                "adeno_igg",
-                "vsr_igg",
-                "flub_igm",
-                "flua_igg",
-                "flu_pcr",
-                "test_24",
-                "flub_igg",
-                "adeno_antigen",
-                "adeno_igm",
-                "bac_iga",
-                "bac_pcr",
-                "bac_antibodies",
-                "adeno_pcr",
-                "adeno_iga",
-                "covid_antibodies",
-                "covid_iga"
-              ]
       - name: test_id
         tests:
           - not_null
@@ -92,6 +58,11 @@ models:
           - not_null
           - dbt_utils.expression_is_true:
               expression: "<= current_date"
+      - name: result
+        tests: &result_tests
+          - not_null
+          - accepted_values:
+              values: [0, 1] # 0 = negative, 1 = positive
       - name: age
         tests: &age_tests
           - dbt_utils.accepted_range:
@@ -104,9 +75,18 @@ models:
                 error_if: ">100"
                 warn_if: ">10"
                 where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+          - not_null:
+              name: age_not_null
+              config:
+                severity: error
+                error_if: ">1000"
+                warn_if: ">100"
+      - name: sex
+        tests: &sex_tests
+          - accepted_values:
+              values: ["M", "F"]
       - name: state
         tests: &state_tests
-          - accepted_uf_names
           - not_null:
               name: state_not_null_last_7_days
               config:
@@ -120,33 +100,24 @@ models:
                 severity: error
                 error_if: ">1000"
                 warn_if: ">100"
-      - name: result
-        tests: &result_tests
+      - name: test_kit
+        tests: &test_kit_tests
+          - not_null
+          - dbt_utils.not_accepted_values:
+              values: ["UNKNOWN"]
           - accepted_values:
-              values: [0, 1, -1]
-      - name: sex
-        tests: &sex_tests
-          - accepted_values:
-              values: ["M", "F"]
+              values: ["covid_pcr", "test_4", "test_23"]     
 
 
-
-  - name: dbmol_03_pivot_results
-    description: Pivot results for dbmol [wip]
+  - name: target_03_pivot_results 
+    description: Pivot results for target [wip]
     tests:
-      - expect_proportion_of_unique_values_in_column_set_to_be_between:
-          columns: test_id, detalhe_exame
-          min_value: 0.98
-          max_value: 1.01
-      - expect_number_of_repeated_lines_in_column_set_to_be_less_than:
-          columns: test_id, detalhe_exame
-          max_value: 100
       - unique:
           column_name: "test_id || '-' || detalhe_exame"
           config:
             severity: warn
       - dbt_utils.equal_rowcount:
-          compare_model: ref('dbmol_02_fix_values')
+          compare_model: ref('target_02_fix_values')
       - at_least_one_test_result_is_present
       - only_one_test_result_is_present
       - model_has_more_than_x_rows:
@@ -156,7 +127,7 @@ models:
         tests: 
           - not_null
           - relationships:
-              to: ref('dbmol_02_fix_values')
+              to: ref('target_02_fix_values')
               field: sample_id
       - name: test_kit
         tests: *test_kit_tests
@@ -165,10 +136,42 @@ models:
           - not_null
       - name: date_testing
         tests: *date_testing_tests
+
       - name: age
-        tests: *age_tests
+        tests: 
+          - dbt_utils.accepted_range:
+                min_value: 0
+                max_value: 200
+          - not_null:
+              name: target_03_age_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+          - not_null:
+              name: target_03_age_not_null
+              config:
+                severity: error
+                error_if: ">1000"
+                warn_if: ">100"
+
       - name: state
-        tests: *state_tests
+        tests: 
+          - not_null:
+              name: target_03_state_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+          - not_null:
+              name: target_03_state_not_null
+              config:
+                severity: error
+                error_if: ">1000"
+                warn_if: ">100"
+
       - name: result
         tests: *result_tests
       - name: sex
@@ -213,12 +216,11 @@ models:
         quote: true
         tests: *test_pivot_test_result_columns
 
-
-  - name: dbmol_04_fill_results
-    description: Pivot results for dbmol [wip]
+  - name: target_04_fill_results
+    description: wip
     tests:
       - dbt_utils.equal_rowcount:
-          compare_model: ref('dbmol_03_pivot_results')
+          compare_model: ref('target_03_pivot_results')
       - at_least_one_test_result_is_present_str
       - model_has_more_than_x_rows:
           n_rows: 0
@@ -227,7 +229,7 @@ models:
         tests: 
           - not_null
           - relationships:
-              to: ref('dbmol_03_pivot_results')
+              to: ref('target_03_pivot_results')
               field: sample_id
       - name: test_kit
         tests: *test_kit_tests
@@ -236,22 +238,55 @@ models:
           - not_null
       - name: date_testing
         tests: *date_testing_tests
+      
       - name: age
-        tests: *age_tests
+        tests: 
+          - dbt_utils.accepted_range:
+                min_value: 0
+                max_value: 200
+          - not_null:
+              name: target_04_age_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+          - not_null:
+              name: target_04_age_not_null
+              config:
+                severity: error
+                error_if: ">1000"
+                warn_if: ">100"
+
       - name: state
-        tests: *state_tests
+        tests: 
+          - not_null:
+              name: target_04_state_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+          - not_null:
+              name: target_04_state_not_null
+              config:
+                severity: error
+                error_if: ">1000"
+                warn_if: ">100"
+
       - name: sex
         tests: *sex_tests
       - name: qty_original_lines
         tests:
+          - dbt_expectations.expect_column_to_exist
           - dbt_utils.accepted_range: &qty_original_lines_accepted_range
               min_value: 1
-              max_value: 25
+              max_value: 23
               inclusive: true
           # - qty_original_lines_equals_row_count:
-          #     ref: ref('dbmol_03_pivot_results')
+          #     ref: ref('target_03_pivot_results')
           - accepted_values:
-              values: [1, 2, 4, 23]
+              values: [1, 23]
               config:
                 severity: error
                 error_if: ">100"
@@ -295,10 +330,10 @@ models:
       - name: BAC_test_result
         quote: true
         tests: *test_fill_values_test_result_columns
-          
 
-  - name: dbmol_05_deduplicate
-    description: Pivot results for dbmol [wip]
+
+  - name: target_05_deduplicate
+    description: wip
     tests:
       - expect_proportion_of_unique_values_in_column_set_to_be_between:
           columns: test_id, test_kit
@@ -320,7 +355,7 @@ models:
           - not_null
           - unique
           - relationships:
-              to: ref('dbmol_04_fill_results')
+              to: ref('target_04_fill_results')
               field: sample_id
       - name: test_kit
         tests: *test_kit_tests
@@ -329,19 +364,51 @@ models:
           - not_null
       - name: date_testing
         tests: *date_testing_tests
+      
       - name: age
-        tests: *age_tests
+        tests: 
+          - dbt_utils.accepted_range:
+                min_value: 0
+                max_value: 200
+          - not_null:
+              name: target_05_age_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+          - not_null:
+              name: target_05_age_not_null
+              config:
+                severity: error
+                error_if: ">1000"
+                warn_if: ">100"
+
       - name: state
-        tests: *state_tests
+        tests: 
+          - not_null:
+              name: target_05_state_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+          - not_null:
+              name: target_05_state_not_null
+              config:
+                severity: error
+                error_if: ">1000"
+                warn_if: ">100"
+
       - name: sex
         tests: *sex_tests
       - name: qty_original_lines
         tests:
           - dbt_utils.accepted_range: *qty_original_lines_accepted_range
           - qty_original_lines_equals_row_count:
-              ref: ref('dbmol_04_fill_results')
+              ref: ref('target_04_fill_results')
           - accepted_values:
-              values: [1, 2, 4, 23]
+              values: [1, 23]
               config:
                 severity: error
                 error_if: ">100"
@@ -383,7 +450,8 @@ models:
         quote: true
         tests: *test_fill_values_test_result_columns
 
-  - name: dbmol_final
+
+  - name: target_final
     description: wip
     tests:
       - at_least_one_test_result_is_present_str
@@ -414,10 +482,42 @@ models:
           - not_null
       - name: date_testing
         tests: *date_testing_tests
+
       - name: age
-        tests: *age_tests
+        tests: 
+          - dbt_utils.accepted_range:
+                min_value: 0
+                max_value: 200
+          - not_null:
+              name: target_final_age_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+          - not_null:
+              name: target_final_age_not_null
+              config:
+                severity: error
+                error_if: ">1000"
+                warn_if: ">100"
+
       - name: state
-        tests: *state_tests
+        tests: 
+          - not_null:
+              name: target_final_state_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+          - not_null:
+              name: target_final_state_not_null
+              config:
+                severity: error
+                error_if: ">1000"
+                warn_if: ">100"
+
       - name: sex
         tests: *sex_tests
       - name: qty_original_lines
