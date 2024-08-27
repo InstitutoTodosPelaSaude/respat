@@ -98,7 +98,7 @@ source_data_fix_values AS (
             THEN
                 CASE
                     WHEN 
-                        result IN ('NAO DETECTADO', 'NEGATIVO', 'NAO DETECTATDO') 
+                        result IN ('NAO DETECTADO', 'NEGATIVO', 'NAO DETECTATDO', 'NAO DETACTADO') 
                         OR result ILIKE 'INFERIOR A%' 
                     THEN 0
                     WHEN 
