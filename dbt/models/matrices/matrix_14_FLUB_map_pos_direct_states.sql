@@ -13,7 +13,8 @@ WITH epiweeks AS (
 -- CTE para listar todos os estados presentes nos dados
 states AS (
     SELECT DISTINCT
-        state_code
+        state_code,
+        state as "state_name"
     FROM {{ ref("matrices_01_unpivot_combined") }}
     WHERE state_code IS NOT NULL
 ),
@@ -22,7 +23,8 @@ states AS (
 epiweeks_states AS (
     SELECT
         e.epiweek_enddate,
-        s.state_code
+        s.state_code,
+        s.state_name
     FROM epiweeks e
     CROSS JOIN states s
 ),
@@ -46,13 +48,14 @@ source_data AS (
 source_data_sum AS (
     SELECT
         e.epiweek_enddate as "semanas epidemiologicas",
-        e.state_code as "state",
+        e.state_name as "state",
+        e.state_code as "state_code",
         COALESCE(SUM(CASE WHEN s.pathogen = 'FLUB' THEN s."Pos" ELSE 0 END), 0) as "cases"
     FROM epiweeks_states e
     LEFT JOIN source_data s 
     ON e.epiweek_enddate = s.epiweek_enddate 
     AND e.state_code = s.state_code
-    GROUP BY e.epiweek_enddate, e.state_code
+    GROUP BY e.epiweek_enddate, e.state_code, e.state_name
 ),
 
 -- CTE que calcula a soma cumulativa de casos por estado, ordenando por semana
@@ -60,18 +63,20 @@ source_data_cumulative_sum AS (
     SELECT
         "semanas epidemiologicas",
         "state",
+        "state_code",
         "cases" AS "epiweek_cases",
-        SUM("cases") OVER (PARTITION BY "state" ORDER BY "semanas epidemiologicas") as "cumulative_cases"
+        SUM("cases") OVER (PARTITION BY "state_code" ORDER BY "semanas epidemiologicas") as "cumulative_cases"
     FROM source_data_sum
-    ORDER BY "semanas epidemiologicas", "state"
+    ORDER BY "semanas epidemiologicas", "state_code"
 )
 
 -- Seleção final das colunas desejadas, ordenada por semana e estado
 SELECT
     "semanas epidemiologicas",
+    "state_code",
     "state",
-    "epiweek_cases",
-    "cumulative_cases"
+    "epiweek_cases"::int as "epiweek_cases",
+    "cumulative_cases"::int as "cumulative_cases"
 FROM source_data_cumulative_sum
 WHERE "cumulative_cases" > 0
-ORDER BY "semanas epidemiologicas", "state"
+ORDER BY "semanas epidemiologicas", "state_code"
