@@ -11,6 +11,7 @@ WITH source_data AS (
     FROM {{ ref("matrices_01_unpivot_combined") }}
     WHERE
         epiweek_enddate >= '{{ epiweek_start }}' AND
+        age_group <> 'NOT REPORTED' AND
         CASE
             WHEN "SC2_test_result"  IN ('Neg', 'Pos') THEN test_kit IN ('test_4', 'test_21', 'test_24')
             WHEN "FLUA_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_4', 'test_21', 'test_24')
