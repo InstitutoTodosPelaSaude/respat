@@ -30,7 +30,10 @@ WITH source_data AS (
         ELSE NULL
     END AS sex,
 
-    age,
+    CASE
+        WHEN age > 120 OR age < 0 THEN NULL
+        ELSE age
+    END AS age,
     exame,
     
     REGEXP_REPLACE(
