@@ -69,14 +69,14 @@ models:
                 min_value: 0
                 max_value: 200
           - not_null:
-              name: age_not_null_last_7_days
+              name: target_02_age_not_null_last_7_days
               config:
                 severity: error
                 error_if: ">100"
                 warn_if: ">10"
                 where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
           - not_null:
-              name: age_not_null
+              name: target_02_age_not_null
               config:
                 severity: error
                 error_if: ">1000"
@@ -88,14 +88,14 @@ models:
       - name: state
         tests: &state_tests
           - not_null:
-              name: state_not_null_last_7_days
+              name: target_02_state_not_null_last_7_days
               config:
                 severity: error
                 error_if: ">100"
                 warn_if: ">10"
                 where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
           - not_null:
-              name: state_not_null
+              name: target_02_state_not_null
               config:
                 severity: error
                 error_if: ">1000"
