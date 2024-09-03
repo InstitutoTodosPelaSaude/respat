@@ -82,4 +82,6 @@ SELECT
     END AS result,
     file_name
 FROM source_table
-WHERE exame NOT IN ('DENVQL', 'CHIKVQL', 'ZIKVQL') -- REMOVE ARBO-RELATED TESTS
+WHERE 
+    exame NOT IN ('DENVQL', 'CHIKVQL', 'ZIKVQL') -- REMOVE ARBO-RELATED TESTS
+    AND result NOT IN ('INDETERMINADO')
