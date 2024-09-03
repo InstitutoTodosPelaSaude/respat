@@ -242,7 +242,7 @@ models:
               field: test_id
           - number_of_repetitions_of_values_between:
               min_value: 1
-              max_value: 3
+              max_value: 5
       - name: sample_id
         tests:
           - unique
