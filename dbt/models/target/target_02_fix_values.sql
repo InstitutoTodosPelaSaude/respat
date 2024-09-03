@@ -45,7 +45,11 @@ SELECT
     ) AS sample_id,
     test_id,
     date_testing,
-    sex,
+    CASE sex
+        WHEN 'F' THEN 'F'
+        WHEN 'M' THEN 'M'
+        ELSE NULL
+    END AS sex,
     CASE
         WHEN regexp_like(age, '^[0-9]*$') THEN CAST(age AS INT)                     -- Examples: '100', '95'
         WHEN regexp_like(age, '^[0-9]*A') THEN CAST(SPLIT_PART(age, 'A', 1) AS INT) -- Examples: '100A', '95A10M'
