@@ -93,8 +93,8 @@ SELECT
     "state",
     "lat",
     "long",
-    "epiweek_cases",
-    "cumulative_cases"
+    "epiweek_cases"::int AS "epiweek_cases",
+    "cumulative_cases"::int AS "cumulative_cases"
 FROM source_data_cumulative_sum
 WHERE "cumulative_cases" > 0
 ORDER BY "semanas epidemiologicas", "state", "location"
