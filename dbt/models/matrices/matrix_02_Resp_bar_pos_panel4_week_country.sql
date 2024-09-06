@@ -19,10 +19,10 @@ WITH source_data AS (
 )
 SELECT
     epiweek_enddate as "semana epidemiológica",
-    SUM(CASE WHEN pathogen = 'FLUA' THEN "Pos" ELSE 0 END) AS "Influenza A",
-    SUM(CASE WHEN pathogen = 'FLUB' THEN "Pos" ELSE 0 END) AS "Influenza B",
-    SUM(CASE WHEN pathogen = 'SC2' THEN "Pos" ELSE 0 END) AS "SARS-CoV-2",
-    SUM(CASE WHEN pathogen = 'VSR' THEN "Pos" ELSE 0 END) AS "Vírus Sincicial Respiratório"
+    SUM(CASE WHEN pathogen = 'FLUA' THEN "Pos" ELSE 0 END)::int AS "Influenza A",
+    SUM(CASE WHEN pathogen = 'FLUB' THEN "Pos" ELSE 0 END)::int AS "Influenza B",
+    SUM(CASE WHEN pathogen = 'SC2' THEN "Pos" ELSE 0 END)::int  AS "SARS-CoV-2",
+    SUM(CASE WHEN pathogen = 'VSR' THEN "Pos" ELSE 0 END)::int  AS "Vírus Sincicial Respiratório"
 FROM source_data
 GROUP BY epiweek_enddate
 ORDER BY epiweek_enddate
