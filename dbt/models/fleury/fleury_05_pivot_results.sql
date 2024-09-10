@@ -29,7 +29,8 @@ SELECT
                 "VIRUSMOL, INFLUENZA A",
                 "VIRUSMOL, INFLUENZA A/H1",
                 "VIRUSMOL, INFLUENZA A/H1-2009",
-                "VIRUSMOL, INFLUENZA A/H3"
+                "VIRUSMOL, INFLUENZA A/H3",
+                "INFLUENZA A"
             ], 
             'pathogen', 
             'result', 
@@ -41,7 +42,8 @@ SELECT
             [
                 "INFLUENZA A E B - TESTE RAPIDO FLU_B_RESULT",
                 "COVIDFLURSVGX - INFLUENZA B",
-                "VIRUSMOL, INFLUENZA B"
+                "VIRUSMOL, INFLUENZA B",
+                "INFLUENZA B"
             ], 
             'pathogen', 
             'result', 
