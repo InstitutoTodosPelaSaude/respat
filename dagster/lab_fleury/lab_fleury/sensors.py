@@ -59,5 +59,21 @@ fleury_slack_failure_sensor = make_slack_on_run_failure_sensor(
     slack_token=DAGSTER_SLACK_BOT_TOKEN,
     channel=DAGSTER_SLACK_BOT_CHANNEL,
     default_status=DefaultSensorStatus.RUNNING,
-    text_fn = lambda context: f"LAB JOB FAILED: {context.failure_event.message}"
+    blocks_fn = lambda context: [
+                {
+                    "type": "header",
+                    "text": {
+                        "type": "plain_text",
+                        "text": f"🔴 RESPAT: Job '{context.dagster_run.job_name}' failed",
+                        "emoji": True
+                    }
+                },
+                {
+                    "type": "section",
+                    "text": {
+                            "type": "plain_text",
+                            "text": f"{context.failure_event.message}"
+                    }
+                }
+            ]
 )
