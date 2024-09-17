@@ -51,7 +51,7 @@ def hlagyn_raw(context):
 
     # Change 'Metodologia' column to Métodologia. Seems weird, but all the pipeline was 
     # made with 'Métodologia' and after HLAGyn fixed the column name to 'Metodologia'
-    if 'Metodologia' in hlagyn_df.columns:
+    if 'Métodologia' not in hlagyn_df.columns:
         hlagyn_df.rename(columns={
                 'Metodologia': 'Métodologia',
                 'metodologia': 'Métodologia',
