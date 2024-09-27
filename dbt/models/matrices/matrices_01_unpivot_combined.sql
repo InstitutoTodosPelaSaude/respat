@@ -10,6 +10,7 @@ WITH source_data AS (
         location_ibge_code,
         CASE WHEN state IS NULL THEN 'NOT REPORTED' ELSE state END AS state,
         CASE WHEN state_code IS NULL THEN 'NOT REPORTED' ELSE state_code END AS state_code,
+        CASE WHEN region IS NULL THEN 'NOT REPORTED' ELSE region END AS region,
         CASE WHEN country IS NULL THEN 'NOT REPORTED' ELSE country END AS country,
         CASE WHEN age_group IS NULL THEN 'NOT REPORTED' ELSE age_group END AS age_group,
         lat,
