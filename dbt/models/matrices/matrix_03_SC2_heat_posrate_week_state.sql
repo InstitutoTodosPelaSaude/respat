@@ -4,6 +4,8 @@
 {% set last_year_fill_threshold = 0.7 %} 
 {% set last_year_days_threshold = 381 %} -- 55 weeks
 
+{% set epiweek_start = '2022-01-01' %}
+
 WITH source_data AS (
     SELECT
         epiweek_enddate,
@@ -12,6 +14,9 @@ WITH source_data AS (
         pathogen,
         {{ matrices_metrics('result') }}
     FROM {{ ref("matrices_01_unpivot_combined") }}
+    WHERE
+        test_kit IN ('covid_antigen', 'covid_pcr', 'sc2_antigen', 'thermo', 'test_4', 'test_14', 'test_21', 'test_23', 'test_24') AND
+        epiweek_enddate >= '{{ epiweek_start }}'
     GROUP BY epiweek_enddate, state_code, region, pathogen
     ORDER BY epiweek_enddate, state_code, region, pathogen
 ),
