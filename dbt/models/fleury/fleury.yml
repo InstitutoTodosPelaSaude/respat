@@ -217,4 +217,7 @@ models:
         quote: true
         tests: *test_fill_values_test_result_columns
       
-    
+  - name: fleury_final
+    description: Final model for Fleury
+    tests:
+      - test_kit_contains_the_correct_pathogen_results
