@@ -105,6 +105,7 @@ models:
   - name: hpardini_03_pivot_results
     description: Pivot results - Create the columns for each pathogen
     test:
+      - test_kit_contains_the_correct_pathogen_results
       - dbt_utils.equal_rowcount:
           compare_model: ref('hpardini_02_fix_values')
       - at_least_one_test_result_is_present
