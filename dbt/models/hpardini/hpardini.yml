@@ -81,7 +81,7 @@ models:
                 warn_if: ">10"
                 where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
       - name: state
-        tests: &state_tests
+        tests: 
           - accepted_uf_names
           - not_null:
               name: hpardini_02_state_not_null_last_7_days
@@ -198,6 +198,139 @@ models:
           - not_null
           - accepted_values:
               values: ['Pos', 'Neg', 'NT']
+      - name: FLUA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: FLUB_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: VSR_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: RINO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: META_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: PARA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ADENO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BOCA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: COVS_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ENTERO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BAC_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+
+
+  - name: hpardini_05_deduplicate
+    description: Deduplicate results
+    tests:
+      - expect_proportion_of_unique_values_in_column_set_to_be_between:
+          columns: test_id, test_kit
+          min_value: 0.99
+          max_value: 1.01
+      - expect_number_of_repeated_lines_in_column_set_to_be_less_than:
+          columns: test_id, test_kit
+          max_value: 100
+      - unique:
+          column_name: "test_id || '-' || test_kit"
+          config:
+            severity: warn
+      - at_least_one_test_result_is_present_str
+      - model_has_more_than_x_rows:
+          n_rows: 0
+    columns:
+
+      # IDENTIFICATION AND DEDUPLICATION TESTS
+      # ======================================
+      - name: sample_id
+        tests: 
+          - not_null
+          - unique
+          - relationships:
+              to: ref('hpardini_04_fill_results')
+              field: sample_id
+      - name: qty_original_lines
+        tests:
+          - dbt_utils.accepted_range: *qty_original_lines_accepted_range
+          - qty_original_lines_equals_row_count:
+              ref: ref('hpardini_04_fill_results')
+          - accepted_values:
+              values: [1, 2]
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+
+      # BASIC INFORMATION
+      # ======================================
+      - name: test_kit
+        tests: *test_kit_tests
+      - name: test_id
+        tests:
+          - not_null
+      - name: date_testing
+        tests:
+          - not_null:
+              config:
+                severity: warn
+                error_if: ">1000"
+          - dbt_utils.expression_is_true:
+              name: hpardini_05_future_date
+              expression: "<= current_date"
+      - name: age
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 120
+          - dbt_utils.not_null_proportion:
+              at_least: 0.95
+              config:
+                severity: warn
+          - not_null:
+              name: hpardini_05_age_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+      - name: state
+        tests: 
+          - accepted_uf_names
+          - not_null:
+              name: hpardini_05_state_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+          - not_null:
+              name: hpardini_05_state_not_null
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+      - name: sex
+        tests:
+          - accepted_values:
+              values: ["M", "F"]
+
+      # Pathogen test results
+      # ======================================
+      - name: SC2_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
       - name: FLUA_test_result
         quote: true
         tests: *test_fill_values_test_result_columns
