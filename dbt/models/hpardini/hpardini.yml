@@ -36,6 +36,18 @@ models:
 
   - name: hpardini_02_fix_values
     description: Standardizes values in columns
+    tests:
+      - expect_proportion_of_unique_values_in_column_set_to_be_between:
+          columns: test_id, pathogen
+          min_value: 0.98
+          max_value: 1.01
+      - expect_number_of_repeated_lines_in_column_set_to_be_less_than:
+          columns: test_id
+          max_value: 20
+      - unique:
+          column_name: test_id
+          config:
+            severity: warn
     columns:
       - name: sample_id
         tests:
@@ -51,7 +63,7 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: [0, 1] # 0 = negative, 1 = positive
+              values: [0, 1, -1] # 0 = negative, 1 = positive, -1 = undefined, other values = UNKNOW
       - name: age
         tests: &age_tests
           - dbt_utils.accepted_range:
@@ -61,6 +73,29 @@ models:
               at_least: 0.95
               config:
                 severity: warn
+          - not_null:
+              name: hpardini_02_age_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+      - name: state
+        tests: &state_tests
+          - accepted_uf_names
+          - not_null:
+              name: hpardini_02_state_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+          - not_null:
+              name: hpardini_02_state_not_null
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
       - name: sex
         tests:
           - accepted_values:
