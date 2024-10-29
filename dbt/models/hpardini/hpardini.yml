@@ -103,7 +103,7 @@ models:
 
 
   - name: hpardini_03_pivot_results
-    description: Pivot results - Create the columns for each pathogen
+    description: Create result columns for each pathogen
     test:
       - dbt_utils.equal_rowcount:
           compare_model: ref('hpardini_02_fix_values')
@@ -163,7 +163,7 @@ models:
 
 
   - name: hpardini_04_fill_results
-    description: Fill results
+    description: Fill results in multitarget tests
     tests:
       - dbt_utils.equal_rowcount:
           compare_model: ref('hpardini_03_pivot_results')
@@ -234,7 +234,7 @@ models:
 
 
   - name: hpardini_05_deduplicate
-    description: Deduplicate results
+    description: Deduplicate results - Multitarget tests
     tests:
       - expect_proportion_of_unique_values_in_column_set_to_be_between:
           columns: test_id, test_kit
@@ -325,6 +325,136 @@ models:
         tests:
           - accepted_values:
               values: ["M", "F"]
+
+      # Pathogen test results
+      # ======================================
+      - name: SC2_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: FLUA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: FLUB_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: VSR_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: RINO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: META_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: PARA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ADENO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BOCA_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: COVS_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: ENTERO_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+      - name: BAC_test_result
+        quote: true
+        tests: *test_fill_values_test_result_columns
+
+
+  - name: hpardini_final
+    description: Table containing all HPardini tests
+    tests:
+      - at_least_one_test_result_is_present_str
+      - number_of_rows_in_the_last_epiweeks_between:
+          min_value: 50
+          max_value: 3000
+          config:
+            severity: warn
+      - freshness_by_pathogen:
+          config:
+            severity: warn
+      - freshness_by_pathogen_sc2_vsr_flua_flub:
+          config:
+            severity: warn
+      - test_kit_contains_the_correct_pathogen_results
+    freshness:
+      warn_after: {count: 5, period: days}
+    loaded_at_field: "date_testing::timestamp"
+    columns:
+
+      - name: sample_id
+        tests: 
+          - not_null
+          - unique
+      - name: qty_original_lines
+        tests:
+          - dbt_expectations.expect_column_to_exist
+          - dbt_utils.accepted_range: *qty_original_lines_accepted_range
+      
+      # BASIC INFORMATION
+      # ======================================
+      - name: test_kit
+        tests: *test_kit_tests
+      - name: test_id
+        tests:
+          - not_null
+      - name: date_testing
+        tests:
+          - not_null:
+              config:
+                severity: warn
+                error_if: ">1000"
+          - dbt_utils.expression_is_true:
+              name: hpardini_06_future_date
+              expression: "<= current_date"
+      - name: age
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 120
+          - dbt_utils.not_null_proportion:
+              at_least: 0.95
+              config:
+                severity: warn
+          - not_null:
+              name: hpardini_06_age_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+      - name: state
+        tests: 
+          - accepted_uf_names
+          - not_null:
+              name: hpardini_06_state_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+          - not_null:
+              name: hpardini_6_state_not_null
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+      - name: sex
+        tests:
+          - accepted_values:
+              values: ["M", "F"]
+
+      - name: created_at
+        tests:
+          - dbt_expectations.expect_column_to_exist
+      - name: updated_at
+        tests:
+          - dbt_expectations.expect_column_to_exist
 
       # Pathogen test results
       # ======================================
