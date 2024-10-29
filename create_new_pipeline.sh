@@ -9,6 +9,7 @@ if [ -z "$1" ]; then
 fi
 
 LAB=$1
+LAB=$(echo "$LAB" | tr '[:upper:]' '[:lower:]')
 PROJECT=lab_${LAB}
 WORKSPACE_FILE="workspace.yaml"
 
@@ -50,12 +51,20 @@ echo "${TS} INFO Creating basic code files"
 # CREATING CODE FILES WITH BASIC CODE  
 # =====================================
 
-ASSETS_FILE="dagster/${PROJECT}/${PROJECT}/assets.py"
-if [ -f "$ASSETS_FILE" ]; then
-    sed -i "s/manifest=dbt_manifest_path/manifest=dbt_manifest_path, select='${LAB}'/" "$ASSETS_FILE"
-    echo "${TS} INFO: Updated $ASSETS_FILE with select=${LAB}"
-else
-    echo "${TS} ERROR: File $ASSETS_FILE does not exist."
-fi
+echo "${TS} INFO Project ${LAB} added to ${WORKSPACE_FILE}"
 
-echo "${TS} INFO: Project ${LAB} added to ${WORKSPACE_FILE}"
+ASSETS_FILE="dagster/${PROJECT}/${PROJECT}/assets.py"
+TEMPLATE_FILE="./templates/asset_template.py"
+
+
+LABNAME=$(echo "$LAB" | tr '[:lower:]' '[:upper:]')   # LABNAME em maiúsculas
+labname=$(echo "$LAB" | tr '[:upper:]' '[:lower:]')   # labname em minúsculas
+
+# Define o caminho do arquivo de template e do arquivo de saída
+TEMPLATE_FILE="./templates/asset_template.py"
+OUTPUT_FILE="dagster/${PROJECT}/${PROJECT}/assets.py"
+
+# Substitui LABNAME e labname no template e salva no arquivo de saída
+sed "s/LABNAME/${LABNAME}/g; s/labname/${labname}/g" "$TEMPLATE_FILE" > "$OUTPUT_FILE"
+
+echo "${TS} INFO Assets template $OUTPUT_FILE created for ${LABNAME}"
