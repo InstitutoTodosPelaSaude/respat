@@ -32,3 +32,36 @@ models:
       - name: detalhe_exame
         tests:
           *not_null_warn_error_if_gt_1000
+
+
+  - name: hpardini_02_fix_values
+    description: Standardizes values in columns
+    columns:
+      - name: sample_id
+        tests:
+          - not_null
+      - name: test_kit
+        tests: &test_kit_tests
+          - not_null
+          - dbt_utils.not_accepted_values:
+              values: ["UNKNOWN"]
+          - accepted_values:
+              values: ["covid_pcr", "covid_antigen", "vsr_antigen", "test_3", "test_4", "flu_antigen"]
+      - name: result
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1] # 0 = negative, 1 = positive
+      - name: age
+        tests: &age_tests
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 120
+          - dbt_utils.not_null_proportion:
+              at_least: 0.95
+              config:
+                severity: warn
+      - name: sex
+        tests:
+          - accepted_values:
+              values: ["M", "F"]
