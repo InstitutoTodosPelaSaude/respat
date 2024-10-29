@@ -60,11 +60,34 @@ TEMPLATE_FILE="./templates/asset_template.py"
 LABNAME=$(echo "$LAB" | tr '[:lower:]' '[:upper:]')   # LABNAME em maiúsculas
 labname=$(echo "$LAB" | tr '[:upper:]' '[:lower:]')   # labname em minúsculas
 
-# Define o caminho do arquivo de template e do arquivo de saída
-TEMPLATE_FILE="./templates/asset_template.py"
-OUTPUT_FILE="dagster/${PROJECT}/${PROJECT}/assets.py"
+TEMPLATE_FILES=(
+    "./templates/asset_template.py"
+    "./templates/definitions_template.py"
+    "./templates/labname_01_convert_types.sql"
+    "./templates/labname.yml"
+)
 
-# Substitui LABNAME e labname no template e salva no arquivo de saída
-sed "s/LABNAME/${LABNAME}/g; s/labname/${labname}/g" "$TEMPLATE_FILE" > "$OUTPUT_FILE"
+OUTPUT_FILES=(
+    "dagster/${PROJECT}/${PROJECT}/assets.py"
+    "dagster/${PROJECT}/${PROJECT}/definitions.py"
+    "dbt/models/${LAB}/${LAB}_01_convert_types.sql"
+    "dbt/models/${LAB}/${LAB}.yml"
+)
 
-echo "${TS} INFO Assets template $OUTPUT_FILE created for ${LABNAME}"
+mkdir -p "dagster/${PROJECT}/${PROJECT}" "dbt/models/${LAB}"
+
+# Processing each file
+for i in "${!TEMPLATE_FILES[@]}"; do
+    TEMPLATE_FILE="${TEMPLATE_FILES[$i]}"
+    OUTPUT_FILE="${OUTPUT_FILES[$i]}"
+
+    # Substitui LABNAME e labname no template e salva no arquivo de saída
+    sed "s/LABNAME/${LABNAME}/g; s/labname/${labname}/g" "$TEMPLATE_FILE" > "$OUTPUT_FILE"
+
+    echo "${TS} INFO Template ${TEMPLATE_FILE} processed and saved to ${OUTPUT_FILE} for ${lab}"
+done
+
+echo "${TS} INFO Restarting Dagster"
+docker compose down dagster
+docker compose up dagster
+
