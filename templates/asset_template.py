@@ -43,7 +43,7 @@ def labname_raw(context):
     """
     Read excel files from data/labname folder and save to db
     """
-    engine = create_engine(f'postgresql://\${DB_USER}:\${DB_PASSWORD}@\${DB_HOST}:\${DB_PORT}/\${DB_NAME}')
+    engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
 
     # Choose one of the files and run the process
     labname_files = [file for file in os.listdir(LABNAME_FILES_FOLDER) if file.endswith(LABNAME_FILES_EXTENSION)]
