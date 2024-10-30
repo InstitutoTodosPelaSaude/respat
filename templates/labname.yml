@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+    - name: dagster
+      description: Import raw data from lab
+      schema: respiratorios # or arboviroses
+      tables:
+        - name: labname_raw
+          meta: 
+            dagster:
+              asset_key: ["labname_raw"]

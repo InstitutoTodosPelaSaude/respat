@@ -1,17 +1,17 @@
 version: 2
 
 sources:
-  - name: dagster
-    description: Raw data from Einstein
-    schema: respiratorios
-    tables:
-      - name: einstein_raw
-        meta:
-          dagster:
-            asset_key: ["einstein_raw"]
+    - name: dagster
+      description: Import raw data from lab
+      schema: respiratorios # or arboviroses
+      tables:
+        - name: hpardini_raw
+          meta: 
+            dagster:
+              asset_key: ["hpardini_raw"]
 
 models:
-  - name: einstein_01_convert_types
+  - name: hpardini_01_convert_types
     description: Convert data types and rename columns
     columns:
       - name: test_id
@@ -22,17 +22,32 @@ models:
                 error_if: ">1000"
       - name: date_testing
         tests:
-          *not_null_warn_error_if_gt_1000
+          - not_null:
+              config:
+                severity: warn
+                error_if: ">1000"
+          - dbt_utils.expression_is_true:
+              name: hpardini_01_future_date
+              expression: "<= current_date"
       - name: detalhe_exame
         tests:
           *not_null_warn_error_if_gt_1000
-      - name: exame
-        tests:
-          *not_null_warn_error_if_gt_1000
 
 
-  - name: einstein_02_fix_values
-    description: wip
+  - name: hpardini_02_fix_values
+    description: Standardizes values in columns
+    tests:
+      - expect_proportion_of_unique_values_in_column_set_to_be_between:
+          columns: test_id, pathogen
+          min_value: 0.98
+          max_value: 1.01
+      - expect_number_of_repeated_lines_in_column_set_to_be_less_than:
+          columns: test_id
+          max_value: 20
+      - unique:
+          column_name: test_id
+          config:
+            severity: warn
     columns:
       - name: sample_id
         tests:
@@ -50,7 +65,7 @@ models:
           - accepted_values:
               values: [0, 1] # 0 = negative, 1 = positive
       - name: age
-        tests: &age_tests
+        tests:
           - dbt_utils.accepted_range:
               min_value: 0
               max_value: 120
@@ -58,54 +73,54 @@ models:
               at_least: 0.95
               config:
                 severity: warn
-
+          - not_null:
+              name: hpardini_02_age_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+      - name: state
+        tests: 
+          - accepted_uf_names
+          - not_null:
+              name: hpardini_02_state_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+          - not_null:
+              name: hpardini_02_state_not_null
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
       - name: sex
         tests:
           - accepted_values:
               values: ["M", "F"]
-    
-      - name: date_testing
-        tests:
-          # date not in the future
-          - dbt_utils.expression_is_true:
-              expression: "<= current_date"
 
 
-  - name: einstein_03_pivot_results
-    description: wip
-    tests:
+  - name: hpardini_03_pivot_results
+    description: Create result columns for each pathogen
+    test:
       - dbt_utils.equal_rowcount:
-          compare_model: ref('einstein_02_fix_values')
+          compare_model: ref('hpardini_02_fix_values')
       - at_least_one_test_result_is_present
       - only_one_test_result_is_present
       - model_has_more_than_x_rows:
           n_rows: 0
     columns:
+      - name: sample_id
+        tests: 
+          - not_null
+          - relationships:
+              to: ref('hpardini_02_fix_values')
+              field: sample_id
       - name: test_id
         tests:
           - not_null
-          - relationships:
-              to: ref('einstein_02_fix_values')
-              field: test_id
-      - name: sample_id
-        tests:
-          - not_null
-          - relationships:
-              to: ref('einstein_02_fix_values')
-              field: sample_id
-      - name: test_kit
-        tests: *test_kit_tests
-      - name: result
-        tests:
-          - not_null
-          - accepted_values:
-              values: [0, 1]
-      - name: age
-        tests: *age_tests
-      - name: date_testing
-        tests:
-          - dbt_utils.expression_is_true:
-              expression: "<= current_date"
       - name: SC2_test_result
         quote: true
         tests: &test_pivot_test_result_columns
@@ -145,42 +160,38 @@ models:
       - name: BAC_test_result
         quote: true
         tests: *test_pivot_test_result_columns
-  
 
-  - name: einstein_04_fill_results
-    description: wip
+
+  - name: hpardini_04_fill_results
+    description: Fill results in multitarget tests
     tests:
+      - dbt_utils.equal_rowcount:
+          compare_model: ref('hpardini_03_pivot_results')
       - at_least_one_test_result_is_present_str
+      - model_has_more_than_x_rows:
+          n_rows: 0
     columns:
+      - name: sample_id
+        tests: 
+          - not_null
+          - relationships:
+              to: ref('hpardini_03_pivot_results')
+              field: sample_id
       - name: test_id
         tests:
           - not_null
-          - relationships:
-              to: ref('einstein_03_pivot_results')
-              field: test_id
-      - name: sample_id
-        tests:
-          - not_null
-          - relationships:
-              to: ref('einstein_03_pivot_results')
-              field: sample_id
-      - name: test_kit
-        tests: *test_kit_tests
-      - name: age
-        tests: *age_tests
-      - name: date_testing
-        tests:
-          - dbt_utils.expression_is_true:
-              expression: "<= current_date"
       - name: qty_original_lines
         tests:
-          - dbt_expectations.expect_column_to_exist
           - dbt_utils.accepted_range: &qty_original_lines_accepted_range
               min_value: 1
-              max_value: 5
+              max_value: 25
               inclusive: true
-          #- qty_original_lines_equals_row_count:
-          #    ref: ref('einstein_03_pivot_results')
+          - accepted_values:
+              values: [1]
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
       - name: SC2_test_result
         quote: true
         tests: &test_fill_values_test_result_columns
@@ -222,10 +233,9 @@ models:
         tests: *test_fill_values_test_result_columns
 
 
-  - name: einstein_05_deduplicate
-    description: wip
+  - name: hpardini_05_deduplicate
+    description: Deduplicate results - Multitarget tests
     tests:
-      - at_least_one_test_result_is_present_str
       - expect_proportion_of_unique_values_in_column_set_to_be_between:
           columns: test_id, test_kit
           min_value: 0.99
@@ -233,37 +243,91 @@ models:
       - expect_number_of_repeated_lines_in_column_set_to_be_less_than:
           columns: test_id, test_kit
           max_value: 100
+      - unique:
+          column_name: "test_id || '-' || test_kit"
+          config:
+            severity: warn
+      - at_least_one_test_result_is_present_str
+      - model_has_more_than_x_rows:
+          n_rows: 0
     columns:
+
+      # IDENTIFICATION AND DEDUPLICATION TESTS
+      # ======================================
+      - name: sample_id
+        tests: 
+          - not_null
+          - unique
+          - relationships:
+              to: ref('hpardini_04_fill_results')
+              field: sample_id
+      - name: qty_original_lines
+        tests:
+          - dbt_utils.accepted_range: *qty_original_lines_accepted_range
+          - qty_original_lines_equals_row_count:
+              ref: ref('hpardini_04_fill_results')
+          - accepted_values:
+              values: [1, 2]
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+
+      # BASIC INFORMATION
+      # ======================================
+      - name: test_kit
+        tests: *test_kit_tests
       - name: test_id
         tests:
           - not_null
-          - relationships:
-              to: ref('einstein_04_fill_results')
-              field: test_id
-          - number_of_repetitions_of_values_between:
-              min_value: 1
-              max_value: 5
-      - name: sample_id
-        tests:
-          - unique
-          - not_null
-          - relationships:
-              to: ref('einstein_04_fill_results')
-              field: sample_id
-      - name: test_kit
-        tests: *test_kit_tests
-      - name: age
-        tests: *age_tests
       - name: date_testing
         tests:
+          - not_null:
+              config:
+                severity: warn
+                error_if: ">1000"
           - dbt_utils.expression_is_true:
+              name: hpardini_05_future_date
               expression: "<= current_date"
-      - name: qty_original_lines
+      - name: age
         tests:
-          - dbt_expectations.expect_column_to_exist
-          - dbt_utils.accepted_range: *qty_original_lines_accepted_range
-          - qty_original_lines_equals_row_count:
-              ref: ref('einstein_03_pivot_results')
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 120
+          - dbt_utils.not_null_proportion:
+              at_least: 0.95
+              config:
+                severity: warn
+          - not_null:
+              name: hpardini_05_age_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+      - name: state
+        tests: 
+          - accepted_uf_names
+          - not_null:
+              name: hpardini_05_state_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+          - not_null:
+              name: hpardini_05_state_not_null
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+      - name: sex
+        tests:
+          - accepted_values:
+              values: ["M", "F"]
+
+      # Pathogen test results
+      # ======================================
       - name: SC2_test_result
         quote: true
         tests: *test_fill_values_test_result_columns
@@ -301,12 +365,13 @@ models:
         quote: true
         tests: *test_fill_values_test_result_columns
 
-  - name: einstein_final
-    description: wip
+
+  - name: hpardini_final
+    description: Table containing all HPardini tests
     tests:
       - at_least_one_test_result_is_present_str
       - number_of_rows_in_the_last_epiweeks_between:
-          min_value: 500
+          min_value: 50
           max_value: 3000
           config:
             severity: warn
@@ -321,25 +386,78 @@ models:
       warn_after: {count: 5, period: days}
     loaded_at_field: "date_testing::timestamp"
     columns:
-      - name: test_id
-        tests:
-          - not_null
+
       - name: sample_id
-        tests:
-          - unique
+        tests: 
           - not_null
-      - name: test_kit
-        tests: *test_kit_tests
-      - name: age
-        tests: *age_tests
-      - name: date_testing
-        tests:
-          - dbt_utils.expression_is_true:
-              expression: "<= current_date"
+          - unique
       - name: qty_original_lines
         tests:
           - dbt_expectations.expect_column_to_exist
           - dbt_utils.accepted_range: *qty_original_lines_accepted_range
+      
+      # BASIC INFORMATION
+      # ======================================
+      - name: test_kit
+        tests: *test_kit_tests
+      - name: test_id
+        tests:
+          - not_null
+      - name: date_testing
+        tests:
+          - not_null:
+              config:
+                severity: warn
+                error_if: ">1000"
+          - dbt_utils.expression_is_true:
+              name: hpardini_06_future_date
+              expression: "<= current_date"
+      - name: age
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 120
+          - dbt_utils.not_null_proportion:
+              at_least: 0.95
+              config:
+                severity: warn
+          - not_null:
+              name: hpardini_06_age_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+      - name: state
+        tests: 
+          - accepted_uf_names
+          - not_null:
+              name: hpardini_06_state_not_null_last_7_days
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+                where: "date_testing > CURRENT_DATE - INTERVAL '7 days'"
+          - not_null:
+              name: hpardini_6_state_not_null
+              config:
+                severity: error
+                error_if: ">100"
+                warn_if: ">10"
+      - name: sex
+        tests:
+          - accepted_values:
+              values: ["M", "F"]
+
+      - name: created_at
+        tests:
+          - dbt_expectations.expect_column_to_exist
+      - name: updated_at
+        tests:
+          - dbt_expectations.expect_column_to_exist
+
+      # Pathogen test results
+      # ======================================
       - name: SC2_test_result
         quote: true
         tests: *test_fill_values_test_result_columns
@@ -376,9 +494,3 @@ models:
       - name: BAC_test_result
         quote: true
         tests: *test_fill_values_test_result_columns
-      - name: created_at
-        tests:
-          - dbt_expectations.expect_column_to_exist
-      - name: updated_at
-        tests:
-          - dbt_expectations.expect_column_to_exist
