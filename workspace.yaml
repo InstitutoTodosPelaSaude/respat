@@ -30,3 +30,7 @@ load_from:
         module_name: external_reports.definitions
         working_directory: dagster/external_reports
     
+
+    - python_module:
+        module_name: lab_hpardini.definitions
+        working_directory: dagster/lab_hpardini
