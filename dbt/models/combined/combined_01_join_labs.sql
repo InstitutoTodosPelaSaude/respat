@@ -107,13 +107,13 @@ WITH source_data AS (
     FROM {{ ref("target_final") }}
     WHERE date_testing >= '{{ var('combined_threshold_date') }}'
 
+    UNION
 
     SELECT
     'HPARDINI' as lab_id,
     {{ columns | join(', ') }}
     FROM {{ ref("hpardini_final") }}
     WHERE date_testing >= '{{ var('combined_threshold_date') }}'
-    
 )
 SELECT
     *
