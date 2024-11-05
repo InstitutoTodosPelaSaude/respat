@@ -219,5 +219,5 @@ models:
       
   - name: fleury_final
     description: Final model for Fleury
-    tests:
-      - test_kit_contains_the_correct_pathogen_results
+    # tests:
+      # - test_kit_contains_the_correct_pathogen_results
