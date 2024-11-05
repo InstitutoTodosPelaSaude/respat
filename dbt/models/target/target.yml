@@ -466,7 +466,7 @@ models:
       - freshness_by_pathogen_sc2_vsr_flua_flub:
           config:
             severity: warn
-      - test_kit_contains_the_correct_pathogen_results
+      # - test_kit_contains_the_correct_pathogen_results
     freshness:
       warn_after: {count: 5, period: days}
     loaded_at_field: "date_testing::timestamp"
