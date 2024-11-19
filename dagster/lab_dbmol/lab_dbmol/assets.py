@@ -15,6 +15,7 @@ from textwrap import dedent
 import pandas as pd
 import os
 import pathlib
+import sys
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
 import shutil
@@ -22,8 +23,10 @@ from io import StringIO
 
 from .constants import dbt_manifest_path
 
-ROOT_PATH = pathlib.Path(__file__).parent.parent.parent.parent.absolute()
-DBMOL_FILES_FOLDER = ROOT_PATH / "data" / "dbmol"
+sys.path.insert(1, os.getcwd())
+from filesystem.filesystem import FileSystem
+
+DBMOL_FILES_FOLDER = "/data/respat/data/dbmol/"
 DBMOL_FILES_EXTENSION = '.csv'
 
 load_dotenv()
@@ -43,17 +46,18 @@ def dbmol_raw(context):
     """
     Read all excel files from data/dbmol folder and save to db
     """
+    file_system = FileSystem(root_path=DBMOL_FILES_FOLDER)
     engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
 
     # Choose one of the files and run the process
-    dbmol_files = [file for file in os.listdir(DBMOL_FILES_FOLDER) if file.endswith(DBMOL_FILES_EXTENSION)]
+    dbmol_files = [file for file in file_system.list_files_in_relative_path("") if file.endswith(DBMOL_FILES_EXTENSION)]
     assert len(dbmol_files) > 0, f"No files found in the folder {DBMOL_FILES_FOLDER} with extension {DBMOL_FILES_EXTENSION}"
 
     dbmol_file = dbmol_files[0]
-    file_path = DBMOL_FILES_FOLDER / dbmol_file
     
     # Get a sample of data to retrieve the column names
-    sample_chunk = pd.read_csv(file_path, chunksize=1)
+    file_to_get = dbmol_file.split('/')[-1] # Get the file name
+    sample_chunk = pd.read_csv(file_system.get_file_content_as_io_bytes(file_to_get), chunksize=1)
     dbmol_df = next(sample_chunk)
     columns_file = ', '.join([f'"{col}" TEXT' for col in dbmol_df.columns])
     new_column = f'"file_name" TEXT'
@@ -67,7 +71,7 @@ def dbmol_raw(context):
     # Process the data by chunks of 1,000,000 rows
     total_rows = 0
     chunk_size = 1_000_000
-    for chunk in pd.read_csv(file_path, chunksize=chunk_size):
+    for chunk in pd.read_csv(file_system.get_file_content_as_io_bytes(file_to_get), chunksize=chunk_size):
         total_rows += len(chunk)
         chunk['file_name'] = dbmol_file
         chunk_buffer = StringIO()
@@ -110,7 +114,8 @@ def dbmol_remove_used_files(context):
     Remove the files that were used in the dbt process
     """
     raw_data_table = 'dbmol_raw'
-    files_in_folder = [file for file in os.listdir(DBMOL_FILES_FOLDER) if file.endswith(DBMOL_FILES_EXTENSION)]
+    file_system = FileSystem(root_path=DBMOL_FILES_FOLDER)
+    files_in_folder = [file for file in file_system.list_files_in_relative_path("") if file.endswith(DBMOL_FILES_EXTENSION)]
 
     # Get the files that were used in the dbt process
     engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
@@ -118,12 +123,12 @@ def dbmol_remove_used_files(context):
     engine.dispose()
 
     # Remove the files that were used
-    path_to_move = DBMOL_FILES_FOLDER / "_out"
+    path_to_move = "_out/"
     for used_file in used_files:
         if used_file in files_in_folder:
             context.log.info(f"Moving file {used_file} to {path_to_move}")
-            shutil.move(DBMOL_FILES_FOLDER / used_file, path_to_move / used_file)
+            file_system.move_file_to_folder("", used_file.split("/")[-1], path_to_move)
     
     # Log the unmoved files
-    files_in_folder = os.listdir(DBMOL_FILES_FOLDER)
+    files_in_folder = file_system.list_files_in_relative_path("")
     context.log.info(f"Files that were not moved: {files_in_folder}")
