@@ -5,7 +5,12 @@ from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 import os
 import pathlib
+import sys
+import io
 from datetime import date
+
+sys.path.insert(1, os.getcwd())
+from filesystem.filesystem import FileSystem
 
 load_dotenv()
 EMAIL_HOST = os.getenv('EMAIL_HOST')
@@ -28,7 +33,7 @@ def send_email_with_file(
         recipient_emails (list): List of email addresses to send the email to.
         subject (str): Subject of the email.
         body (str): Body of the email.
-        file_paths (list): List of file paths to attach to the email.
+        file_paths (list): List of Minio file paths to attach to the email.
     """
     # Check arguments
     assert isinstance(recipient_emails, list), "recipient_emails must be a list."
@@ -52,15 +57,23 @@ def send_email_with_file(
     message.attach(message_body)
 
     # Attach the files
+    file_system = FileSystem(root_path="/data/") # Create a file system to get the files
     for file_path in file_paths:
-        if not os.path.exists(file_path):
-            file_path = ROOT_PATH / file_path
-        assert os.path.exists(file_path), f"File does not exist: {file_path}"
+        # Clean the file path
+        if file_path.startswith('/data'):
+            file_path = file_path[5:]
+        if file_path.startswith('data'):
+            file_path = file_path[4:]
+
+        # Get the file from Minio
+        file = file_system.get_file_content_as_io_bytes(file_path)
+        if file is None:
+            raise Exception(f"File does not exist: {file_path}")
         
-        with open(file_path, 'rb') as file:
-            attachment = MIMEApplication(file.read(), Name=os.path.basename(file_path))
-            attachment['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
-            message.attach(attachment)
+        # Attach the file
+        attachment = MIMEApplication(file.getvalue(), Name=os.path.basename(file_path))
+        attachment['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+        message.attach(attachment)
 
     # Send the email
     try:

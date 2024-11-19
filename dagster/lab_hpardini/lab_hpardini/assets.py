@@ -14,15 +14,17 @@ from dagster_dbt import (
 from textwrap import dedent
 import pandas as pd
 import os
+import sys
 import pathlib
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
 
 from .constants import dbt_manifest_path
 
+sys.path.insert(1, os.getcwd())
+from filesystem.filesystem import FileSystem
 
-ROOT_PATH = pathlib.Path(__file__).parent.parent.parent.parent.absolute()
-HPARDINI_FILES_FOLDER = ROOT_PATH / "data" / "hpardini"
+HPARDINI_FILES_FOLDER = "/data/respat/data/hpardini/"
 HPARDINI_FILES_EXTENSION = '.csv'
 
 dagster_dbt_translator = DagsterDbtTranslator(
@@ -43,15 +45,17 @@ def hpardini_raw(context):
     """
     Read excel files from data/hpardini folder and save to db
     """
+    file_system = FileSystem(root_path=HPARDINI_FILES_FOLDER)
     engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
 
     # Choose one of the files and run the process
-    hpardini_files = [file for file in os.listdir(HPARDINI_FILES_FOLDER) if file.endswith(HPARDINI_FILES_EXTENSION)]
+    hpardini_files = [file for file in file_system.list_files_in_relative_path("") if file.endswith(HPARDINI_FILES_EXTENSION)]
     assert len(hpardini_files) > 0, f"No files found in the folder {HPARDINI_FILES_FOLDER} with extension {HPARDINI_FILES_EXTENSION}"
 
     # Read the file
     context.log.info(f"Reading file {hpardini_files[0]}")
-    hpardini_df = pd.read_csv(HPARDINI_FILES_FOLDER / hpardini_files[0], dtype = str, encoding='latin-1', sep=';')
+    file_to_get = hpardini_files[0].split('/')[-1] # Get the file name
+    hpardini_df = pd.read_csv(file_system.get_file_content_as_io_bytes(file_to_get), dtype = str, encoding='latin-1', sep=';')
     hpardini_df['file_name'] = hpardini_files[0]
 
     # Save to db
