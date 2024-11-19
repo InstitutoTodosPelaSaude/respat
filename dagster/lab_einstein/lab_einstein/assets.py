@@ -14,6 +14,7 @@ from dagster_dbt import (
 from textwrap import dedent
 import pandas as pd
 import os
+import sys
 import pathlib
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
@@ -21,8 +22,10 @@ import shutil
 
 from .constants import dbt_manifest_path
 
-ROOT_PATH = pathlib.Path(__file__).parent.parent.parent.parent.absolute()
-EINSTEIN_FILES_FOLDER = ROOT_PATH / "data" / "einstein"
+sys.path.insert(1, os.getcwd())
+from filesystem.filesystem import FileSystem
+
+EINSTEIN_FILES_FOLDER = "/data/respat/data/einstein/"
 EINSTEIN_FILES_EXTENSION = '.xlsx'
 
 load_dotenv()
@@ -42,14 +45,16 @@ def einstein_raw(context):
     """
     Read all excel files from data/einstein folder and save to db
     """
+    file_system = FileSystem(root_path=EINSTEIN_FILES_FOLDER)
     engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
 
     # Choose one of the files and run the process
-    einstein_files = [file for file in os.listdir(EINSTEIN_FILES_FOLDER) if file.endswith(EINSTEIN_FILES_EXTENSION)]
+    einstein_files = [file for file in file_system.list_files_in_relative_path("") if file.endswith(EINSTEIN_FILES_EXTENSION)]
     assert len(einstein_files) > 0, f"No files found in the folder {EINSTEIN_FILES_FOLDER} with extension {EINSTEIN_FILES_EXTENSION}"
 
     # Read the sheets 'itps_covid', 'itps_influenza' and 'itps_vsr' from the file
-    einstein_df = pd.read_excel(EINSTEIN_FILES_FOLDER / einstein_files[0], dtype = str, sheet_name=['itps_covid', 'itps_influenza', 'itps_vsr'])
+    file_to_get = einstein_files[0].split('/')[-1] # Get the file name
+    einstein_df = pd.read_excel(file_system.get_file_content_as_io_bytes(file_to_get), dtype = str, sheet_name=['itps_covid', 'itps_influenza', 'itps_vsr'])
     einstein_df = pd.concat(einstein_df, axis=0, ignore_index=True)
     einstein_df['file_name'] = einstein_files[0]
     context.log.info(f"Reading file {einstein_files[0]}")
@@ -96,7 +101,8 @@ def einstein_remove_used_files(context):
     Remove the files that were used in the dbt process
     """
     raw_data_table = 'einstein_raw'
-    files_in_folder = [file for file in os.listdir(EINSTEIN_FILES_FOLDER) if file.endswith(EINSTEIN_FILES_EXTENSION)]
+    file_system = FileSystem(root_path=EINSTEIN_FILES_FOLDER)
+    files_in_folder = [file for file in file_system.list_files_in_relative_path("") if file.endswith(EINSTEIN_FILES_EXTENSION)]
 
     # Get the files that were used in the dbt process
     engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
@@ -104,13 +110,13 @@ def einstein_remove_used_files(context):
     engine.dispose()
 
     # Remove the files that were used
-    path_to_move = EINSTEIN_FILES_FOLDER / "_out"
+    path_to_move = "_out/"
     for used_file in used_files:
         if used_file in files_in_folder:
             context.log.info(f"Moving file {used_file} to {path_to_move}")
-            shutil.move(EINSTEIN_FILES_FOLDER / used_file, path_to_move / used_file)
+            file_system.move_file_to_folder("", used_file.split("/")[-1], path_to_move)
     
     # Log the unmoved files
-    files_in_folder = os.listdir(EINSTEIN_FILES_FOLDER)
+    files_in_folder = file_system.list_files_in_relative_path("")
     context.log.info(f"Files that were not moved: {files_in_folder}")
 
