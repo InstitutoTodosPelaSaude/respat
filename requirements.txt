@@ -52,6 +52,7 @@ MarkupSafe==2.1.5
 mashumaro==3.12
 mdurl==0.1.2
 minimal-snowplow-tracker==0.0.2
+minio==7.2.10
 more-itertools==10.2.0
 msgpack==1.0.7
 multidict==6.0.5
