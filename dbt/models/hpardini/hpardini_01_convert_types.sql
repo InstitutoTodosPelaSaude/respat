@@ -5,7 +5,7 @@ WITH source_data AS (
 )
 SELECT 
     "CODIGO" AS test_id,
-    TO_DATE("DATACOLETA", 'DD/MM/YYYY') AS date_testing,
+    TO_DATE("DATACOLETA", 'YYYY-MM-DD') AS date_testing,
     {{ normalize_text("PATÓGENO") }} AS pathogen,
     {{ normalize_text("MÉTODO") }}   AS detalhe_exame,
     {{ normalize_text("CIDADE") }}   AS location,
