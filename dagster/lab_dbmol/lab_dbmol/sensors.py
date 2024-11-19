@@ -1,4 +1,5 @@
 import os
+import sys
 from dotenv import load_dotenv
 
 from dagster import (
@@ -13,7 +14,10 @@ from dagster.core.storage.dagster_run import FINISHED_STATUSES, DagsterRunStatus
 from dagster_slack import make_slack_on_run_failure_sensor
 
 from .jobs import dbmol_all_assets_job
-from .assets import ROOT_PATH, DBMOL_FILES_FOLDER, DBMOL_FILES_EXTENSION
+from .assets import DBMOL_FILES_FOLDER, DBMOL_FILES_EXTENSION
+
+sys.path.insert(1, os.getcwd())
+from filesystem.filesystem import FileSystem
 
 load_dotenv()
 DAGSTER_SLACK_BOT_TOKEN = os.getenv('DAGSTER_SLACK_BOT_TOKEN')
@@ -30,7 +34,8 @@ def new_dbmol_file_sensor(context: SensorEvaluationContext):
     The job will only run if the last run is finished to avoid running multiple times.
     """
     # Check if there are new files in the dbmol folder
-    files = os.listdir(DBMOL_FILES_FOLDER)
+    file_system = FileSystem(root_path=DBMOL_FILES_FOLDER)
+    files = file_system.list_files_in_relative_path("")
     valid_files = [file for file in files if file.endswith(DBMOL_FILES_EXTENSION)]
     if len(valid_files) == 0:
         return

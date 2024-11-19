@@ -14,13 +14,17 @@ from dagster_dbt import (
 from textwrap import dedent
 import pandas as pd
 import os
+import sys
 import pathlib
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
-from io import StringIO
+from io import StringIO, BytesIO
 import zipfile
 
 from .constants import dbt_manifest_path
+
+sys.path.insert(1, os.getcwd())
+from filesystem.filesystem import FileSystem
 
 dagster_dbt_translator = DagsterDbtTranslator(
     settings=DagsterDbtTranslatorSettings(enable_asset_checks=True)
@@ -29,6 +33,8 @@ dagster_dbt_translator = DagsterDbtTranslator(
 ROOT_PATH = pathlib.Path(__file__).parent.parent.parent.parent.absolute()
 HISTORICAL_COMBINED_FILE_FOLDER = ROOT_PATH / "data" / "historical_data"
 HISTORICAL_COMBINED_FILE_EXTENSION = '.tsv'
+
+COMBINED_FILES_FOLDER = "/data/respat/data/combined/"
 
 load_dotenv()
 DB_HOST = os.getenv('DB_HOST')
@@ -117,16 +123,19 @@ def export_to_tsv(context):
     """
     Get the final combined data from the database and export to tsv
     """
-    # Create data folder if not exists
-    pathlib.Path('data/combined').mkdir(parents=True, exist_ok=True)
+    # Get the file system
+    file_system = FileSystem(root_path=COMBINED_FILES_FOLDER)
 
     # Export to xlsx
     engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
     cursor = engine.raw_connection().cursor()
 
     # Export data
-    with open('data/combined/combined.tsv', 'w') as file:
-        cursor.copy_expert(f'COPY (SELECT * FROM {DB_SCHEMA}."combined_final") TO STDOUT WITH CSV DELIMITER E\'\t\' HEADER', file)
+    tsv_buffer = StringIO()
+    cursor.copy_expert(f'COPY (SELECT * FROM {DB_SCHEMA}."combined_final") TO STDOUT WITH CSV DELIMITER E\'\t\' HEADER', tsv_buffer)
+    tsv_buffer.seek(0)
+
+    file_system.save_content_in_file('', BytesIO(tsv_buffer.getvalue().encode('utf-8')).read(), 'combined.tsv')
 
     engine.dispose()
 
@@ -138,9 +147,18 @@ def zip_exported_file(context):
     """
     Zip the combined exported file
     """
-    with zipfile.ZipFile('data/combined/combined.zip', 'w',
+    file_system = FileSystem(root_path=COMBINED_FILES_FOLDER)
+
+    file_to_zip = file_system.get_file_content_as_io_bytes('combined.tsv')
+
+    zip_buffer = BytesIO()
+    with zipfile.ZipFile(zip_buffer, 
+                         'w',
                          compression=zipfile.ZIP_DEFLATED,
                          compresslevel=9) as zf:
-        zf.write('data/combined/combined.tsv', arcname='combined.tsv')
+        zf.writestr('combined.tsv', file_to_zip.getvalue())
+    zip_buffer.seek(0)
+
+    file_system.save_content_in_file('', zip_buffer.read(), 'combined.zip')
 
 

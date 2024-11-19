@@ -20,6 +20,7 @@ from dagster.core.storage.dagster_run import FINISHED_STATUSES, DagsterRunStatus
 from dagster_slack import make_slack_on_run_failure_sensor
 import pandas as pd
 import os
+import sys
 import pathlib
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
@@ -28,8 +29,10 @@ import shutil
 
 from .constants import dbt_manifest_path
 
-ROOT_PATH = pathlib.Path(__file__).parent.parent.parent.parent.absolute()
-SABIN_FILES_FOLDER = ROOT_PATH / "data" / "sabin"
+sys.path.insert(1, os.getcwd())
+from filesystem.filesystem import FileSystem
+
+SABIN_FILES_FOLDER = "/data/respat/data/sabin/"
 SABIN_RAW_FILES_EXTENSION = '.xlsx'
 SABIN_CONVERTED_FILES_EXTENSION = '.csv'
 
@@ -49,38 +52,46 @@ dagster_dbt_translator = DagsterDbtTranslator(
 
 @asset(compute_kind="python")
 def sabin_convert_xlsx_to_csv(context):
-    for file in os.listdir(SABIN_FILES_FOLDER):
+    file_system = FileSystem(root_path=SABIN_FILES_FOLDER)
+
+    for file in file_system.list_files_in_relative_path(""):
         if not file.endswith(SABIN_RAW_FILES_EXTENSION):
             continue
         
-        file_path = SABIN_FILES_FOLDER / file
+        file_to_get = file.split("/")[-1] # Get the file name
         response = requests.post(
             "http://xlsx2csv:2140/convert",
-            files={"file": open(file_path, "rb")},
+            files={"file": file_system.get_file_content_as_io_bytes(file_to_get)},
         )
 
         if response.status_code != 200:
-            raise Exception(f"Error converting file {file_path}")
+            raise Exception(f"Error converting file {file}")
         
-        with open(file_path.with_suffix(SABIN_CONVERTED_FILES_EXTENSION), 'wb') as f:
-            f.write(response.content)
-
-        context.log.info(f"Converted file {file_path}")
+        # Save the converted file
+        file_binary = response.content
+        file_name = file_to_get.replace(SABIN_RAW_FILES_EXTENSION, SABIN_CONVERTED_FILES_EXTENSION)
+        context.log.info(f"Saving converted file {file_name}")
+        success = file_system.save_content_in_file("", file_binary, file_name, context.log)
+        if not success:
+            raise Exception(f"Error saving converted file {file}")
+        context.log.info(f"Converted file {file}")
 
         # Move the original file to _out folder
-        shutil.move(file_path, SABIN_FILES_FOLDER / '_out' / file)
-        context.log.info(f"Moved file {file_path} to _out folder")
+        file_system.move_file_to_folder("", file.split("/")[-1], '_out/')
+        context.log.info(f"Moved file {file} to _out folder")
 
 
 @asset(compute_kind="python", deps=[sabin_convert_xlsx_to_csv])
 def sabin_raw(context):
+    file_system = FileSystem(root_path=SABIN_FILES_FOLDER)
     engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
 
     # Choose one of the files to get the columns
-    sabin_files = [file for file in os.listdir(SABIN_FILES_FOLDER) if file.endswith(SABIN_CONVERTED_FILES_EXTENSION)]
+    sabin_files = [file for file in file_system.list_files_in_relative_path("") if file.endswith(SABIN_CONVERTED_FILES_EXTENSION)]
     assert len(sabin_files) > 0, f"No files found in {SABIN_FILES_FOLDER} with extension {SABIN_CONVERTED_FILES_EXTENSION}"
 
-    sabin_df = pd.read_csv(SABIN_FILES_FOLDER / sabin_files[0], dtype = str)
+    file_to_get = sabin_files[0].split("/")[-1] # Get the file name
+    sabin_df = pd.read_csv(file_system.get_file_content_as_io_bytes(file_to_get), dtype = str)
     sabin_df['file_name'] = sabin_files[0]
     context.log.info(f"Reading file {sabin_files[0]}")
 
@@ -107,7 +118,8 @@ def sabin_remove_used_files(context):
     Remove the files that were used in the dbt process
     """
     raw_data_table = 'sabin_raw'
-    files_in_folder = [file for file in os.listdir(SABIN_FILES_FOLDER) if file.endswith(SABIN_CONVERTED_FILES_EXTENSION)]
+    file_system = FileSystem(root_path=SABIN_FILES_FOLDER)
+    files_in_folder = [file for file in file_system.list_files_in_relative_path("") if file.endswith(SABIN_CONVERTED_FILES_EXTENSION)]
 
     # Get the files that were used in the dbt process
     engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
@@ -115,12 +127,12 @@ def sabin_remove_used_files(context):
     engine.dispose()
 
     # Remove the files that were used
-    path_to_move = SABIN_FILES_FOLDER / "_out"
+    path_to_move = "_out/"
     for used_file in used_files:
         if used_file in files_in_folder:
             context.log.info(f"Moving file {used_file} to {path_to_move}")
-            shutil.move(SABIN_FILES_FOLDER / used_file, path_to_move / used_file)
+            file_system.move_file_to_folder("", used_file.split("/")[-1], path_to_move)
     
     # Log the unmoved files
-    files_in_folder = os.listdir(SABIN_FILES_FOLDER)
+    files_in_folder = file_system.list_files_in_relative_path("")
     context.log.info(f"Files that were not moved: {files_in_folder}")

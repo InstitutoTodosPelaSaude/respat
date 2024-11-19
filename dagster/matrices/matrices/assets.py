@@ -16,14 +16,20 @@ from .constants import dbt_manifest_path
 from textwrap import dedent
 import pandas as pd
 import os
+import sys
+import io
 import pathlib
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
 
+sys.path.insert(1, os.getcwd())
+from filesystem.filesystem import FileSystem
 
 dagster_dbt_translator = DagsterDbtTranslator(
     settings=DagsterDbtTranslatorSettings(enable_asset_checks=True)
 )
+
+MATRICES_FILES_FOLDER = "/data/respat/data/matrices/"
 
 load_dotenv()
 DB_HOST = os.getenv('DB_HOST')
@@ -67,11 +73,17 @@ def respiratorios_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource
     ]
 )
 def export_matrices_to_xlsx(context):
-    # Delete all the files in the folder, ignoring the .gitkeep file
-    for file in os.listdir(SAVE_PATH):
-        if file != ".gitkeep":
-            os.remove(f'{SAVE_PATH}/{file}')
-            context.log.info(f"Deleted file: {file}")
+    # Get file system
+    file_system = FileSystem(root_path=MATRICES_FILES_FOLDER)
+
+    # Delete all the files in the folder to avoid unnecessary files
+    for file in file_system.list_files_in_relative_path(""):
+        file = file.split("/")[-1] # Get the file name
+        deleted = file_system.delete_file(file)
+
+        if not deleted:
+            raise Exception(f'Error deleting file {file}')
+        context.log.info(f'Deleted {file}')
 
     # Map all the db matrix tables that need to be exported to its file name
     matrices_name_map = {
@@ -99,4 +111,8 @@ def export_matrices_to_xlsx(context):
     for matrix_name, new_name in matrices_name_map.items():
         matrix_df = pd.read_sql_query(f'SELECT * FROM {DB_SCHEMA}."{matrix_name}"', engine, dtype='str')
 
-        matrix_df.to_excel(f'{SAVE_PATH}/{new_name}.xlsx', index=False)
+        excel_buffer = io.BytesIO()
+        matrix_df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+
+        file_system.save_content_in_file('', excel_buffer.read(), f'{new_name}.xlsx')

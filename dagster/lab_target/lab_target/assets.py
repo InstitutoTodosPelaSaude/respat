@@ -14,6 +14,7 @@ from dagster_dbt import (
 from textwrap import dedent
 import pandas as pd
 import os
+import sys
 import pathlib
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
@@ -22,9 +23,10 @@ from io import StringIO
 
 from .constants import dbt_manifest_path
 
+sys.path.insert(1, os.getcwd())
+from filesystem.filesystem import FileSystem
 
-ROOT_PATH = pathlib.Path(__file__).parent.parent.parent.parent.absolute()
-TARGET_FILES_FOLDER = ROOT_PATH / "data" / "target"
+TARGET_FILES_FOLDER = "/data/respat/data/target/"
 TARGET_FILES_EXTENSION = '.csv'
 
 dagster_dbt_translator = DagsterDbtTranslator(
@@ -45,15 +47,17 @@ def target_raw(context):
     """
     Read excel files from data/target folder and save to db
     """
+    file_system = FileSystem(root_path=TARGET_FILES_FOLDER)
     engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
 
     # Choose one of the files and run the process
-    target_files = [file for file in os.listdir(TARGET_FILES_FOLDER) if file.endswith(TARGET_FILES_EXTENSION)]
+    target_files = [file for file in file_system.list_files_in_relative_path("") if file.endswith(TARGET_FILES_EXTENSION)]
     assert len(target_files) > 0, f"No files found in the folder {TARGET_FILES_FOLDER} with extension {TARGET_FILES_EXTENSION}"
 
     # Read the file
     context.log.info(f"Reading file {target_files[0]}")
-    target_df = pd.read_csv(TARGET_FILES_FOLDER / target_files[0], dtype = str)
+    file_to_get = target_files[0].split('/')[-1] # Get the file name
+    target_df = pd.read_csv(file_system.get_file_content_as_io_bytes(file_to_get), dtype = str)
     target_df['file_name'] = target_files[0]
 
     # Save to db
@@ -91,7 +95,8 @@ def target_remove_used_files(context):
     Remove the files that were used in the dbt process
     """
     raw_data_table = 'target_raw'
-    files_in_folder = [file for file in os.listdir(TARGET_FILES_FOLDER) if file.endswith(TARGET_FILES_EXTENSION)]
+    file_system = FileSystem(root_path=TARGET_FILES_FOLDER)
+    files_in_folder = [file for file in file_system.list_files_in_relative_path("") if file.endswith(TARGET_FILES_EXTENSION)]
 
     # Get the files that were used in the dbt process
     engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
@@ -99,13 +104,13 @@ def target_remove_used_files(context):
     engine.dispose()
 
     # Remove the files that were used
-    path_to_move = TARGET_FILES_FOLDER / "_out"
+    path_to_move = "_out/"
     for used_file in used_files:
         if used_file in files_in_folder:
             context.log.info(f"Moving file {used_file} to {path_to_move}")
-            shutil.move(TARGET_FILES_FOLDER / used_file, path_to_move / used_file)
+            file_system.move_file_to_folder("", used_file.split("/")[-1], path_to_move)
     
     # Log the unmoved files
-    files_in_folder = os.listdir(TARGET_FILES_FOLDER)
+    files_in_folder = file_system.list_files_in_relative_path("")
     context.log.info(f"Files that were not moved: {files_in_folder}")
 
