@@ -106,6 +106,7 @@ def sivep_raw(context):
         
         context.log.info(f"Chunk {i} - Saving {chunk_rows} rows in the Buffer")
 
+        chunk = chunk[sivep_df_columns]
         chunk['file_name'] = sivep_file
         chunk_buffer = StringIO()
         chunk.to_csv(chunk_buffer, index=False, header=False)
