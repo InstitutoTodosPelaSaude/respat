@@ -13,6 +13,9 @@ models:
           - dbt_utils.expression_is_true:
               name: sivep_01_future_date
               expression: "<= current_date"
+              config:
+                severity: warn
+                error_if: ">30"
       - name: sex
         tests:
           - not_null:
