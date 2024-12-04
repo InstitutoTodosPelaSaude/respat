@@ -69,18 +69,13 @@ def sivep_raw(context):
     context.log.info(f"Loading a sample of {sivep_file} to define the columns")
 
     file_to_get = sivep_file.split('/')[-1] # Get the file name
-    sample_chunk = pd.read_csv(
-        file_system.get_file_content_as_io_bytes(file_to_get), 
-        chunksize=1, 
-        sep=';', 
-        encoding='latin-1'
-    )
-    sivep_df_sample = next(sample_chunk)
-    columns_file = ', '.join([f'"{col}" TEXT' for col in sivep_df_sample.columns])
-    filename_column = f'"file_name" TEXT'
-    columns = f"{columns_file}, {filename_column}"
+    file_contents = file_system.get_file_content_as_io_bytes(file_to_get)
+    header = file_contents.readline().decode('latin-1').strip()
+    columns = ', '.join([f'{col} TEXT' for col in header.split(';')])
+    filename_column = f'file_name TEXT'
+    columns = f"{columns}, {filename_column}"
 
-    context.log.info(f"Finished loading sample. Columns found: {columns_file}")
+    context.log.info(f"Finished loading sample. Columns found: {columns}")
     
     # drop table if exists
     context.log.info(f"Dropping table {DB_SCHEMA}.sivep_raw")
@@ -115,7 +110,7 @@ def sivep_raw(context):
 
         cursor.copy_expert(f"COPY {DB_SCHEMA}.sivep_raw FROM STDIN WITH CSV", chunk_buffer)
         context.log.info(f"Chunk {i} - Finished saving {chunk_rows} rows in table `{DB_SCHEMA}.sivep_raw` ")
-        
+
         cursor.connection.commit()
 
     cursor.close()
