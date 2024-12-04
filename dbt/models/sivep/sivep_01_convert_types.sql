@@ -5,8 +5,10 @@ WITH source_data AS (
 )
 SELECT 
     id_unidade ,
-    cs_sexo ,
+    cs_sexo AS sex ,
     TO_DATE(dt_coleta, 'dd/mm/yyyy') AS dt_coleta,
+    nu_idade_n::NUMERIC::INTEGER AS nu_idade_n, 
+    tp_idade::NUMERIC::INTEGER tp_idade,
     sem_pri::NUMERIC::INTEGER AS sem_pri,
     amostra::NUMERIC::INTEGER AS amostra,
     id_mn_resi ,
