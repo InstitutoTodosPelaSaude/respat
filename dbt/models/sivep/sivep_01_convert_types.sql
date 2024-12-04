@@ -4,19 +4,26 @@ WITH source_data AS (
     {{ source("dagster", "sivep_raw") }}
 )
 SELECT 
-    id_unidade ,
-    cs_sexo AS sex ,
-    TO_DATE(dt_coleta, 'dd/mm/yyyy') AS dt_coleta,
+    id_unidade,
+
+    -- PACIENT
+    cs_sexo AS sex,
     nu_idade_n::NUMERIC::INTEGER AS nu_idade_n, 
-    tp_idade::NUMERIC::INTEGER tp_idade,
+    tp_idade::NUMERIC::INTEGER   AS tp_idade,
+    
+    -- LOCATION
+    co_mun_res::NUMERIC::INTEGER        AS co_mun_res,
+    {{ normalize_text("id_mn_resi") }}  AS location,
+    {{ normalize_text("sg_uf") }}       AS sg_uf,
+    id_pais,
+    id_rg_resi,
+
+    TO_DATE(dt_coleta, 'dd/mm/yyyy') AS date_testing,
+
     sem_pri::NUMERIC::INTEGER AS sem_pri,
     amostra::NUMERIC::INTEGER AS amostra,
-    id_mn_resi ,
-    id_pais ,
-    id_rg_resi ,
-    sg_uf ,
-    co_mun_res::NUMERIC::INTEGER AS co_mun_res,
-    dt_notific ,
+    
+    TO_DATE(dt_notific, 'dd/mm/yyyy') AS dt_notific ,
     TO_DATE(dt_sin_pri, 'dd/mm/yyyy') AS dt_sin_pri ,
     TO_DATE(dt_res_an, 'dd/mm/yyyy') AS dt_res_an ,
     res_an::NUMERIC::INTEGER AS res_an,
@@ -49,5 +56,6 @@ SELECT
     classi_fin::NUMERIC::INTEGER AS classi_fin,
     classi_out,
     criterio::NUMERIC::INTEGER AS criterio ,
+    
     file_name
 FROM source_data
