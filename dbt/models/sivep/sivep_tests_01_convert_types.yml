@@ -22,3 +22,15 @@ models:
               config:
                 severity: warn
                 error_if: ">1000"
+      - name: location
+        tests:
+          - not_null:
+              config:
+                severity: warn
+                error_if: ">1000"
+      - name: sg_uf
+        tests:
+          - not_null:
+              config:
+                severity: warn
+                error_if: ">1000"
