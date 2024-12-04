@@ -52,6 +52,18 @@ def sivep_raw(context):
     engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
     cursor = engine.raw_connection().cursor()
 
+    sivep_df_columns = [
+        "ID_UNIDADE", "CS_SEXO", "DT_COLETA",  "SEM_PRI", "AMOSTRA",
+        "ID_MN_RESI",  "ID_PAIS", "ID_RG_RESI",  "SG_UF",  "CO_MUN_RES", 
+        "DT_NOTIFIC", "DT_SIN_PRI", "DT_RES_AN", 
+        "RES_AN", "POS_AN_FLU", "POS_AN_OUT", "AN_SARS2", "AN_VSR", 
+        "AN_PARA1", "AN_PARA2", "AN_PARA3", "AN_ADENO", "AN_OUTRO", 
+        "DS_AN_OUT", "DT_PCR", "PCR_RESUL", "POS_PCRFLU", "POS_PCROUT", 
+        "PCR_SARS2", "PCR_VSR", "PCR_PARA1", "PCR_PARA2", "PCR_PARA3", "PCR_PARA4", 
+        "PCR_ADENO", "PCR_METAP", "PCR_BOCA", "PCR_RINO", "PCR_OUTRO", "DS_PCR_OUT", 
+        "CLASSI_FIN", "CLASSI_OUT", "CRITERIO"
+    ]
+
     # Choose one of the files and run the process
     sivep_files = [
         file for file 
@@ -65,29 +77,23 @@ def sivep_raw(context):
     sivep_file = sivep_files[0]
     context.log.info(f"Processing {sivep_file}")
 
-    # Get a sample of data to retrieve the column names
-    context.log.info(f"Loading a sample of {sivep_file} to define the columns")
-
-    file_to_get = sivep_file.split('/')[-1] # Get the file name
-    file_contents = file_system.get_file_content_as_io_bytes(file_to_get)
-    header = file_contents.readline().decode('latin-1').strip()
-    columns = ', '.join([f'{col} TEXT' for col in header.split(';')])
+    columns = ', '.join([f'{col} TEXT' for col in sivep_df_columns])
     filename_column = f'file_name TEXT'
     columns = f"{columns}, {filename_column}"
 
-    context.log.info(f"Finished loading sample. Columns found: {columns}")
-    
     # drop table if exists
     context.log.info(f"Dropping table {DB_SCHEMA}.sivep_raw")
     cursor.execute(f"DROP TABLE IF EXISTS {DB_SCHEMA}.sivep_raw")
     cursor.execute(f"CREATE TABLE {DB_SCHEMA}.sivep_raw ({columns})")
 
     # Process the data by chunks
+    file_to_get = sivep_file.split('/')[-1]
     total_rows = 0
     chunk_size = 1_000_000
     chunks_sivep_df = pd.read_csv(
         file_system.get_file_content_as_io_bytes(file_to_get), 
         chunksize=chunk_size, 
+        usecols=sivep_df_columns,
         sep=';', 
         encoding='latin-1'
     )
