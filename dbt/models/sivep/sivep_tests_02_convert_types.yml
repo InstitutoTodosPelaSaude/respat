@@ -1,0 +1,44 @@
+version: 2
+
+models:
+  - name: sivep_02_fix_values
+    description: Convert data types and rename columns
+    columns:
+      - name: date_testing
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              name: sivep_02_future_date
+              expression: "<= current_date"
+      - name: sex
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["M", "F"]
+      - name: location
+        tests:
+          - not_null
+      - name: state
+        tests:
+          - accepted_uf_names
+          - not_null:
+              name: sivep_02_state_not_null
+              config:
+                severity: error
+                error_if: ">1000"
+                warn_if: ">100"
+      - name: age
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 200
+              config:
+                severity: error
+                error_if: ">1000"
+                warn_if: ">100"
+          - not_null:
+              name: sivep_02_age_not_null
+              config:
+                severity: error
+                error_if: ">1000"
+                warn_if: ">100"
