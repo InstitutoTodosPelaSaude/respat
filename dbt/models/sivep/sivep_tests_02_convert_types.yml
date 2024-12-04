@@ -12,7 +12,11 @@ models:
               expression: "<= current_date"
       - name: sex
         tests:
-          - not_null
+          - not_null:
+              config:
+                severity: error
+                error_if: ">1000"
+                warn_if: ">100"
           - accepted_values:
               values: ["M", "F"]
       - name: location

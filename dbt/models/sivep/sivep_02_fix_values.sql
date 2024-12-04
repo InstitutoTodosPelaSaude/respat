@@ -9,7 +9,7 @@ SELECT
     -- PACIENT
     CASE 
         WHEN sex NOT IN ('F', 'M') THEN NULL
-        ELSE NULL
+        ELSE sex
     END AS sex,
     
     CASE
@@ -22,7 +22,7 @@ SELECT
     -- LOCATION
     co_mun_res,
     location,
-    sg_uf,
+    {{ map_state_code_to_state_name('sg_uf', 'NULL') }} AS state,
     id_pais,
     id_rg_resi,
 
@@ -67,4 +67,8 @@ SELECT
     
     file_name
 FROM source_data
-WHERE amostra = 1 -- Only tests with sample collected
+WHERE 1=1
+AND amostra = 1 -- Only tests with sample collected
+AND location IS NOT NULL
+AND date_testing <= CURRENT_DATE
+AND date_testing IS NOT NULL
