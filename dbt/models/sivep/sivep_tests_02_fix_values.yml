@@ -46,78 +46,32 @@ models:
                 severity: error
                 error_if: ">1000"
                 warn_if: ">100"
-      - name: FLUA_antigen_result
+      - name: result
         quote: true
         tests:
           - accepted_values:
               values: [0, 1]
-      - name: FLUB_antigen_result
-        quote: true
+          - not_null
+      - name: test_kit
         tests:
+          - not_null
           - accepted_values:
-              values: [0, 1]
-      - name: SC2_antigen_result
-        quote: true
+              values: [
+                    'flua_antigen', 'flub_antigen',
+                    'covid_antigen','vsr_antigen',
+                    'para_antigen','adeno_antigen',
+                    'flua_pcr','flub_pcr',
+                    'covid_pcr','vsr_pcr',
+                    'adeno_pcr','meta_pcr',
+                    'boca_pcr','rino_pcr',
+                    'para_pcr'
+                  ]
+      - name: sample_id
         tests:
-          - accepted_values:
-              values: [0, 1]
-      - name: VSR_antigen_result
-        quote: true
-        tests:
-          - accepted_values:
-              values: [0, 1]
-      - name: PARA_antigen_result
-        quote: true
-        tests:
-          - accepted_values:
-              values: [0, 1]
-      - name: ADENO_antigen_result
-        quote: true
-        tests:
-          - accepted_values:
-              values: [0, 1]
-      - name: FLUA_pcr_result
-        quote: true
-        tests:
-          - accepted_values:
-              values: [0, 1]
-      - name: FLUB_pcr_result
-        quote: true
-        tests:
-          - accepted_values:
-              values: [0, 1]
-      - name: SC2_pcr_result
-        quote: true
-        tests:
-          - accepted_values:
-              values: [0, 1]
-      - name: VSR_pcr_result
-        quote: true
-        tests:
-          - accepted_values:
-              values: [0, 1]
-      - name: ADENO_pcr_result
-        quote: true
-        tests:
-          - accepted_values:
-              values: [0, 1]
-      - name: META_pcr_result
-        quote: true
-        tests:
-          - accepted_values:
-              values: [0, 1]
-      - name: BOCA_pcr_result
-        quote: true
-        tests:
-          - accepted_values:
-              values: [0, 1]
-      - name: RINO_pcr_result
-        quote: true
-        tests:
-          - accepted_values:
-              values: [0, 1]
-      - name: PARA_pcr_result
-        quote: true
-        tests:
-          - accepted_values:
-              values: [0, 1]
+          - not_null
+          - unique:
+              config:
+                severity: error
+                error_if: ">50000"
+                warn_if: ">10000"
+        

@@ -82,5 +82,28 @@ results_normalized AS (
         AND date_testing <= CURRENT_DATE
         AND date_testing IS NOT NULL
 )
-
-
+SELECT 
+    -- CREATING TEST IDENTIFIER = location info + date + personal info + test info
+    md5(CONCAT( id_unidade, co_mun_res, date_testing, age, sex, test_kit_pathogen.test_kit )) AS sample_id,
+    results_normalized.*, 
+    test_kit_pathogen.*
+FROM results_normalized
+CROSS JOIN LATERAL (
+    VALUES
+        ('flua_antigen', "FLUA_antigen_result"),
+        ('flub_antigen', "FLUB_antigen_result"),
+        ('covid_antigen',  "SC2_antigen_result"),
+        ('vsr_antigen', "VSR_antigen_result"),
+        ('para_antigen', "PARA_antigen_result"),
+        ('adeno_antigen', "ADENO_antigen_result"),
+        ('flua_pcr', "FLUA_pcr_result"),
+        ('flub_pcr', "FLUB_pcr_result"),
+        ('covid_pcr', "SC2_pcr_result"),
+        ('vsr_pcr', "VSR_pcr_result"),
+        ('adeno_pcr', "ADENO_pcr_result"),
+        ('meta_pcr', "META_pcr_result"),
+        ('boca_pcr', "BOCA_pcr_result"),
+        ('rino_pcr', "RINO_pcr_result"),
+        ('para_pcr', "PARA_pcr_result")
+) AS test_kit_pathogen(test_kit, result)
+WHERE test_kit_pathogen.result IS NOT NULL
