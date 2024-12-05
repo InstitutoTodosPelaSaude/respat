@@ -51,5 +51,7 @@ SELECT
     {% endfor %}
     ,
     -- Count the number of lines in each sample_id
-    1 AS qty_original_lines
+    COUNT(*) OVER(
+            PARTITION BY sample_id
+        ) AS qty_original_lines
 FROM source_data
