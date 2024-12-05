@@ -1,11 +1,12 @@
 version: 2
 
 models:
-  - name: sivep_03_pivot_results
-    description: Map test results to each pathogen column
+  - name: sivep_04_fill_results
+    description: Fill results in multitarget tests
     tests:  
-      - at_least_one_test_result_is_present
-      - only_one_test_result_is_present
+      - dbt_utils.equal_rowcount:
+          compare_model: ref('sivep_03_pivot_results')
+      - at_least_one_test_result_is_present_str
       - model_has_more_than_x_rows:
           n_rows: 0
     columns:
@@ -14,7 +15,7 @@ models:
         tests:
           - not_null
           - dbt_utils.expression_is_true:
-              name: sivep_03_future_date
+              name: sivep_04_future_date
               expression: "<= current_date"
       - name: sex
         tests:
@@ -32,7 +33,7 @@ models:
         tests:
           - accepted_uf_names
           - not_null:
-              name: sivep_03_state_not_null
+              name: sivep_04_state_not_null
               config:
                 severity: error
                 error_if: ">1000"
@@ -47,17 +48,11 @@ models:
                 error_if: ">1000"
                 warn_if: ">100"
           - not_null:
-              name: sivep_03_age_not_null
+              name: sivep_04_age_not_null
               config:
                 severity: error
                 error_if: ">1000"
                 warn_if: ">100"
-      - name: result
-        quote: true
-        tests:
-          - accepted_values:
-              values: [0, 1]
-          - not_null
       - name: test_kit
         tests:
           - not_null
@@ -80,42 +75,48 @@ models:
                 severity: error
                 error_if: ">50000"
                 warn_if: ">10000"
+      - name: qty_original_lines
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 10
+              inclusive: true
       - name: SC2_test_result
         quote: true
-        tests: &test_pivot_test_result_columns
+        tests: &test_fill_values_test_result_columns
           - not_null
           - accepted_values:
-              values: [0, 1, -1]
+              values: ['Pos', 'Neg', 'NT']
       - name: FLUA_test_result
         quote: true
-        tests: *test_pivot_test_result_columns
+        tests: *test_fill_values_test_result_columns
       - name: FLUB_test_result
         quote: true
-        tests: *test_pivot_test_result_columns
+        tests: *test_fill_values_test_result_columns
       - name: VSR_test_result
         quote: true
-        tests: *test_pivot_test_result_columns
+        tests: *test_fill_values_test_result_columns
       - name: RINO_test_result
         quote: true
-        tests: *test_pivot_test_result_columns
+        tests: *test_fill_values_test_result_columns
       - name: META_test_result
         quote: true
-        tests: *test_pivot_test_result_columns
+        tests: *test_fill_values_test_result_columns
       - name: PARA_test_result
         quote: true
-        tests: *test_pivot_test_result_columns
+        tests: *test_fill_values_test_result_columns
       - name: ADENO_test_result
         quote: true
-        tests: *test_pivot_test_result_columns
+        tests: *test_fill_values_test_result_columns
       - name: BOCA_test_result
         quote: true
-        tests: *test_pivot_test_result_columns
+        tests: *test_fill_values_test_result_columns
       - name: COVS_test_result
         quote: true
-        tests: *test_pivot_test_result_columns
+        tests: *test_fill_values_test_result_columns
       - name: ENTERO_test_result
         quote: true
-        tests: *test_pivot_test_result_columns
+        tests: *test_fill_values_test_result_columns
       - name: BAC_test_result
         quote: true
-        tests: *test_pivot_test_result_columns
+        tests: *test_fill_values_test_result_columns
