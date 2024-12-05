@@ -46,3 +46,78 @@ models:
                 severity: error
                 error_if: ">1000"
                 warn_if: ">100"
+      - name: FLUA_antigen_result
+        quote: true
+        tests:
+          - accepted_values:
+              values: [0, 1]
+      - name: FLUB_antigen_result
+        quote: true
+        tests:
+          - accepted_values:
+              values: [0, 1]
+      - name: SC2_antigen_result
+        quote: true
+        tests:
+          - accepted_values:
+              values: [0, 1]
+      - name: VSR_antigen_result
+        quote: true
+        tests:
+          - accepted_values:
+              values: [0, 1]
+      - name: PARA_antigen_result
+        quote: true
+        tests:
+          - accepted_values:
+              values: [0, 1]
+      - name: ADENO_antigen_result
+        quote: true
+        tests:
+          - accepted_values:
+              values: [0, 1]
+      - name: FLUA_pcr_result
+        quote: true
+        tests:
+          - accepted_values:
+              values: [0, 1]
+      - name: FLUB_pcr_result
+        quote: true
+        tests:
+          - accepted_values:
+              values: [0, 1]
+      - name: SC2_pcr_result
+        quote: true
+        tests:
+          - accepted_values:
+              values: [0, 1]
+      - name: VSR_pcr_result
+        quote: true
+        tests:
+          - accepted_values:
+              values: [0, 1]
+      - name: ADENO_pcr_result
+        quote: true
+        tests:
+          - accepted_values:
+              values: [0, 1]
+      - name: META_pcr_result
+        quote: true
+        tests:
+          - accepted_values:
+              values: [0, 1]
+      - name: BOCA_pcr_result
+        quote: true
+        tests:
+          - accepted_values:
+              values: [0, 1]
+      - name: RINO_pcr_result
+        quote: true
+        tests:
+          - accepted_values:
+              values: [0, 1]
+      - name: PARA_pcr_result
+        quote: true
+        tests:
+          - accepted_values:
+              values: [0, 1]
