@@ -135,6 +135,7 @@ def sivep_raw(context):
         }
     )
 
+
 @dbt_assets(
     manifest=dbt_manifest_path,
     select='sivep',
@@ -142,3 +143,38 @@ def sivep_raw(context):
 )
 def respiratorios_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
     yield from dbt.cli(["build"], context=context).stream()
+
+
+@asset(
+    compute_kind="python", 
+    deps=[get_asset_key_for_model([respiratorios_dbt_assets], "sivep_final")]
+)
+def sivep_remove_used_files(context):
+    """
+    Remove the files that were used in the dbt process
+    """
+
+    context.log.info("Removing last successfully ingested file")
+
+    raw_data_table = 'sivep_raw'
+    file_system = FileSystem(root_path=SIVEP_FILES_FOLDER)
+    files_in_folder = [file for file in file_system.list_files_in_relative_path("") if file.endswith(SIVEP_FILES_EXTENSION)]
+
+    context.log.info(f"Querying database to retrieve last used fil. Table {DB_SCHEMA}.{raw_data_table}")
+    # Get the files that were used in the dbt process
+    engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
+    used_files = pd.read_sql_query(f"SELECT DISTINCT file_name FROM {DB_SCHEMA}.{raw_data_table}", engine).file_name.to_list()
+    engine.dispose()
+
+    context.log.info(f"Moving files to _out/")
+
+    # Remove the files that were used
+    path_to_move = "_out/"
+    for used_file in used_files:
+        if used_file in files_in_folder:
+            context.log.info(f"Moving file {used_file} to {path_to_move}")
+            file_system.move_file_to_folder("", used_file.split("/")[-1], path_to_move)
+    
+    # Log the unmoved files
+    files_in_folder = file_system.list_files_in_relative_path("")
+    context.log.info(f"Files that were not moved: {files_in_folder}")
