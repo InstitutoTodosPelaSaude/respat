@@ -19,7 +19,7 @@ import sys
 import pathlib
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
-from io import StringIO
+from io import StringIO, BytesIO
 
 from .constants import dbt_manifest_path
 
@@ -27,6 +27,7 @@ sys.path.insert(1, os.getcwd())
 from filesystem.filesystem import FileSystem
 
 SIVEP_FILES_FOLDER = "/data/respat/data/SIVEP/"
+INFODENGUE_FILES_PUBLIC_FOLDER = "/public/data/respat/SIVEP"
 SIVEP_FILES_EXTENSION = '.csv'
 
 dagster_dbt_translator = DagsterDbtTranslator(
@@ -178,3 +179,25 @@ def sivep_remove_used_files(context):
     # Log the unmoved files
     files_in_folder = file_system.list_files_in_relative_path("")
     context.log.info(f"Files that were not moved: {files_in_folder}")
+
+@asset(
+    compute_kind="python", 
+    deps=[get_asset_key_for_model([respiratorios_dbt_assets], "sivep_final")]
+)
+def export_to_csv(context):
+    """
+    Get the final sivep data from the database and export to csv
+    """
+    file_system = FileSystem(root_path=INFODENGUE_FILES_PUBLIC_FOLDER)
+
+    engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
+    cursor = engine.raw_connection().cursor()
+
+
+    buffer = StringIO()
+    cursor.copy_expert(f'COPY (SELECT * FROM {DB_SCHEMA}."sivep_final") TO STDOUT WITH CSV DELIMITER \';\' HEADER', buffer)
+    buffer.seek(0)
+
+    file_system.save_content_in_file('', BytesIO(buffer.getvalue().encode('utf-8')).read(), 'SIVEP.csv')
+
+    engine.dispose()
