@@ -1,0 +1,77 @@
+version: 2
+
+models:
+  - name: sivep_02_fix_values
+    description: Standardizes values in columns
+    columns:
+      - name: date_testing
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              name: sivep_02_future_date
+              expression: "<= current_date"
+      - name: sex
+        tests:
+          - not_null:
+              config:
+                severity: error
+                error_if: ">1000"
+                warn_if: ">100"
+          - accepted_values:
+              values: ["M", "F"]
+      - name: location
+        tests:
+          - not_null
+      - name: state
+        tests:
+          - accepted_uf_names
+          - not_null:
+              name: sivep_02_state_not_null
+              config:
+                severity: error
+                error_if: ">1000"
+                warn_if: ">100"
+      - name: age
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 200
+              config:
+                severity: error
+                error_if: ">1000"
+                warn_if: ">100"
+          - not_null:
+              name: sivep_02_age_not_null
+              config:
+                severity: error
+                error_if: ">1000"
+                warn_if: ">100"
+      - name: result
+        quote: true
+        tests:
+          - accepted_values:
+              values: [0, 1]
+          - not_null
+      - name: test_kit
+        tests:
+          - not_null
+          - accepted_values:
+              values: [
+                    'flua_antigen', 'flub_antigen',
+                    'covid_antigen','vsr_antigen',
+                    'para_antigen','adeno_antigen',
+                    'flua_pcr','flub_pcr',
+                    'covid_pcr','vsr_pcr',
+                    'adeno_pcr','meta_pcr',
+                    'boca_pcr','rino_pcr',
+                    'para_pcr'
+                  ]
+      - name: sample_id
+        tests:
+          - not_null
+          - unique:
+              config:
+                severity: error
+                error_if: ">50000"
+                warn_if: ">10000"
+        

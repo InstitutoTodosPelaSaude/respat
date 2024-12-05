@@ -19,12 +19,12 @@
 WITH source_data AS (
 
     SELECT * FROM
-    {{ ref('hpardini_03_pivot_results') }}
+    {{ ref('sivep_03_pivot_results') }}
 
 )
 SELECT
     sample_id,
-    test_id,	
+    sample_id AS test_id,	
     test_kit,
     sex,
     age,
