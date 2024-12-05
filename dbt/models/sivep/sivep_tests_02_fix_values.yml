@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: sivep_02_fix_values
-    description: Convert data types and rename columns
+    description: Standardizes values in columns
     columns:
       - name: date_testing
         tests:

@@ -90,20 +90,20 @@ SELECT
 FROM results_normalized
 CROSS JOIN LATERAL (
     VALUES
-        ('flua_antigen', "FLUA_antigen_result"),
-        ('flub_antigen', "FLUB_antigen_result"),
-        ('covid_antigen',  "SC2_antigen_result"),
-        ('vsr_antigen', "VSR_antigen_result"),
-        ('para_antigen', "PARA_antigen_result"),
-        ('adeno_antigen', "ADENO_antigen_result"),
-        ('flua_pcr', "FLUA_pcr_result"),
-        ('flub_pcr', "FLUB_pcr_result"),
-        ('covid_pcr', "SC2_pcr_result"),
-        ('vsr_pcr', "VSR_pcr_result"),
-        ('adeno_pcr', "ADENO_pcr_result"),
-        ('meta_pcr', "META_pcr_result"),
-        ('boca_pcr', "BOCA_pcr_result"),
-        ('rino_pcr', "RINO_pcr_result"),
-        ('para_pcr', "PARA_pcr_result")
-) AS test_kit_pathogen(test_kit, result)
+        ('flua_antigen',  'flua',  "FLUA_antigen_result"),
+        ('flub_antigen',  'flub',  "FLUB_antigen_result"),
+        ('covid_antigen', 'covid', "SC2_antigen_result"),
+        ('vsr_antigen',   'vsr',   "VSR_antigen_result"),
+        ('para_antigen',  'para',  "PARA_antigen_result"),
+        ('adeno_antigen', 'adeno', "ADENO_antigen_result"),
+        ('flua_pcr',      'flua',  "FLUA_pcr_result"),
+        ('flub_pcr',      'flub',  "FLUB_pcr_result"),
+        ('covid_pcr',     'covid', "SC2_pcr_result"),
+        ('vsr_pcr',       'vsr',   "VSR_pcr_result"),
+        ('adeno_pcr',     'adeno', "ADENO_pcr_result"),
+        ('meta_pcr',      'meta',  "META_pcr_result"),
+        ('boca_pcr',      'boca',  "BOCA_pcr_result"),
+        ('rino_pcr',      'rino',  "RINO_pcr_result"),
+        ('para_pcr',      'para',  "PARA_pcr_result")
+) AS test_kit_pathogen(test_kit, pathogen, result)
 WHERE test_kit_pathogen.result IS NOT NULL
