@@ -56,9 +56,9 @@ def sivep_raw(context):
         "ID_UNIDADE", "CS_SEXO", "NU_IDADE_N", "TP_IDADE", "DT_COLETA",  "SEM_PRI", "AMOSTRA",
         "ID_MN_RESI",  "ID_PAIS", "ID_RG_RESI",  "SG_UF",  "CO_MUN_RES", 
         "DT_NOTIFIC", "DT_SIN_PRI", "DT_RES_AN", 
-        "RES_AN", "POS_AN_FLU", "POS_AN_OUT", "AN_SARS2", "AN_VSR", 
+        "RES_AN", "TP_FLU_AN", "POS_AN_FLU", "POS_AN_OUT", "AN_SARS2", "AN_VSR", 
         "AN_PARA1", "AN_PARA2", "AN_PARA3", "AN_ADENO", "AN_OUTRO", 
-        "DS_AN_OUT", "DT_PCR", "PCR_RESUL", "POS_PCRFLU", "POS_PCROUT", 
+        "DS_AN_OUT", "DT_PCR", "PCR_RESUL", "POS_PCRFLU", "POS_PCROUT", "TP_FLU_PCR", 
         "PCR_SARS2", "PCR_VSR", "PCR_PARA1", "PCR_PARA2", "PCR_PARA3", "PCR_PARA4", 
         "PCR_ADENO", "PCR_METAP", "PCR_BOCA", "PCR_RINO", "PCR_OUTRO", "DS_PCR_OUT", 
         "CLASSI_FIN", "CLASSI_OUT", "CRITERIO"
