@@ -57,7 +57,7 @@ SELECT
     ds_pcr_out ,
     classi_fin::NUMERIC::INTEGER AS classi_fin,
     classi_out,
-    criterio::NUMERIC::INTEGER AS criterio ,
+    REPLACE(criterio, ';', '')::NUMERIC::INTEGER AS criterio ,
     
     file_name
 FROM source_data
