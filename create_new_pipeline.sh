@@ -63,6 +63,8 @@ labname=$(echo "$LAB" | tr '[:upper:]' '[:lower:]')   # labname em minúsculas
 TEMPLATE_FILES=(
     "./templates/asset_template.py"
     "./templates/definitions_template.py"
+    "./templates/constants_template.py"
+    "./templates/jobs_template.py"
 
     "./templates/labname_tests_01_convert_types.yml"
     "./templates/labname_tests_02_fix_values.yml"
@@ -83,6 +85,8 @@ TEMPLATE_FILES=(
 OUTPUT_FILES=(
     "dagster/${PROJECT}/${PROJECT}/assets.py"
     "dagster/${PROJECT}/${PROJECT}/definitions.py"
+    "dagster/${PROJECT}/${PROJECT}/constants.py"
+    "dagster/${PROJECT}/${PROJECT}/jobs.py"
 
     "dbt/models/${LAB}/${LAB}_tests_01_convert_types.yml"
     "dbt/models/${LAB}/${LAB}_tests_02_fix_values.yml"
