@@ -63,15 +63,41 @@ labname=$(echo "$LAB" | tr '[:upper:]' '[:lower:]')   # labname em minúsculas
 TEMPLATE_FILES=(
     "./templates/asset_template.py"
     "./templates/definitions_template.py"
-    "./templates/labname_01_convert_types.sql"
+
+    "./templates/labname_tests_01_convert_types.yml"
+    "./templates/labname_tests_02_fix_values.yml"
+    "./templates/labname_tests_03_pivot_results.yml"
+    "./templates/labname_tests_04_fill_results.yml"
+    "./templates/labname_tests_05_deduplicate.yml"
+    "./templates/labname_tests_final.yml"
     "./templates/labname.yml"
+
+    "./templates/labname_01_convert_types.sql"
+    "./templates/labname_02_fix_values.sql"
+    "./templates/labname_03_pivot_results.sql"
+    "./templates/labname_04_fill_results.sql"
+    "./templates/labname_05_deduplicate.sql"
+    "./templates/labname_final.sql"
 )
 
 OUTPUT_FILES=(
     "dagster/${PROJECT}/${PROJECT}/assets.py"
     "dagster/${PROJECT}/${PROJECT}/definitions.py"
-    "dbt/models/${LAB}/${LAB}_01_convert_types.sql"
+
+    "dbt/models/${LAB}/${LAB}_tests_01_convert_types.yml"
+    "dbt/models/${LAB}/${LAB}_tests_02_fix_values.yml"
+    "dbt/models/${LAB}/${LAB}_tests_03_pivot_results.yml"
+    "dbt/models/${LAB}/${LAB}_tests_04_fill_results.yml"
+    "dbt/models/${LAB}/${LAB}_tests_05_deduplicate.yml"
+    "dbt/models/${LAB}/${LAB}_tests_final.yml"
     "dbt/models/${LAB}/${LAB}.yml"
+
+    "dbt/models/${LAB}/${LAB}_01_convert_types.sql"
+    "dbt/models/${LAB}/${LAB}_02_fix_values.sql"
+    "dbt/models/${LAB}/${LAB}_03_pivot_results.sql"
+    "dbt/models/${LAB}/${LAB}_04_fill_results.sql"
+    "dbt/models/${LAB}/${LAB}_05_deduplicate.sql"
+    "dbt/models/${LAB}/${LAB}_final.sql"
 )
 
 mkdir -p "dagster/${PROJECT}/${PROJECT}" "dbt/models/${LAB}"
