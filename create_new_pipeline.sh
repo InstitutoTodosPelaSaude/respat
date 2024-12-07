@@ -37,13 +37,6 @@ echo "${TS} INFO Creating project folders in /dbt"
 
 mkdir -p ./dbt/models/${LAB}
 
-echo "${TS} INFO Creating project folders in /data"
-
-mkdir -p ./data/${LAB}
-mkdir -p ./data/${LAB}/_out
-touch ./data/${LAB}/.gitkeep
-touch ./data/${LAB}/_out/.gitkeep
-
 echo "${TS} INFO Finished creating the basic structure"
 echo "${TS} INFO Creating basic code files"
 
