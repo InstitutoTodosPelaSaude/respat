@@ -1,0 +1,36 @@
+version: 2
+
+models:
+  - name: labname_01_convert_types
+    description: Convert data types and rename columns
+    columns:
+      - name: date_testing
+        tests:
+          - not_null:
+              config:
+                severity: warn
+                error_if: ">1000"
+          - dbt_utils.expression_is_true:
+              name: labname_01_future_date
+              expression: "<= current_date"
+              config:
+                severity: warn
+                error_if: ">30"
+      - name: sex
+        tests:
+          - not_null:
+              config:
+                severity: warn
+                error_if: ">1000"
+      - name: location
+        tests:
+          - not_null:
+              config:
+                severity: warn
+                error_if: ">1000"
+      - name: sg_uf
+        tests:
+          - not_null:
+              config:
+                severity: warn
+                error_if: ">1000"
