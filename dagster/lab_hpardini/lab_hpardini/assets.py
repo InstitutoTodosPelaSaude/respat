@@ -58,6 +58,10 @@ def hpardini_raw(context):
     hpardini_df = pd.read_csv(file_system.get_file_content_as_io_bytes(file_to_get), dtype = str, encoding='latin-1', sep=';')
     hpardini_df['file_name'] = hpardini_files[0]
 
+    # Change all dates from dd/mm/yyyy to yyyy-mm-dd. But the column values can be in both formats
+    date_column = 'DATACOLETA'
+    hpardini_df[date_column] = pd.to_datetime(hpardini_df[date_column], errors='coerce').dt.strftime('%Y-%m-%d')
+
     # Save to db
     hpardini_df.to_sql('hpardini_raw', engine, schema=DB_SCHEMA, if_exists='replace', index=False)
     engine.dispose()
