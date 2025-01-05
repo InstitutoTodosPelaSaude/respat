@@ -221,6 +221,23 @@ class FileSystem():
         except S3Error as e:
             print(f'Error moving file to folder: {e}')
             return False
+        
+
+    def copy_file_to_folder(self, relative_path, file_name, target_folder):
+        try:
+            original_file_absolute_path  = self.root_path + relative_path + file_name
+            target_file_path             = self.root_path + target_folder + file_name
+
+            self.client.copy_object(
+                self.bucket_name, 
+                target_file_path, 
+                CopySource( self.bucket_name, original_file_absolute_path )
+            )
+
+            return True
+        except S3Error as e:
+            print(f'Error copying file to folder: {e}')
+            return False
 
    
     def delete_file(self, relative_path):

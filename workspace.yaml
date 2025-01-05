@@ -38,3 +38,7 @@ load_from:
     - python_module:
         module_name: lab_sivep.definitions
         working_directory: dagster/lab_sivep
+
+    - python_module:
+        module_name: save_results.definitions
+        working_directory: dagster/save_results
