@@ -12,6 +12,7 @@ from dagster_slack import make_slack_on_run_failure_sensor
 import os
 from dotenv import load_dotenv
 from time import sleep
+from datetime import datetime
 
 from .jobs import combined_all_assets_job
 
@@ -36,6 +37,12 @@ TIME_CHECKING_RUNNING_ASSETS = 40 # 45 seconds
     minimum_interval_seconds=180 # 3 minutes
 )
 def run_combined_sensor(context: SensorEvaluationContext):
+    # Run only in certain days
+    WEEK_DAYS_TO_RUN = [1, 2, 3] # Tuesday, Wednesday or Thursday
+    current_weekday = datetime.now().weekday()
+    if current_weekday not in WEEK_DAYS_TO_RUN:
+        return SkipReason(f"Today is not day to run")
+
     # Get the last run status of the job
     job_to_look = 'combined_all_assets_job'
     last_run = context.instance.get_runs(
