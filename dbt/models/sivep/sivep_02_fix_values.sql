@@ -28,7 +28,7 @@ results_normalized AS (
         id_rg_resi,
 
         date_testing,
-        dt_sin_pri,
+        dt_sin_pri AS date_pri_sin,
 
         -- Itens 69 - Dicionário de dados SRAG
         CASE
