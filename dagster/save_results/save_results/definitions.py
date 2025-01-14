@@ -8,9 +8,15 @@ from .assets import (
     save_matrices_files,
     save_external_reports_files
 )
-from .jobs import save_files_assets_job
+from .jobs import (
+    create_new_folder_job,
+    save_matrices_files_job,
+    save_external_reports_files_job
+)
 from .sensors import (
-    run_save_results_sensor, 
+    run_create_new_folder_sensor,
+    run_save_matrices_files_sensor,
+    run_save_external_reports_files_sensor,
     save_files_slack_success_sensor,
     save_files_slack_failure_sensor
 )
@@ -22,9 +28,15 @@ defs = Definitions(
         save_matrices_files,
         save_external_reports_files
     ],
-    jobs=[save_files_assets_job],
+    jobs=[
+        create_new_folder_job,
+        save_matrices_files_job,
+        save_external_reports_files_job
+    ],
     sensors=[
-        run_save_results_sensor,
+        run_create_new_folder_sensor,
+        run_save_matrices_files_sensor,
+        run_save_external_reports_files_sensor,
         save_files_slack_success_sensor,
         save_files_slack_failure_sensor,
     ]
