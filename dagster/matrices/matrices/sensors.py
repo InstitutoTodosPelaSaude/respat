@@ -20,7 +20,7 @@ DAGSTER_SLACK_BOT_TOKEN = os.getenv('DAGSTER_SLACK_BOT_TOKEN')
 DAGSTER_SLACK_BOT_CHANNEL = os.getenv('DAGSTER_SLACK_BOT_CHANNEL')
 
 @asset_sensor(
-    asset_key=AssetKey('combined_final'),
+    asset_key=AssetKey('zip_exported_file'),
     job=matrices_all_assets_job,
     default_status=DefaultSensorStatus.RUNNING
 )
