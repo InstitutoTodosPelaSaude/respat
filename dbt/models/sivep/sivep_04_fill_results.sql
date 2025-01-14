@@ -32,7 +32,7 @@ SELECT
     --state_code,
     state,
     date_testing,
-    dt_sin_pri,
+    date_pri_sin,
     NULL AS patient_id,
     file_name,
 
