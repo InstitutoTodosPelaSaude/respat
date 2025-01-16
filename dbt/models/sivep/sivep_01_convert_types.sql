@@ -24,7 +24,7 @@ SELECT
     amostra::NUMERIC::INTEGER AS amostra,
     
     TO_DATE(dt_notific, 'dd/mm/yyyy') AS dt_notific ,
-    TO_DATE(dt_sin_pri, 'dd/mm/yyyy') AS dt_sin_pri ,
+    TO_DATE(dt_sin_pri, 'dd/mm/yyyy') AS dt_sin_pri , 
     TO_DATE(dt_res_an, 'dd/mm/yyyy') AS dt_res_an ,
     res_an::NUMERIC::INTEGER AS res_an,
     pos_an_flu::NUMERIC::INTEGER AS pos_an_flu,
