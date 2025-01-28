@@ -66,7 +66,9 @@ def run_combined_sensor(context: SensorEvaluationContext):
         'sabin_all_assets_job', 
         'fleury_all_assets_job',
         'dbmol_all_assets_job',
-        'combined_historical_final'
+        'combined_historical_final',
+        'hpardini_all_assets_job',
+        'target_all_assets_job'
     ]
 
     # Check if there are new lab assets completed and run combined if it is true
