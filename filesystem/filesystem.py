@@ -63,14 +63,14 @@ class FileSystem():
             print(f"Error connecting to MinIO: {str(e)}")
 
 
-    def list_files_in_relative_path(self, relative_path: str, accepted_extensions=None):
+    def list_files_in_relative_path(self, relative_path: str, accepted_extensions=None, recursive=False):
     
         try:
             prefix = self.root_path+relative_path
             print(prefix)
 
             # List objects in the specified path (prefix)
-            objects = self.client.list_objects(self.bucket_name, prefix=str(prefix), recursive=False)
+            objects = self.client.list_objects(self.bucket_name, prefix=str(prefix), recursive=recursive)
 
             # Filter files by extension if provided
             file_list = []

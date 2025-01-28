@@ -23,6 +23,7 @@ from filesystem.filesystem import FileSystem
 from utils.epiweek import get_epiweek_str
 
 REPORTS_FILES_FOLDER = "/data/respat/reports/"
+REPORTS_CURRENT_FILES_FOLDER = "/data/respat/reports/current/"
 
 load_dotenv()
 DAGSTER_SLACK_BOT_TOKEN = os.getenv('DAGSTER_SLACK_BOT_TOKEN')
@@ -33,9 +34,16 @@ DAGSTER_SLACK_BOT_CHANNEL = os.getenv('DAGSTER_SLACK_BOT_CHANNEL')
     deps=[AssetKey('zip_exported_file')]
 )
 def create_new_folder(context):
-    file_system = FileSystem(root_path=REPORTS_FILES_FOLDER)
+    # First of all: Clean the REPORTS_CURRENT_FILES_FOLDER folder to avoid old files
+    file_system = FileSystem(root_path=REPORTS_CURRENT_FILES_FOLDER)
+    for file in file_system.list_files_in_relative_path("", recursive=True):
+        deleted = file_system.delete_file(file)
+        if not deleted:
+            raise Exception(f'Error deleting file {file}')
+        context.log.info(f'Deleted {file}')
 
     # Get the last folder created
+    file_system = FileSystem(root_path=REPORTS_FILES_FOLDER)
     all_folders = file_system.list_files_in_relative_path("")
     if all_folders:
         all_folders = [folder.split('/')[-2] for folder in all_folders]
@@ -92,7 +100,7 @@ def save_matrices_files(context):
     folder_name = materialization.metadata["folder_name"].text
     context.log.info(f'Saving matrices files into {folder_name} folder')
 
-    # Copy files from matrices folder
+    # Copy files from matrices folder to the folder_name folder
     file_system = FileSystem(root_path='/data/respat/')
     matrix_files = file_system.list_files_in_relative_path('data/matrices/')
     for matrix_file in matrix_files:
@@ -100,14 +108,25 @@ def save_matrices_files(context):
         file_system.copy_file_to_folder("data/matrices/", file_name, f'reports/{folder_name}/matrices/')
         context.log.info(f"{file_name} saved successfully")
 
+    context.log.info(f'Saving matrices files into current folder')
+
+    # Copy files from matrices folder to the current folder
+    file_system = FileSystem(root_path='/data/respat/')
+    matrix_files = file_system.list_files_in_relative_path('data/matrices/')
+    for matrix_file in matrix_files:
+        file_name = matrix_file.split('/')[-1]
+        file_system.copy_file_to_folder("data/matrices/", file_name, f'reports/current/matrices/')
+        context.log.info(f"{file_name} saved successfully")
+
 @asset(compute_kind="python", deps=[create_new_folder])
 def save_external_reports_files(context):
     # Get the folder name from 'create_new_folder' asset
     materialization = context.instance.get_latest_materialization_event(AssetKey(["create_new_folder"])).asset_materialization
     folder_name = materialization.metadata["folder_name"].text
+
+    # Copy files from external_reports folder to the folder_name folder
     context.log.info(f'Saving external_reports files into {folder_name} folder')
 
-    # Copy files from external_reports folder
     file_system = FileSystem(root_path='/data/respat/')
     report_folders = file_system.list_files_in_relative_path('data/external_reports/')
     for report_folder in report_folders:
@@ -118,6 +137,21 @@ def save_external_reports_files(context):
             # Save each file in the subfolder
             file_name = report_file.split('/')[-1]
             file_system.copy_file_to_folder(f"data/external_reports/{report_folder}/", file_name, f'reports/{folder_name}/external_reports/{report_folder}/')
+            context.log.info(f"{report_folder}/{file_name} saved successfully")
+
+    # Copy files from external_reports folder to current folder
+    context.log.info(f'Saving external_reports files into current folder')
+
+    file_system = FileSystem(root_path='/data/respat/')
+    report_folders = file_system.list_files_in_relative_path('data/external_reports/')
+    for report_folder in report_folders:
+        # Get all files from each subfolder
+        report_folder = report_folder.split('/')[-2]
+        reports = file_system.list_files_in_relative_path(f'data/external_reports/{report_folder}/')
+        for report_file in reports:
+            # Save each file in the subfolder
+            file_name = report_file.split('/')[-1]
+            file_system.copy_file_to_folder(f"data/external_reports/{report_folder}/", file_name, f'reports/current/external_reports/{report_folder}/')
             context.log.info(f"{report_folder}/{file_name} saved successfully")
 
 
