@@ -86,7 +86,7 @@ def save_files_slack_success_sensor(context: SensorEvaluationContext):
                     "type": "header",
                     "text": {
                         "type": "plain_text",
-                        "text": f"🎉 Novo relatório do RESPAT gerado com sucesso!",
+                        "text": f"🎉 Novo processamento de dados do RESPAT gerado com sucesso!",
                         "emoji": True
                     }
                 },
@@ -101,85 +101,24 @@ def save_files_slack_success_sensor(context: SensorEvaluationContext):
                     "type": "section",
                     "text": {
                             "type": "mrkdwn",
-                            "text": "O relatório foi criado e pode ser acessado pelo link abaixo:",
+                            "text": "Uma nova corrida foi finalizada e pode ser acessada pelo link abaixo:",
                     }
                 },
                 {
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": "👉 *Link para o este relatório:*"
+                        "text": "👉 *Link para os dados mais recentes:*"
                     },
                     "accessory": {
                         "type": "button",
                         "text": {
                             "type": "plain_text",
-                            "text": "Ir para o relatório",
+                            "text": "Ver dados",
                             "emoji": True
                         },
                         "value": "click_me_report",
-                        "url": f"{minio_url}reports/{folder_name}/",
-                        "action_id": "button-action"
-                    }
-                },
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": "*Links fixos:* Os arquivos mais recentes sempre estarão disponíveis em:"
-                    }
-                },
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": "\t🔗 *Matrizes:*"
-                    },
-                    "accessory": {
-                        "type": "button",
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Matrizes",
-                            "emoji": True
-                        },
-                        "value": "click_me_matrices",
-                        "url": f"{minio_url}data/matrices/",
-                        "action_id": "button-action"
-                    }
-                },
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": "\t🔗 *Combined:*"
-                    },
-                    "accessory": {
-                        "type": "button",
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Combined",
-                            "emoji": True
-                        },
-                        "value": "click_me_combined",
-                        "url": f"{minio_url}data/combined/",
-                        "action_id": "button-action"
-                    }
-                },
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": "\t🔗 *Relatórios Externos:*"
-                    },
-                    "accessory": {
-                        "type": "button",
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Relatórios Externos",
-                            "emoji": True
-                        },
-                        "value": "click_me_ext_reports",
-                        "url": f"{minio_url}data/external_reports/",
+                        "url": f"{minio_url}reports/current/",
                         "action_id": "button-action"
                     }
                 },
