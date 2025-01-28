@@ -30,7 +30,9 @@ TIME_CHECKING_RUNNING_ASSETS = 40 # 45 seconds
         AssetKey("hlagyn_final"), 
         AssetKey("sabin_final"), 
         AssetKey("fleury_final"),
-        AssetKey("dbmol_final")
+        AssetKey("dbmol_final"),
+        AssetKey("hpardini_final"),
+        AssetKey("target_final")
     ],
     job=combined_all_assets_job,
     default_status=DefaultSensorStatus.RUNNING,
