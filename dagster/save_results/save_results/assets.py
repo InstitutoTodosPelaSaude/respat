@@ -46,7 +46,8 @@ def create_new_folder(context):
     file_system = FileSystem(root_path=REPORTS_FILES_FOLDER)
     all_folders = file_system.list_files_in_relative_path("")
     if all_folders:
-        all_folders = [folder.split('/')[-2] for folder in all_folders]
+        # Remove 'current' folder
+        all_folders = [folder.split('/')[-2] for folder in all_folders if 'current' not in folder] 
         all_folders.sort()
         last_folder = all_folders[-1]
     else:
