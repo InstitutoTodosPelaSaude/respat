@@ -58,7 +58,7 @@ def send_email_with_file(
 
     # Attach the files
     file_system = FileSystem(root_path="/data/") # Create a file system to get the files
-    for file_path in file_paths:
+    for file_path, file_name in file_paths:
         # Clean the file path
         if file_path.startswith('/data'):
             file_path = file_path[5:]
@@ -71,8 +71,8 @@ def send_email_with_file(
             raise Exception(f"File does not exist: {file_path}")
         
         # Attach the file
-        attachment = MIMEApplication(file.getvalue(), Name=os.path.basename(file_path))
-        attachment['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+        attachment = MIMEApplication(file.getvalue(), Name=file_name)
+        attachment['Content-Disposition'] = f'attachment; filename="{file_name}"'
         message.attach(attachment)
 
     # Send the email
