@@ -42,7 +42,7 @@ def run_combined_sensor(context: SensorEvaluationContext):
     # Defining constants for the start and end datetime
     START_DAY = 1  # Tuesday
     START_TIME = time(12, 0)  # 12:00 PM (noon)
-    END_DAY = 3  # Thursday
+    END_DAY = 2  # Wednesday
     END_TIME = time(18, 0)  # 6:00 PM
 
     # Getting the current date and time
