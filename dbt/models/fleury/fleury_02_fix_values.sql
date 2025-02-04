@@ -64,6 +64,7 @@ SELECT
     END AS state,
     exame,
     CASE exame
+        WHEN 'FLUABRSVGX'       THEN 'test_3'
         WHEN 'COVIDFLURSVGX'    THEN 'test_4'
         WHEN 'VIRUSMOL'         THEN 'test_21'
         WHEN '2019NCOV'         THEN 'covid_pcr'

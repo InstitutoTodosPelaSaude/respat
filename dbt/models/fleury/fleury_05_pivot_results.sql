@@ -30,6 +30,7 @@ SELECT
                 "VIRUSMOL, INFLUENZA A/H1",
                 "VIRUSMOL, INFLUENZA A/H1-2009",
                 "VIRUSMOL, INFLUENZA A/H3",
+                "FLUABRSVGX - INFLUENZA A",
                 "INFLUENZA A"
             ], 
             'pathogen', 
@@ -43,6 +44,7 @@ SELECT
                 "INFLUENZA A E B - TESTE RAPIDO FLU_B_RESULT",
                 "COVIDFLURSVGX - INFLUENZA B",
                 "VIRUSMOL, INFLUENZA B",
+                "FLUABRSVGX - INFLUENZA B",
                 "INFLUENZA B"
             ], 
             'pathogen', 
@@ -56,6 +58,7 @@ SELECT
                 "VIRUS RESPIRATORIO - SINCICIAL",
                 "COVIDFLURSVGX - VIRUS SINCICIAL RESPIRATORIO",
                 "VIRUSMOL, VIRUS SINCICIAL RESPIRATORIO",
+                "FLUABRSVGX - V. SINCICIAL RESPIRATORIO",
                 "VIRUS SINCIAL RESPIRATORIO"
             ], 
             'pathogen', 
