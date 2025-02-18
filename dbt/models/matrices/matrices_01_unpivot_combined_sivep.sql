@@ -1,21 +1,49 @@
 {{ config(materialized='view') }}
 
-WITH source_data AS (
+WITH 
+age_groups AS (
+    SELECT * 
+    FROM {{ ref("age_groups") }}
+),
+
+epiweeks AS (
+    SELECT *
+    FROM {{ ref("epiweeks") }}
+),
+
+source_data_raw AS(
+    SELECT
+    *
+    FROM {{ ref("sivep_final") }}
+),
+
+source_data_epiweeks AS(
+    SELECT 
+        source_data_raw.*,
+        ew.end_date as epiweek_enddate,
+        ew.week_num as epiweek_number,
+
+        TO_CHAR(source_data_raw.date_testing, 'YYYY-MM') as month
+        
+    FROM source_data_raw
+    LEFT JOIN epiweeks AS ew ON source_data_raw.date_testing >= ew.start_date AND source_data_raw.date_testing <= ew.end_date
+),
+
+source_data_full AS(
+    SELECT 
+        source_data_epiweeks.*,
+        ag.age_group
+    FROM source_data_epiweeks
+    LEFT JOIN age_groups AS ag ON source_data_epiweeks.age >= ag." min_age" AND source_data_epiweeks.age <=  ag." max_age"
+),
+ 
+source_data AS (
     SELECT
         sample_id,
         test_kit,
         epiweek_enddate,
         epiweek_number,
-        lab_id,
-        CASE WHEN location IS NULL THEN 'NOT REPORTED' ELSE location END AS location,
-        location_ibge_code,
-        CASE WHEN state IS NULL THEN 'NOT REPORTED' ELSE state END AS state,
-        CASE WHEN state_code IS NULL THEN 'NOT REPORTED' ELSE state_code END AS state_code,
-        CASE WHEN region IS NULL THEN 'NOT REPORTED' ELSE region END AS region,
-        CASE WHEN country IS NULL THEN 'NOT REPORTED' ELSE country END AS country,
         CASE WHEN age_group IS NULL THEN 'NOT REPORTED' ELSE age_group END AS age_group,
-        lat,
-        long,
         "SC2_test_result",
         "FLUA_test_result",
         "FLUB_test_result",
@@ -28,12 +56,12 @@ WITH source_data AS (
         "ENTERO_test_result",
         "META_test_result",
         "BAC_test_result"
-
-    FROM {{ ref("combined_final") }}
+    FROM source_data_full
     WHERE 
         epiweek_enddate < CURRENT_DATE AND
         epiweek_enddate >= '2022-01-01'
 )
+
 SELECT
     combined.*,
     combined_pivoted.*
