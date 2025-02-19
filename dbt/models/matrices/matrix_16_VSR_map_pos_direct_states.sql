@@ -22,7 +22,7 @@ source_data AS (
     FROM {{ ref("matrices_01_unpivot_combined") }}
     WHERE 
         "VSR_test_result" IN ('Pos', 'Neg') AND
-        test_kit NOT IN ('vsr_antigen', 'test_4', 'test_3', 'test_14', 'test_23', 'test_21', 'test_24') AND
+        test_kit IN ('vsr_antigen', 'test_4', 'test_3', 'test_14', 'test_23', 'test_21', 'test_24') AND
         epiweek_enddate >= '{{ epiweek_start }}'
     GROUP BY epiweek_enddate, state_code, state, pathogen
 ),
@@ -74,8 +74,8 @@ source_data_cumulative_sum AS (
 -- Seleção final dos dados, filtrando apenas semanas com casos cumulativos maiores que zero
 SELECT
     "semanas epidemiologicas" as "Semanas epidemiológicas",
-    "state_code" as "Código do estado",
-    "state" as "Estado",
+    "state_code" as "State_code",
+    "state" as "State",
     "epiweek_cases"::INTEGER as "Casos na última semana",
     "cumulative_cases"::INTEGER as "Casos cumulativos"
 FROM source_data_cumulative_sum

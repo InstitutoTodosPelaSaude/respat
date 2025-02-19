@@ -9,7 +9,7 @@ source_data AS (
     FROM {{ ref("matrices_01_unpivot_combined") }}
     WHERE
         "SC2_test_result" IN ('Pos', 'Neg') AND
-        test_kit IN ('test_4', 'test_21', 'test_24')
+        test_kit IN ('thermo', 'covid_antigen', 'covid_pcr', 'sc2_antigen', 'test_14', 'test_21', 'test_24', 'test_4')
     GROUP BY epiweek_enddate, pathogen
     ORDER BY epiweek_enddate, pathogen
 ),

@@ -25,7 +25,7 @@ source_data AS (
     FROM {{ ref("matrices_01_unpivot_combined") }}
     WHERE 
         "VSR_test_result" IN ('Pos', 'Neg') AND
-        test_kit NOT IN ('vsr_antigen', 'test_4', 'test_3', 'test_14', 'test_23', 'test_21', 'test_24') AND
+        test_kit IN ('vsr_antigen', 'test_4', 'test_3', 'test_14', 'test_23', 'test_21', 'test_24') AND
         epiweek_enddate >= '{{ epiweek_start }}'
     GROUP BY epiweek_enddate, state_code, state, location, location_ibge_code, lat, long, pathogen
     ORDER BY epiweek_enddate, state_code
@@ -94,12 +94,12 @@ source_data_cumulative_sum AS (
 -- Seleção final dos dados, filtrando apenas semanas com casos cumulativos maiores que zero
 SELECT
     "semanas epidemiologicas" as "Semanas epidemiologicas",
-    "location_ibge_code" as "location_ibge_code",
-    "location" as "Cidade",
-    "state_code" as "state_code",
-    "state" as "state",
-    "lat" as "lat",
-    "long" as "long",
+    "location_ibge_code" as "Location_ibge_code",
+    "location" as "Location",
+    "state_code" as "State_code",
+    "state" as "State",
+    "lat" as "Lat",
+    "long" as "Long",
     "epiweek_cases"::INTEGER as "Casos na última semana",
     "cumulative_cases"::INTEGER as "Casos cumulativos"
 FROM source_data_cumulative_sum
