@@ -23,10 +23,10 @@ source_data_epiweeks AS(
         ew.end_date as epiweek_enddate,
         ew.week_num as epiweek_number,
 
-        TO_CHAR(source_data_raw.date_testing, 'YYYY-MM') as month
+        TO_CHAR(source_data_raw.date_pri_sin, 'YYYY-MM') as month
         
     FROM source_data_raw
-    LEFT JOIN epiweeks AS ew ON source_data_raw.date_testing >= ew.start_date AND source_data_raw.date_testing <= ew.end_date
+    LEFT JOIN epiweeks AS ew ON source_data_raw.date_pri_sin >= ew.start_date AND source_data_raw.date_pri_sin <= ew.end_date
 ),
 
 source_data_full AS(
