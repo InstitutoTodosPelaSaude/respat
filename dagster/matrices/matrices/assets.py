@@ -78,6 +78,8 @@ def respiratorios_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_22_VSR_line_posrate_direct_week_country_annual"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_23_FLUA_line_posrate_direct_week_country_annual"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_24_FLUB_line_posrate_direct_week_country_annual"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_25_FLUA_map_pos_direct_cities"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_25_FLUA_map_pos_direct_states"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_ALL_count_by_labid_testkit_pathogen_result"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_SC2_posrate_by_epiweek_state"),
     ]
@@ -122,6 +124,8 @@ def export_matrices_to_xlsx(context):
         "matrix_22_VSR_line_posrate_direct_week_country_annual":        "22_VSR_line_posrate_direct_week_country_annual",
         "matrix_23_FLUA_line_posrate_direct_week_country_annual":       "23_FLUA_line_posrate_direct_week_country_annual",
         "matrix_24_FLUB_line_posrate_direct_week_country_annual":       "24_FLUB_line_posrate_direct_week_country_annual",
+        "matrix_25_FLUA_map_pos_direct_cities":                         "25_FLUA_map_pos_direct_cities",
+        "matrix_25_FLUA_map_pos_direct_states":                         "25_FLUA_map_pos_direct_states",
         "matrix_ALL_count_by_labid_testkit_pathogen_result":            "matrix_ALL_count_by_labid_testkit_pathogen_result",
         "matrix_SC2_posrate_by_epiweek_state":                          "matrix_SC2_posrate_by_epiweek_state",
     }
