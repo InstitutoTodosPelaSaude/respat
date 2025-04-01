@@ -1,5 +1,7 @@
 {{ config(materialized='table') }}
 
+{% set epiweek_start = '2022-02-26' %}
+
 WITH source_data AS (
     SELECT
         epiweek_enddate,
@@ -13,7 +15,8 @@ WITH source_data AS (
             WHEN "FLUB_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_4', 'test_21', 'test_24')
             WHEN "VSR_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_4', 'test_21', 'test_24')
             ELSE FALSE
-        END
+        END AND 
+        epiweek_enddate >= '{{ epiweek_start }}'
     GROUP BY epiweek_enddate, pathogen
     ORDER BY epiweek_enddate, pathogen
 )
