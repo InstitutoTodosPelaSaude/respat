@@ -10,6 +10,7 @@ WITH source_data AS (
         {{ matrices_metrics('result') }}
     FROM {{ ref("matrices_01_unpivot_combined") }}
     WHERE
+        age_group NOT IN ('NOT REPORTED') AND
         test_kit IN ('flu_antigen', 'flu_pcr', 'test_3', 'test_4', 'test_14', 'test_21', 'test_23', 'test_24') AND
         epiweek_enddate >= '{{ epiweek_start }}'
     GROUP BY epiweek_enddate, age_group, pathogen
