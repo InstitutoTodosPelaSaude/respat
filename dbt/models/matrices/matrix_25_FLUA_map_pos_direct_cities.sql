@@ -103,5 +103,5 @@ SELECT
     "epiweek_cases"::int as "Casos na última semana",
     "cumulative_cases"::int as "Casos cumulativos"
 FROM source_data_cumulative_sum
-WHERE "cumulative_cases" > 0
+WHERE "cumulative_cases" > 0 AND location <> 'NOT REPORTED' AND state <> 'NOT REPORTED'
 ORDER BY "semanas epidemiologicas", "state", "location"
