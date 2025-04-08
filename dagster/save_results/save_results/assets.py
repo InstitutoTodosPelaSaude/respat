@@ -143,7 +143,7 @@ def save_public_matrices(context):
 
         # Copy the file to the public folder
         file = data_file_system.get_file_content_as_binary(f'data/matrices/csv/{file_name}')
-        result = public_file_system.save_content_in_file(f"reports/{folder_name}/matrices/csv/", file, file_name)
+        result = public_file_system.save_content_in_file(f"reports/{folder_name}/matrices/csv/", file, file_name, content_type="text/csv")
         if not result:
             raise Exception(f'Error saving file {file_name} in public folder')
         context.log.info(f"{file_name} saved successfully")
@@ -159,7 +159,7 @@ def save_public_matrices(context):
 
         # Copy the file to the public folder
         file = data_file_system.get_file_content_as_binary(f'data/matrices/csv/{file_name}')
-        result = public_file_system.save_content_in_file(f"reports/current/matrices/csv/", file, file_name)
+        result = public_file_system.save_content_in_file(f"reports/current/matrices/csv/", file, file_name, content_type="text/csv")
         if not result:
             raise Exception(f'Error saving file {file_name} in public folder')
         context.log.info(f"{file_name} saved successfully")

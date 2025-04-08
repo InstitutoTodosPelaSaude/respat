@@ -87,7 +87,7 @@ class FileSystem():
             print(f"Error listing files in MinIO: {e}")
             
 
-    def save_content_in_file(self, relative_path, content, file_name, log_context = None):
+    def save_content_in_file(self, relative_path, content, file_name, log_context = None, content_type = "application/octet-stream"):
         try:
             if not relative_path.endswith("/"):
                 relative_path += "/"
@@ -99,7 +99,8 @@ class FileSystem():
                 self.bucket_name,
                 object_name,
                 io.BytesIO(content),
-                length=len(content)
+                length=len(content),
+                content_type=content_type
             )
             
             return True
