@@ -101,23 +101,24 @@ def save_matrices_files(context):
     folder_name = materialization.metadata["folder_name"].text
     context.log.info(f'Saving matrices files into {folder_name} folder')
 
-    # Copy files from matrices folder to the folder_name folder
-    file_system = FileSystem(root_path='/data/respat/')
-    matrix_files = file_system.list_files_in_relative_path('data/matrices/')
-    for matrix_file in matrix_files:
-        file_name = matrix_file.split('/')[-1]
-        file_system.copy_file_to_folder("data/matrices/", file_name, f'reports/{folder_name}/matrices/')
-        context.log.info(f"{file_name} saved successfully")
+    for file_type in ['csv', 'xlsx']:
+        # Copy files from matrices folder to the folder_name folder
+        file_system = FileSystem(root_path='/data/respat/')
+        matrix_files = file_system.list_files_in_relative_path(f'data/matrices/{file_type}/')
+        for matrix_file in matrix_files:
+            file_name = matrix_file.split('/')[-1]
+            file_system.copy_file_to_folder(f"data/matrices/{file_type}/", file_name, f'reports/{folder_name}/matrices/{file_type}/')
+            context.log.info(f"{file_name} saved successfully")
 
-    context.log.info(f'Saving matrices files into current folder')
+        context.log.info(f'Saving matrices files into current folder')
 
-    # Copy files from matrices folder to the current folder
-    file_system = FileSystem(root_path='/data/respat/')
-    matrix_files = file_system.list_files_in_relative_path('data/matrices/')
-    for matrix_file in matrix_files:
-        file_name = matrix_file.split('/')[-1]
-        file_system.copy_file_to_folder("data/matrices/", file_name, f'reports/current/matrices/')
-        context.log.info(f"{file_name} saved successfully")
+        # Copy files from matrices folder to the current folder
+        file_system = FileSystem(root_path='/data/respat/')
+        matrix_files = file_system.list_files_in_relative_path(f'data/matrices/{file_type}/')
+        for matrix_file in matrix_files:
+            file_name = matrix_file.split('/')[-1]
+            file_system.copy_file_to_folder(f"data/matrices/{file_type}/", file_name, f'reports/current/matrices/{file_type}/')
+            context.log.info(f"{file_name} saved successfully")
 
 @asset(compute_kind="python", deps=[create_new_folder])
 def save_external_reports_files(context):
