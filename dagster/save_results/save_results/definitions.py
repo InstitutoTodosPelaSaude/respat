@@ -6,7 +6,8 @@ from .assets import (
     create_new_folder,
     save_combined_files,
     save_matrices_files,
-    save_external_reports_files
+    save_external_reports_files,
+    save_public_matrices
 )
 from .jobs import (
     create_new_folder_job,
@@ -26,7 +27,8 @@ defs = Definitions(
         create_new_folder,
         save_combined_files,
         save_matrices_files,
-        save_external_reports_files
+        save_external_reports_files,
+        save_public_matrices
     ],
     jobs=[
         create_new_folder_job,

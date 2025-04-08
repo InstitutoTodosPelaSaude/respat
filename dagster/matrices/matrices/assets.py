@@ -54,13 +54,16 @@ def respiratorios_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource
     compute_kind="python",
     deps=[
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_01_VRISP_line_posrate_direct_week_country"),
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_02_Resp_bar_pos_panel4_week_country"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_02_Resp_bar_pos_panel4_week_country_h"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_02_Resp_bar_pos_panel4_week_country_r"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_03_SC2_heat_posrate_week_state"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_04_SC2_heat_posrate_agegroups_week_country"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_06_Resp_line_posrate_direct_week_country"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_05_FLUA_heat_posrate_agegroups_week_country"),
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_07_Resp_bar_pos_panel20PLUS_week_country"),
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_08_Resp_line_bar_posrate_posneg_week_country"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_07_Resp_bar_pos_panel20PLUS_week_country_h"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_07_Resp_bar_pos_panel20PLUS_week_country_r"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_08_Resp_line_bar_posrate_posneg_week_country_h"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_08_Resp_line_bar_posrate_posneg_week_country_r"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_09_Resp_pyr_pos_agegroups_all_week_country"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_10_Resp_pyr_pos_agegroups_panel4_week_country"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_13_SC2_map_pos_direct_states"),
@@ -96,17 +99,34 @@ def export_matrices_to_xlsx(context):
         if not deleted:
             raise Exception(f'Error deleting file {file}')
         context.log.info(f'Deleted {file}')
+    
+    for file in file_system.list_files_in_relative_path("xlsx"):
+        file = file.split("/")[-1] # Get the file name
+        deleted = file_system.delete_file(file)
+        if not deleted:
+            raise Exception(f'Error deleting file {file}')
+        context.log.info(f'Deleted {file}')
+
+    for file in file_system.list_files_in_relative_path("csv"):
+        file = file.split("/")[-1]
+        deleted = file_system.delete_file(file)
+        if not deleted:
+            raise Exception(f'Error deleting file {file}')
+        context.log.info(f'Deleted {file}')
 
     # Map all the db matrix tables that need to be exported to its file name
     matrices_name_map = {
         "matrix_01_VRISP_line_posrate_direct_week_country":             "01_VRISP_line_posrate_direct_week_country",
-        "matrix_02_Resp_bar_pos_panel4_week_country":                   "02_Resp_bar_pos_panel4_week_country",
+        "matrix_02_Resp_bar_pos_panel4_week_country_h":                 "02_Resp_bar_pos_panel4_week_country_h",
+        "matrix_02_Resp_bar_pos_panel4_week_country_r":                 "02_Resp_bar_pos_panel4_week_country_r",
         "matrix_03_SC2_heat_posrate_week_state":                        "03_SC2_heat_posrate_week_state",
         "matrix_04_SC2_heat_posrate_agegroups_week_country":            "04_SC2_heat_posrate_agegroups_week_country",
         "matrix_05_FLUA_heat_posrate_agegroups_week_country":           "05_FLUA_heat_posrate_agegroups_week_country",
         "matrix_06_Resp_line_posrate_direct_week_country":              "06_Resp_line_posrate_direct_week_country",
-        "matrix_07_Resp_bar_pos_panel20PLUS_week_country":              "07_Resp_bar_pos_panel20+_week_country",
-        "matrix_08_Resp_line_bar_posrate_posneg_week_country":          "08_Resp_line_bar_posrate_posneg_week_country",
+        "matrix_07_Resp_bar_pos_panel20PLUS_week_country_h":            "07_Resp_bar_pos_panel20+_week_country_h",
+        "matrix_07_Resp_bar_pos_panel20PLUS_week_country_r":            "07_Resp_bar_pos_panel20+_week_country_r",
+        "matrix_08_Resp_line_bar_posrate_posneg_week_country_h":        "08_Resp_line_bar_posrate_posneg_week_country_h",
+        "matrix_08_Resp_line_bar_posrate_posneg_week_country_r":        "08_Resp_line_bar_posrate_posneg_week_country_r",
         "matrix_09_Resp_pyr_pos_agegroups_all_week_country":            "09_Resp_pyr_pos_agegroups_all_week_country",
         "matrix_10_Resp_pyr_pos_agegroups_panel4_week_country":         "10_Resp_pyr_pos_agegroups_panel4_week_country",
         "matrix_13_SC2_map_pos_direct_states":                          "13_SC2_map_pos_direct_states",
@@ -130,13 +150,23 @@ def export_matrices_to_xlsx(context):
         "matrix_SC2_posrate_by_epiweek_state":                          "matrix_SC2_posrate_by_epiweek_state",
     }
 
-    # Get each matrix table and export it to a xlsx file
+    # Get each matrix table and export it to a xlsx file and csv file
     engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
     for matrix_name, new_name in matrices_name_map.items():
         matrix_df = pd.read_sql_query(f'SELECT * FROM {DB_SCHEMA}."{matrix_name}"', engine, dtype='str')
 
+        # Save the xlsx file
         excel_buffer = io.BytesIO()
         matrix_df.to_excel(excel_buffer, index=False)
         excel_buffer.seek(0)
+        result = file_system.save_content_in_file('xlsx', excel_buffer.read(), f'{new_name}.xlsx', log_context=context.log)
+        if not result:
+            raise Exception(f'Error saving file {new_name}.xlsx')
 
-        file_system.save_content_in_file('', excel_buffer.read(), f'{new_name}.xlsx')
+        # Save the csv file
+        csv_buffer = io.StringIO()
+        matrix_df.to_csv(csv_buffer, index=False)
+        csv_buffer.seek(0)
+        result = file_system.save_content_in_file('csv', io.BytesIO(csv_buffer.getvalue().encode('utf-8')).read(), f'{new_name}.csv', log_context=context.log)
+        if not result:
+            raise Exception(f'Error saving file {new_name}.csv')

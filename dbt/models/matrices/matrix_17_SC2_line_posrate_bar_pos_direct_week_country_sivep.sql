@@ -29,7 +29,7 @@ sivep_data AS (
 source_posrate AS (
     SELECT
         sc.epiweek_enddate as "Semanas epidemiológicas",
-        MAX(CASE WHEN sc.pathogen = 'SC2' THEN sc."posrate" * 100 ELSE NULL END) as "Positividade (Lab. parceiros)"
+        MAX(CASE WHEN sc.pathogen = 'SC2' THEN sc."posrate" * 100 ELSE NULL END) as "Positividade (%, Lab. parceiros)"
     FROM source_data sc
     GROUP BY sc.epiweek_enddate
     ORDER BY sc.epiweek_enddate
@@ -46,8 +46,8 @@ sivep_posrate AS (
 
 SELECT 
     COALESCE(sp."Semanas epidemiológicas", svp."Semanas epidemiológicas") AS "Semanas epidemiológicas",
-    svp."Infecções graves por SARS-CoV-2 (SIVEP)",
-    sp."Positividade (Lab. parceiros)"
+    sp."Positividade (%, Lab. parceiros)",
+    svp."Infecções graves por SARS-CoV-2 (SIVEP)"
 FROM source_posrate sp
 FULL OUTER JOIN sivep_posrate svp
 ON sp."Semanas epidemiológicas" = svp."Semanas epidemiológicas"
