@@ -11,7 +11,8 @@ create_new_folder_job = define_asset_job(
 save_matrices_files_job = define_asset_job(
     name="save_matrices_files_job",
     selection=[
-        'save_matrices_files'
+        'save_matrices_files',
+        'save_public_matrices'
     ]
 )
 

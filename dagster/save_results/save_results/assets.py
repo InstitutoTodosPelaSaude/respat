@@ -120,6 +120,50 @@ def save_matrices_files(context):
             file_system.copy_file_to_folder(f"data/matrices/{file_type}/", file_name, f'reports/current/matrices/{file_type}/')
             context.log.info(f"{file_name} saved successfully")
 
+def start_with_number(s):
+    return bool(re.match(r'^\d+', s))
+
+@asset(compute_kind="python", deps=[save_matrices_files])
+def save_public_matrices(context):
+    # Get the folder name from 'create_new_folder' asset
+    materialization = context.instance.get_latest_materialization_event(AssetKey(["create_new_folder"])).asset_materialization
+    folder_name = materialization.metadata["folder_name"].text
+    folder_name = re.search(r'SE\d+\.\d+', folder_name).group()
+    context.log.info(f'Saving public matrices files into {folder_name} folder')
+
+    # Copy files from matrices folder to the folder_name folder
+    data_file_system = FileSystem(root_path='/data/respat/')
+    public_file_system = FileSystem(root_path='/public/respat/')
+    matrix_files = data_file_system.list_files_in_relative_path(f'data/matrices/csv/')
+    for matrix_file in matrix_files:
+        file_name = matrix_file.split('/')[-1]
+        if not start_with_number(file_name):
+            # Skip files that don't start with a number
+            continue
+
+        # Copy the file to the public folder
+        file = data_file_system.get_file_content_as_binary(f'data/matrices/csv/{file_name}')
+        result = public_file_system.save_content_in_file(f"reports/{folder_name}/matrices/csv/", file, file_name)
+        if not result:
+            raise Exception(f'Error saving file {file_name} in public folder')
+        context.log.info(f"{file_name} saved successfully")
+
+    # Copy files from matrices folder to the current folder
+    context.log.info(f'Saving public matrices files into current folder')
+    matrix_files = data_file_system.list_files_in_relative_path(f'data/matrices/csv/')
+    for matrix_file in matrix_files:
+        file_name = matrix_file.split('/')[-1]
+        if not start_with_number(file_name):
+            # Skip files that don't start with a number
+            continue
+
+        # Copy the file to the public folder
+        file = data_file_system.get_file_content_as_binary(f'data/matrices/csv/{file_name}')
+        result = public_file_system.save_content_in_file(f"reports/current/matrices/csv/", file, file_name)
+        if not result:
+            raise Exception(f'Error saving file {file_name} in public folder')
+        context.log.info(f"{file_name} saved successfully")
+
 @asset(compute_kind="python", deps=[create_new_folder])
 def save_external_reports_files(context):
     # Get the folder name from 'create_new_folder' asset
