@@ -55,6 +55,7 @@ def respiratorios_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource
     deps=[
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_01_VRISP_line_posrate_direct_week_country_h"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_01_VRISP_line_posrate_direct_week_country_r"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_01_VRISP_line_posrate_direct_week_country_c"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_02_Resp_bar_pos_panel4_week_country_h"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_02_Resp_bar_pos_panel4_week_country_r"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_03_SC2_heat_posrate_week_state"),
@@ -127,6 +128,7 @@ def export_matrices_to_xlsx(context):
     matrices_name_map = {
         "matrix_01_VRISP_line_posrate_direct_week_country_h":           "01_VRISP_line_posrate_direct_week_country_h",
         "matrix_01_VRISP_line_posrate_direct_week_country_r":           "01_VRISP_line_posrate_direct_week_country_r",
+        "matrix_01_VRISP_line_posrate_direct_week_country_c":           "01_VRISP_line_posrate_direct_week_country_c",
         "matrix_02_Resp_bar_pos_panel4_week_country_h":                 "02_Resp_bar_pos_panel4_week_country_h",
         "matrix_02_Resp_bar_pos_panel4_week_country_r":                 "02_Resp_bar_pos_panel4_week_country_r",
         "matrix_03_SC2_heat_posrate_week_state":                        "03_SC2_heat_posrate_week_state",
