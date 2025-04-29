@@ -22,4 +22,4 @@ SELECT
     {{ normalize_text("Resultado") }}               AS result,
     file_name
 FROM source_data
-WHERE "Numerdo do Pedido"::BIGINT::TEXT != '638745' -- Test with future date in 19/08/2024 [TEMPORARY]
+WHERE "Numerdo do Pedido"::BIGINT::TEXT NOT IN ('638745', '603268') -- Tests with future date
