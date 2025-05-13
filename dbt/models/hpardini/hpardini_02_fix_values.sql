@@ -38,4 +38,4 @@ SELECT
     file_name
 
 FROM source_data
-WHERE pathogen NOT IN ('DENV', 'CHIKV')
+WHERE pathogen NOT IN ('DENV', 'CHIKV', 'INFLUENZA B', 'INFLUENZA A', 'RSV')
