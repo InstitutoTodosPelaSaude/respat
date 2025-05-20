@@ -9,18 +9,18 @@ WITH source_data AS (
     FROM {{ ref("matrices_01_unpivot_combined") }}
     WHERE
         CASE
-            WHEN "SC2_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_24')
-            WHEN "FLUA_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_24')
-            WHEN "FLUB_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_24')
-            WHEN "VSR_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_24')
+            WHEN "SC2_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_23', 'test_24')
+            WHEN "FLUA_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_23', 'test_24')
+            WHEN "FLUB_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_23', 'test_24')
+            WHEN "VSR_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_23', 'test_24')
             WHEN "COVS_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_24')
-            WHEN "ADENO_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_24')
-            WHEN "BOCA_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_24')
-            WHEN "RINO_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_24')
-            WHEN "PARA_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_24')
-            WHEN "ENTERO_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_24')
-            WHEN "META_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_24')
-            WHEN "BAC_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_24')
+            WHEN "ADENO_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_23', 'test_24')
+            WHEN "BOCA_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_23', 'test_24')
+            WHEN "RINO_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_23', 'test_24')
+            WHEN "PARA_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_23', 'test_24')
+            WHEN "ENTERO_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_23', 'test_24')
+            WHEN "META_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_23', 'test_24')
+            WHEN "BAC_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_23', 'test_24')
             ELSE FALSE
         END
     GROUP BY epiweek_enddate, age_group, pathogen

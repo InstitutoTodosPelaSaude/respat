@@ -14,7 +14,7 @@ WITH source_data AS (
     FROM {{ ref("matrices_01_unpivot_combined") }}
     WHERE 
         "FLUB_test_result" IN ('Pos', 'Neg') AND 
-        test_kit IN ('flu_antigen', 'flu_pcr', 'test_3', 'test_4', 'test_14', 'test_21', 'test_24')
+        test_kit IN ('flu_antigen', 'flu_pcr', 'test_3', 'test_4', 'test_14', 'test_21', 'test_23', 'test_24')
     GROUP BY epiweek_month, epiweek_year, pathogen
     ORDER BY epiweek_month, epiweek_year, pathogen
 )

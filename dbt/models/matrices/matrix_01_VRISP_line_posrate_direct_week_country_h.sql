@@ -8,10 +8,10 @@ WITH source_data AS (
     FROM {{ ref("matrices_01_unpivot_combined") }}
     WHERE
         CASE
-            WHEN "SC2_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('thermo', 'covid_antigen', 'covid_pcr', 'test_4', 'test_14', 'test_21', 'test_24')
-            WHEN "FLUA_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('flu_antigen', 'flu_pcr', 'test_3', 'test_4', 'test_14', 'test_21', 'test_24')
-            WHEN "FLUB_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('flu_antigen', 'flu_pcr', 'test_3', 'test_4', 'test_14', 'test_21', 'test_24')
-            WHEN "VSR_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_3', 'test_4', 'test_14', 'test_21', 'test_24', 'vsr_antigen')
+            WHEN "SC2_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('thermo', 'covid_antigen', 'covid_pcr', 'test_4', 'test_14', 'test_21', 'test_23', 'test_24')
+            WHEN "FLUA_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('flu_antigen', 'flu_pcr', 'test_3', 'test_4', 'test_14', 'test_21', 'test_23', 'test_24')
+            WHEN "FLUB_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('flu_antigen', 'flu_pcr', 'test_3', 'test_4', 'test_14', 'test_21', 'test_23', 'test_24')
+            WHEN "VSR_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_3', 'test_4', 'test_14', 'test_21', 'test_24', 'test_23', 'vsr_antigen')
             ELSE FALSE
         END
     GROUP BY epiweek_enddate, pathogen
