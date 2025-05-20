@@ -8,14 +8,14 @@ WITH source_data AS (
     FROM {{ ref("matrices_01_unpivot_combined") }}
     WHERE
         CASE
-            WHEN "COVS_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_24')
-            WHEN "ADENO_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_24', 'adeno_pcr')
-            WHEN "BOCA_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_24')
-            WHEN "RINO_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_24')
-            WHEN "PARA_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_24')
-            WHEN "ENTERO_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_24')
-            WHEN "META_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_24')
-            WHEN "BAC_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_24', 'bac_pcr', 'bac_antigen')
+            WHEN "COVS_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_14', 'test_21', 'test_23', 'test_24')
+            WHEN "ADENO_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_14', 'test_21', 'test_23', 'test_24', 'adeno_pcr')
+            WHEN "BOCA_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_14', 'test_23', 'test_24')
+            WHEN "RINO_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_14', 'test_21', 'test_23', 'test_24')
+            WHEN "PARA_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_14', 'test_21', 'test_23', 'test_24')
+            WHEN "ENTERO_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_14', 'test_21', 'test_23', 'test_24')
+            WHEN "META_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_14', 'test_21', 'test_23', 'test_24')
+            WHEN "BAC_test_result" IN ('Neg', 'Pos') THEN test_kit IN ('test_21', 'test_23', 'test_24', 'bac_pcr', 'bac_antigen')
             ELSE FALSE
         END
     GROUP BY epiweek_enddate, pathogen

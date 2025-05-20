@@ -39,7 +39,7 @@ source_data AS (
     FROM {{ ref("matrices_01_unpivot_combined") }}
     WHERE 
         "FLUA_test_result" IN ('Pos', 'Neg') AND
-        test_kit IN ('flu_antigen', 'flu_pcr', 'test_3', 'test_4', 'test_14', 'test_21', 'test_24') AND
+        test_kit IN ('flu_antigen', 'flu_pcr', 'test_3', 'test_4', 'test_14', 'test_21', 'test_23', 'test_24') AND
         epiweek_enddate >= '{{ epiweek_start }}'
     GROUP BY epiweek_enddate, state_code, pathogen
 ),

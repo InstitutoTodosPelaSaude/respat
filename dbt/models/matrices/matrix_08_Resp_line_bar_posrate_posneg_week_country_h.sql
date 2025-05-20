@@ -5,6 +5,8 @@ WITH source_data AS (
         epiweek_enddate,
         {{ matrices_metrics('result') }}
     FROM {{ ref("matrices_01_unpivot_combined") }}
+    WHERE
+        test_kit IN ('adeno_pcr', 'bac_antigen', 'bac_pcr', 'covid_antigen', 'covid_pcr', 'flu_antigen', 'flu_pcr', 'test_14', 'test_21', 'test_23', 'test_24', 'test_3', 'test_4', 'thermo', 'vsr_antigen')
     GROUP BY epiweek_enddate
     ORDER BY epiweek_enddate
 )
