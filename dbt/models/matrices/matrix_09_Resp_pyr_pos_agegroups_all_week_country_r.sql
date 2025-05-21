@@ -19,4 +19,4 @@ SELECT
     *
 FROM source_data
 WHERE 
-    "semana_epidemiológica" >= (SELECT epiweek_enddate FROM last_epiweek) - {{ last_year_days_threshold }}  
+    "semana_epidemiológica" > (SELECT epiweek_enddate FROM last_epiweek) - {{ last_year_days_threshold }}  
