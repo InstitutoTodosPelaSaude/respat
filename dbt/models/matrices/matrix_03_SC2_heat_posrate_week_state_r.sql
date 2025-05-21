@@ -18,4 +18,4 @@ SELECT
 FROM source_data
 WHERE 
     "Completude final" IN ('Apenas 12 meses', 'Alta qualidade') AND
-    "semanas_epidemiologicas" >= (SELECT epiweek_enddate FROM last_epiweek) - {{ last_year_days_threshold }}
+    "semanas_epidemiologicas" > (SELECT epiweek_enddate FROM last_epiweek) - {{ last_year_days_threshold }}
