@@ -34,11 +34,11 @@ WITH source_data AS (
 
 SELECT
     epiweek_enddate as "Semana Epidemiológica",
-    MAX(CASE WHEN region = 'Centro-Oeste' THEN "totaltests" ELSE 0 END) as "Centro-Oeste",
-    MAX(CASE WHEN region = 'Nordeste' THEN "totaltests" ELSE 0 END) as "Nordeste",
-    MAX(CASE WHEN region = 'Norte' THEN "totaltests" ELSE 0 END) as "Norte",
-    MAX(CASE WHEN region = 'Sudeste' THEN "totaltests" ELSE 0 END) as "Sudeste",
-    MAX(CASE WHEN region = 'Sul' THEN "totaltests" ELSE 0 END) as "Sul"
+    SUM(CASE WHEN region = 'Centro-Oeste' THEN "totaltests" ELSE 0 END) as "Centro-Oeste",
+    SUM(CASE WHEN region = 'Nordeste' THEN "totaltests" ELSE 0 END) as "Nordeste",
+    SUM(CASE WHEN region = 'Norte' THEN "totaltests" ELSE 0 END) as "Norte",
+    SUM(CASE WHEN region = 'Sudeste' THEN "totaltests" ELSE 0 END) as "Sudeste",
+    SUM(CASE WHEN region = 'Sul' THEN "totaltests" ELSE 0 END) as "Sul"
 FROM source_data
 GROUP BY epiweek_enddate
 ORDER BY epiweek_enddate
