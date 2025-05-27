@@ -6,7 +6,7 @@ WITH source_data AS (
     SELECT
         epiweek_enddate,
         region,
-        {{ matrices_metrics('result') }}
+        COUNT(DISTINCT sample_id) AS distinct_tests
     FROM {{ ref("matrices_01_unpivot_combined") }}
     WHERE
         epiweek_enddate >= '{{ epiweek_start }}' AND
@@ -34,11 +34,11 @@ WITH source_data AS (
 
 SELECT
     epiweek_enddate as "Semana Epidemiológica",
-    SUM(CASE WHEN region = 'Centro-Oeste' THEN "totaltests" ELSE 0 END) as "Centro-Oeste",
-    SUM(CASE WHEN region = 'Nordeste' THEN "totaltests" ELSE 0 END) as "Nordeste",
-    SUM(CASE WHEN region = 'Norte' THEN "totaltests" ELSE 0 END) as "Norte",
-    SUM(CASE WHEN region = 'Sudeste' THEN "totaltests" ELSE 0 END) as "Sudeste",
-    SUM(CASE WHEN region = 'Sul' THEN "totaltests" ELSE 0 END) as "Sul"
+    SUM(CASE WHEN region = 'Centro-Oeste' THEN "distinct_tests" ELSE 0 END) as "Centro-Oeste",
+    SUM(CASE WHEN region = 'Nordeste' THEN "distinct_tests" ELSE 0 END) as "Nordeste",
+    SUM(CASE WHEN region = 'Norte' THEN "distinct_tests" ELSE 0 END) as "Norte",
+    SUM(CASE WHEN region = 'Sudeste' THEN "distinct_tests" ELSE 0 END) as "Sudeste",
+    SUM(CASE WHEN region = 'Sul' THEN "distinct_tests" ELSE 0 END) as "Sul"
 FROM source_data
 GROUP BY epiweek_enddate
 ORDER BY epiweek_enddate
