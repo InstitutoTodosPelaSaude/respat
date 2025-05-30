@@ -116,5 +116,7 @@ WITH source_data AS (
     WHERE date_testing >= '{{ var('combined_threshold_date') }}'
 )
 SELECT
-    *
+    source_data.*,
+    methods.test_method as test_method
 FROM source_data
+LEFT JOIN {{ ref('test_methods') }} as methods ON source_data.test_kit = methods.test_kit
