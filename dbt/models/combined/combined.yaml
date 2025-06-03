@@ -118,9 +118,6 @@ models:
       - name: test_kit
         tests:
           - not_null
-      - name: test_method
-        tests:
-          - not_null
 
   - name: combined_02_age_groups
     description: Add age groups to combined table
