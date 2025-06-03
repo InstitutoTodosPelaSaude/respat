@@ -109,4 +109,58 @@ sources:
       - name: macroregions
 
 models:
-  - name: combined_01_join_labs.sql
+  - name: combined_01_join_labs
+    description: Join all labs in one table
+    columns:
+      - name: sample_id
+        tests:
+          - unique
+      - name: test_kit
+        tests:
+          - not_null
+      - name: test_method
+        tests:
+          - not_null
+
+  - name: combined_02_age_groups
+    description: Add age groups to combined table
+    columns:
+      - name: sample_id
+        tests:
+          - unique
+          - relationships:
+              to: ref('combined_01_join_labs')
+              field: sample_id
+
+  - name: combined_03_dates
+    description: Add epiweeks to combined table
+    columns:
+      - name: sample_id
+        tests:
+          - unique
+          - relationships:
+              to: ref('combined_02_age_groups')
+              field: sample_id
+
+  - name: combined_04_fix_location
+    description: Fix location name with mistakes in combined table 
+    columns:
+      - name: sample_id
+        tests:
+          - unique
+          - relationships:
+              to: ref('combined_03_dates')
+              field: sample_id
+      - name: state
+        tests:
+          - accepted_uf_names
+
+  - name: combined_05_location
+    description: Add location info to combined table
+    columns:
+      - name: sample_id
+        tests:
+          - unique
+          - relationships:
+              to: ref('combined_04_fix_location')
+              field: sample_id
