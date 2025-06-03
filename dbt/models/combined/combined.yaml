@@ -148,9 +148,6 @@ models:
           - relationships:
               to: ref('combined_03_dates')
               field: sample_id
-      - name: state
-        tests:
-          - accepted_uf_names
 
   - name: combined_05_location
     description: Add location info to combined table
