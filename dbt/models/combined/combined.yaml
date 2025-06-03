@@ -1,9 +1,23 @@
 version: 2
 
 sources:
+  - name: test_methods
+    description: Table to map test_kits to test_methods created by dbt seed
+    schema: respiratorios
+    tables:
+      - name: test_methods
+        description: Seed table with test methods and descriptions
+        columns:
+          - name: test_kit
+            description: The name of the test kit, formatted as "test_kit_name"
+          - name: test_method
+            description: The method group of the test kit
+          - name: test_description
+            description: A description of the test kit
+
   - name: age_groups
     description: Table to map age groups created by dbt seed
-    schema: arboviroses
+    schema: respiratorios
     tables:
       - name: age_groups
         description: Seed table with age groups
@@ -17,7 +31,7 @@ sources:
 
   - name: epiweeks
     description: Table to map epiweeks created by dbt seed
-    schema: arboviroses
+    schema: respiratorios
     tables:
       - name: epiweeks
         description: Seed table with epiweeks
@@ -34,7 +48,7 @@ sources:
             
   - name: fix_location
     description: Table to fix locations with mistakes created by dbt seed
-    schema: arboviroses
+    schema: respiratorios
     tables:
       - name: fix_location
         columns:
@@ -49,7 +63,7 @@ sources:
 
   - name: fix_state
     description: Table created by dbt seed to fix states with mistakes
-    schema: arboviroses
+    schema: respiratorios
     tables:
       - name: fix_state
         columns:
@@ -62,7 +76,7 @@ sources:
 
   - name: municipios
     description: Table to map location created by dbt seed
-    schema: arboviroses
+    schema: respiratorios
     tables:
       - name: municipios
       # CD_MUN,CD_UF,SIGLA_UF,NM_UF,NM_UF_NORM,NM_MUN,NM_MUN_NORM,REGIAO,lat,long
@@ -90,9 +104,63 @@ sources:
 
   - name: macroregions
     description: Table to map macroregions created by dbt seed
-    schema: arboviroses
+    schema: respiratorios
     tables:
       - name: macroregions
 
 models:
-  - name: combined_01_join_labs.sql
+  - name: combined_01_join_labs
+    description: Join all labs in one table
+    columns:
+      - name: sample_id
+        tests:
+          - unique
+      - name: test_kit
+        tests:
+          - not_null
+      - name: test_method
+        tests:
+          - not_null
+
+  - name: combined_02_age_groups
+    description: Add age groups to combined table
+    columns:
+      - name: sample_id
+        tests:
+          - unique
+          - relationships:
+              to: ref('combined_01_join_labs')
+              field: sample_id
+
+  - name: combined_03_dates
+    description: Add epiweeks to combined table
+    columns:
+      - name: sample_id
+        tests:
+          - unique
+          - relationships:
+              to: ref('combined_02_age_groups')
+              field: sample_id
+
+  - name: combined_04_fix_location
+    description: Fix location name with mistakes in combined table 
+    columns:
+      - name: sample_id
+        tests:
+          - unique
+          - relationships:
+              to: ref('combined_03_dates')
+              field: sample_id
+      - name: state
+        tests:
+          - accepted_uf_names
+
+  - name: combined_05_location
+    description: Add location info to combined table
+    columns:
+      - name: sample_id
+        tests:
+          - unique
+          - relationships:
+              to: ref('combined_04_fix_location')
+              field: sample_id

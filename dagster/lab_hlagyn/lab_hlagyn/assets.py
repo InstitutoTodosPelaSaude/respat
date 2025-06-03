@@ -66,6 +66,12 @@ def hlagyn_raw(context):
                 'Metodlogia': 'Métodologia',
                 'metodlogia': 'Métodologia',
                 'METODOLOGIA': 'Métodologia',
+                'Metodo': 'Métodologia',
+                'METODO': 'Métodologia',
+                'metodo': 'Métodologia',
+                'Método': 'Métodologia',
+                'MÉTODO': 'Métodologia',
+                'método': 'Métodologia',
             }, inplace=True)
 
     # The columns are not the same for all files, so we need to check the columns
