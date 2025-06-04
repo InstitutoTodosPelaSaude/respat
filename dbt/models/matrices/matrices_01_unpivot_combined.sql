@@ -6,6 +6,7 @@ WITH source_data AS (
         test_kit,
         epiweek_enddate,
         date_testing,
+        "month",
         epiweek_number,
         lab_id,
         CASE WHEN location IS NULL THEN 'NOT REPORTED' ELSE location END AS location,
