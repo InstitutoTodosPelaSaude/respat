@@ -4,7 +4,7 @@ WITH source_data AS (
     {{ source("dagster", "sivep_raw") }}
 )
 SELECT 
-    id_unidade,
+    nm_un_inte as id_unidade,
 
     -- PACIENT
     cs_sexo AS sex,
@@ -18,14 +18,14 @@ SELECT
     id_pais,
     id_rg_resi,
 
-    TO_DATE(dt_coleta, 'dd/mm/yyyy') AS date_testing,
+    TO_DATE(dt_coleta, 'yyyy-mm-dd') AS date_testing,
 
     sem_pri::NUMERIC::INTEGER AS sem_pri,
     amostra::NUMERIC::INTEGER AS amostra,
     
-    TO_DATE(dt_notific, 'dd/mm/yyyy') AS dt_notific ,
-    TO_DATE(dt_sin_pri, 'dd/mm/yyyy') AS dt_sin_pri , 
-    TO_DATE(dt_res_an, 'dd/mm/yyyy') AS dt_res_an ,
+    TO_DATE(dt_notific, 'yyyy-mm-dd') AS dt_notific ,
+    TO_DATE(dt_sin_pri, 'yyyy-mm-dd') AS dt_sin_pri , 
+    TO_DATE(dt_res_an, 'yyyy-mm-dd') AS dt_res_an ,
     res_an::NUMERIC::INTEGER AS res_an,
     pos_an_flu::NUMERIC::INTEGER AS pos_an_flu,
     tp_flu_an::NUMERIC::INTEGER AS tp_flu_an,
@@ -38,7 +38,7 @@ SELECT
     an_adeno::NUMERIC::INTEGER AS an_adeno ,
     an_outro::NUMERIC::INTEGER AS an_outro ,
     ds_an_out,
-    TO_DATE(dt_pcr, 'dd/mm/yyyy') AS dt_pcr,
+    TO_DATE(dt_pcr, 'yyyy-mm-dd') AS dt_pcr,
     pcr_resul::NUMERIC::INTEGER AS pcr_resul,
     pos_pcrflu::NUMERIC::INTEGER AS pos_pcrflu,
     tp_flu_pcr::NUMERIC::INTEGER AS tp_flu_pcr,
@@ -54,7 +54,7 @@ SELECT
     pcr_boca::NUMERIC::INTEGER AS pcr_boca,
     pcr_rino::NUMERIC::INTEGER AS pcr_rino,
     pcr_outro::NUMERIC::INTEGER AS pcr_outro,
-    ds_pcr_out ,
+    ds_pcr_out,
     classi_fin::NUMERIC::INTEGER AS classi_fin,
     classi_out,
     REPLACE(criterio, ';', '')::NUMERIC::INTEGER AS criterio ,

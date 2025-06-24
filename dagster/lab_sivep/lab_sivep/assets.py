@@ -54,7 +54,7 @@ def sivep_raw(context):
     cursor = engine.raw_connection().cursor()
 
     sivep_df_columns = [
-        "ID_UNIDADE", "CS_SEXO", "NU_IDADE_N", "TP_IDADE", "DT_COLETA",  "SEM_PRI", "AMOSTRA",
+        "NM_UN_INTE", "CS_SEXO", "NU_IDADE_N", "TP_IDADE", "DT_COLETA",  "SEM_PRI", "AMOSTRA",
         "ID_MN_RESI",  "ID_PAIS", "ID_RG_RESI",  "SG_UF",  "CO_MUN_RES", 
         "DT_NOTIFIC", "DT_SIN_PRI", "DT_RES_AN", 
         "RES_AN", "TP_FLU_AN", "POS_AN_FLU", "POS_AN_OUT", "AN_SARS2", "AN_VSR", 
