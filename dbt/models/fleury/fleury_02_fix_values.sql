@@ -69,6 +69,7 @@ SELECT
         WHEN 'VIRUSMOL'         THEN 'test_21'
         WHEN '2019NCOV'         THEN 'covid_pcr'
         WHEN 'COVID19POCT'      THEN 'covid_pcr'
+        WHEN '2019NCOVTE'       THEN 'covid_pcr'
         WHEN 'AGCOVIDNS'        THEN 'covid_antigen'
         WHEN 'AGINFLU'          THEN 'flu_antigen'
         WHEN 'AGSINCURG'        THEN 'vsr_antigen'

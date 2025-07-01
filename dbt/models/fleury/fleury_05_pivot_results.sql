@@ -12,7 +12,6 @@ SELECT
                 "COVID 19, DETECCAO POR PCR",
                 "COVID 19, ANTIGENO, TESTE RAPIDO",
                 "COVIDFLURSVGX - SARS-COV-2",
-                "COVID 19, DETECCAO POR PCR",
                 "VIRUSMOL, SARS-COV-2"
             ], 
             'pathogen', 

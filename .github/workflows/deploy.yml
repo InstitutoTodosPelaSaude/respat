@@ -28,6 +28,6 @@ jobs:
           echo "Host $SSH_HOST\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
           ssh-keyscan -H $SSH_HOST > ~/.ssh/known_hosts
       - run: ssh $SSH_USER@$SSH_HOST "echo 'Testing SSH connection'"
-      - run: ssh $SSH_USER@$SSH_HOST -T 'cd ~/monit-frontend/data/respat; git pull; docker compose down; docker compose up --build -d'
+      - run: ssh $SSH_USER@$SSH_HOST -T 'cd ~/monit-frontend/data/respat; git pull; docker compose down; docker compose build --no-cache; docker compose up -d'
       - run: ssh $SSH_USER@$SSH_HOST   "cd ~/monit-frontend/data/respat/; echo \$(git rev-parse --short HEAD) \$(git show -s --format=%cd --date=format:'%Y-%m-%d' HEAD) > version.txt" 
       
