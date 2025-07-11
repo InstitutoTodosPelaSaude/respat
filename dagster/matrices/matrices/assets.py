@@ -96,6 +96,7 @@ def respiratorios_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_30_Resp_bar_total_posneg_months_regions"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_30_Resp_bar_total_posneg_week_regions"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_31_Resp_pyr_pos_agegroups_all_quarter_country"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_34_SC2_line_posrate_bar_pos_direct_week_regions_sivep"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_ALL_count_by_labid_testkit_pathogen_result"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_SC2_posrate_by_epiweek_state"),
     ]
@@ -172,6 +173,7 @@ def export_matrices_to_xlsx(context):
         "matrix_30_Resp_bar_total_posneg_months_regions":               "30_Resp_bar_total_posneg_months_regions",
         "matrix_30_Resp_bar_total_posneg_week_regions":                 "30_Resp_bar_total_posneg_week_regions",
         "matrix_31_Resp_pyr_pos_agegroups_all_quarter_country":         "31_Resp_pyr_pos_agegroups_all_quarter_country",
+        "matrix_34_SC2_line_posrate_bar_pos_direct_week_regions_sivep": "34_SC2_line_posrate_bar_pos_direct_week_regions_sivep",
         "matrix_ALL_count_by_labid_testkit_pathogen_result":            "matrix_ALL_count_by_labid_testkit_pathogen_result",
         "matrix_SC2_posrate_by_epiweek_state":                          "matrix_SC2_posrate_by_epiweek_state",
     }

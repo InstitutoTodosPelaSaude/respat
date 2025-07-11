@@ -29,12 +29,20 @@ source_data_epiweeks AS(
     LEFT JOIN epiweeks AS ew ON source_data_raw.date_pri_sin >= ew.start_date AND source_data_raw.date_pri_sin <= ew.end_date
 ),
 
-source_data_full AS(
+source_data_regions AS (
     SELECT 
         source_data_epiweeks.*,
-        ag.age_group
+        r.region AS region
     FROM source_data_epiweeks
-    LEFT JOIN age_groups AS ag ON source_data_epiweeks.age >= ag." min_age" AND source_data_epiweeks.age <=  ag." max_age"
+    LEFT JOIN {{ ref("macroregions") }} AS r ON source_data_epiweeks.state = {{ normalize_text("r.state_name") }}
+),
+
+source_data_full AS(
+    SELECT 
+        source_data_regions.*,
+        ag.age_group
+    FROM source_data_regions
+    LEFT JOIN age_groups AS ag ON source_data_regions.age >= ag." min_age" AND source_data_regions.age <=  ag." max_age"
 ),
  
 source_data AS (
@@ -43,6 +51,7 @@ source_data AS (
         test_kit,
         epiweek_enddate,
         epiweek_number,
+        region,
         CASE WHEN age_group IS NULL THEN 'NOT REPORTED' ELSE age_group END AS age_group,
         "SC2_test_result",
         "FLUA_test_result",
