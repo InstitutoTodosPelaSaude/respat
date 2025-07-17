@@ -2,6 +2,6 @@ fastapi
 pydantic
 uvicorn
 python-multipart
-jpype1
+jpype1==1.5.2
 aspose-cells
 pandas
