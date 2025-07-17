@@ -5,6 +5,7 @@ services:
     environment:
       - DAGSTER_DBT_PARSE_PROJECT_ON_LOAD=1
       - DAGSTER_HOME=/usr/app/respiratorios/dagster_home
+      - DAGSTER_PATH_PREFIX=${DAGSTER_PATH_PREFIX}
     ports:
       - "3007:3000"
     volumes:

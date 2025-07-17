@@ -34,7 +34,7 @@ source_data_regions AS (
         source_data_epiweeks.*,
         r.region AS region
     FROM source_data_epiweeks
-    LEFT JOIN {{ ref("macroregions") }} AS r ON source_data_epiweeks.state = {{ normalize_text("r.state_name") }}
+    LEFT JOIN {{ ref("macroregions") }} AS r ON source_data_epiweeks.state = {{ normalize_text("state_name") }}
 ),
 
 source_data_full AS(
