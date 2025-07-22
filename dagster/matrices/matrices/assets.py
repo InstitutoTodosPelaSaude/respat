@@ -100,8 +100,8 @@ def respiratorios_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_35_FLUA_line_posrate_bar_pos_direct_week_regions_sivep"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_36_FLUB_line_posrate_bar_pos_direct_week_regions_sivep"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_37_VSR_line_posrate_bar_pos_direct_week_regions_sivep"),
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_38_VRISP_posrate_posneg_week_region"),
-        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_39_VRISP_posrate_posneg_week_state"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_101_VRISP_posrate_posneg_week_region"),
+        get_asset_key_for_model([respiratorios_dbt_assets], "matrix_102_VRISP_posrate_posneg_week_state"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_ALL_count_by_labid_testkit_pathogen_result"),
         get_asset_key_for_model([respiratorios_dbt_assets], "matrix_SC2_posrate_by_epiweek_state"),
     ]
@@ -182,8 +182,8 @@ def export_matrices_to_xlsx(context):
         "matrix_35_FLUA_line_posrate_bar_pos_direct_week_regions_sivep":"35_FLUA_line_posrate_bar_pos_direct_week_regions_sivep",
         "matrix_36_FLUB_line_posrate_bar_pos_direct_week_regions_sivep":"36_FLUB_line_posrate_bar_pos_direct_week_regions_sivep",
         "matrix_37_VSR_line_posrate_bar_pos_direct_week_regions_sivep": "37_VSR_line_posrate_bar_pos_direct_week_regions_sivep",
-        "matrix_38_VRISP_posrate_posneg_week_region":                   "38_VRISP_posrate_posneg_week_region",
-        "matrix_39_VRISP_posrate_posneg_week_state":                    "39_VRISP_posrate_posneg_week_state",
+        "matrix_101_VRISP_posrate_posneg_week_region":                  "101_VRISP_posrate_posneg_week_region",
+        "matrix_102_VRISP_posrate_posneg_week_state":                   "102_VRISP_posrate_posneg_week_state",
         "matrix_ALL_count_by_labid_testkit_pathogen_result":            "matrix_ALL_count_by_labid_testkit_pathogen_result",
         "matrix_SC2_posrate_by_epiweek_state":                          "matrix_SC2_posrate_by_epiweek_state",
     }
