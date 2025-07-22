@@ -83,11 +83,11 @@ SELECT
     MAX(CASE WHEN sp.region = 'Sudeste' THEN "Positividade (%, Lab. parceiros)" ELSE NULL END) as "Sudeste (Positividade)",
     MAX(CASE WHEN sp.region = 'Sul' THEN "Positividade (%, Lab. parceiros)" ELSE NULL END) as "Sul (Positividade)",
 
-    SUM(CASE WHEN svp.region = 'Centro-Oeste' THEN "Infecções graves por Influenza A (SIVEP)" ELSE 0 END) as "Centro-Oeste (FLUA)",
-    SUM(CASE WHEN svp.region = 'Nordeste' THEN "Infecções graves por Influenza A (SIVEP)" ELSE 0 END) as "Nordeste (FLUA)",
-    SUM(CASE WHEN svp.region = 'Norte' THEN "Infecções graves por Influenza A (SIVEP)" ELSE 0 END) as "Norte (FLUA)",
-    SUM(CASE WHEN svp.region = 'Sudeste' THEN "Infecções graves por Influenza A (SIVEP)" ELSE 0 END) as "Sudeste (FLUA)",
-    SUM(CASE WHEN svp.region = 'Sul' THEN "Infecções graves por Influenza A (SIVEP)" ELSE 0 END) as "Sul (FLUA)"
+    SUM(CASE WHEN svp.region = 'Centro-Oeste' THEN "Infecções graves por Influenza A (SIVEP)" ELSE 0 END) as "Centro-Oeste (SRAG)",
+    SUM(CASE WHEN svp.region = 'Nordeste' THEN "Infecções graves por Influenza A (SIVEP)" ELSE 0 END) as "Nordeste (SRAG)",
+    SUM(CASE WHEN svp.region = 'Norte' THEN "Infecções graves por Influenza A (SIVEP)" ELSE 0 END) as "Norte (SRAG)",
+    SUM(CASE WHEN svp.region = 'Sudeste' THEN "Infecções graves por Influenza A (SIVEP)" ELSE 0 END) as "Sudeste (SRAG)",
+    SUM(CASE WHEN svp.region = 'Sul' THEN "Infecções graves por Influenza A (SIVEP)" ELSE 0 END) as "Sul (SRAG)"
 FROM source_posrate sp
 FULL OUTER JOIN sivep_posrate svp ON sp."Semanas epidemiológicas" = svp."Semanas epidemiológicas"
 LEFT JOIN source_total_posrate stp ON sp."Semanas epidemiológicas" = stp."Semanas epidemiológicas"
