@@ -36,5 +36,5 @@ SELECT
     "totaltests" AS "Total de Testes",
     "posrate" * 100 AS "Taxa de Positividade (%)"
 FROM source_data
-ORDER BY epiweek_enddate, region, state, state_code, pathogen;
+ORDER BY epiweek_enddate, region, state, state_code, pathogen
 
