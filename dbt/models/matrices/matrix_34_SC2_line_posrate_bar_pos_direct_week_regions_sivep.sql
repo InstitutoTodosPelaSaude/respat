@@ -49,7 +49,6 @@ source_total_posrate AS (
         MAX(CASE WHEN sc.pathogen = 'SC2' THEN sc."posrate" * 100 ELSE NULL END) as "Positividade Total"
     FROM source_total sc
     GROUP BY sc.epiweek_enddate
-    ORDER BY sc.epiweek_enddate
 ),
 
 source_posrate AS (
@@ -59,7 +58,6 @@ source_posrate AS (
         MAX(CASE WHEN sc.pathogen = 'SC2' THEN sc."posrate" * 100 ELSE NULL END) as "Positividade (%, Lab. parceiros)"
     FROM source_data sc
     GROUP BY sc.epiweek_enddate, sc.region
-    ORDER BY sc.epiweek_enddate, sc.region
 ),
 
 sivep_posrate AS (
@@ -69,7 +67,6 @@ sivep_posrate AS (
         SUM(CASE WHEN sc.pathogen = 'SC2' THEN sc."Pos" ELSE 0 END)::int AS "Infecções graves por SARS-CoV-2 (SIVEP)"
     FROM sivep_data sc
     GROUP BY sc.epiweek_enddate, sc.region
-    ORDER BY sc.epiweek_enddate, sc.region
 )
 
 SELECT 

@@ -19,6 +19,7 @@ import pathlib
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
 import shutil
+import re
 
 from .constants import dbt_manifest_path
 
@@ -54,8 +55,8 @@ def hlagyn_raw(context):
     hlagyn_df['file_name'] = hlagyn_files[0]
     context.log.info(f"Reading file {hlagyn_files[0]}")
 
-    # Change 'Metodologia' column to Métodologia. Seems weird, but all the pipeline was 
-    # made with 'Métodologia' and after HLAGyn fixed the column name to 'Metodologia'
+    # Change 'Metodologia' column to 'Métodologia'. Seems weird, but the whole pipeline was
+    # built with 'Métodologia' and only later HLAGyn fixed the column name to 'Metodologia'.
     if 'Métodologia' not in hlagyn_df.columns:
         hlagyn_df.rename(columns={
                 'Metodologia': 'Métodologia',
@@ -73,6 +74,64 @@ def hlagyn_raw(context):
                 'MÉTODO': 'Métodologia',
                 'método': 'Métodologia',
             }, inplace=True)
+
+    # Normalize 'Cidade' and 'UF' columns when they come with another column name
+    if 'Cidade' not in hlagyn_df.columns:
+        hlagyn_df.rename(columns={
+                'Cidade (Inst Saúde)': 'Cidade'
+            }, inplace=True)
+    
+    if 'UF' not in hlagyn_df.columns:
+        hlagyn_df.rename(columns={
+                'UF (Inst Saúde)': 'UF'
+            }, inplace=True)
+        
+    # Sometimes the result columns like 'CT_I', 'CT_N', 'CT_ORF1AB', etc. appear as 'Resultado' in the files.
+    # We need to rename them back to 'CT_I', 'CT_N', 'CT_ORF1AB', etc., using the values from the columns.
+    # For example: If all values start with 'CT_I:', we rename the column to 'CT_I'.
+    
+    # Select all columns with the name "Resultado", "Resultado.1", etc.
+    resultado_cols = [col for col in hlagyn_df.columns if col.startswith("Resultado")]
+
+    for col in resultado_cols:
+        # Consider both NaN and empty or whitespace-only strings as empty
+        col_sem_na = hlagyn_df[col].dropna()
+        col_sem_na = col_sem_na[col_sem_na.astype(str).str.strip() != ""]
+        if col_sem_na.empty:
+            hlagyn_df.drop(columns=[col], inplace=True)
+            continue  # If the column is empty, skip to the next iteration
+
+        # Get the first non-null value to extract the prefix (e.g., "CT_I:")
+        first_value = hlagyn_df[col].dropna().astype(str).iloc[0]
+        match = re.match(r'^([\w\d]+):\s*(.*)', first_value)
+        if match:
+            prefix = match.group(1)  # Example: "CT_I"
+            # 3. Rename the column
+            hlagyn_df.rename(columns={col: prefix}, inplace=True)
+            # 4. Remove the prefix from the column values
+            hlagyn_df[prefix] = (
+                hlagyn_df[prefix]
+                .astype(str)
+                .str.replace(r'^[\w\d]+:\s*', '', regex=True)
+                .replace({'nan': '', 'None': ''})  # Fix "nan" and "None" values to empty string
+                .apply(lambda x: x.strip() if isinstance(x, str) else x)  # Remove extra spaces
+            )
+
+    # After processing, check if only one 'Resultado' column remains
+    resultado_restantes = [col for col in hlagyn_df.columns if col.startswith("Resultado")]
+    if len(resultado_restantes) == 1:
+        col_antiga = resultado_restantes[0]
+        hlagyn_df.rename(columns={col_antiga: "Resultado"}, inplace=True)
+
+    # Map columns when identifying a PR4 file
+    if 'VIRUS_HRSV' in hlagyn_df.columns:
+        # Rename the columns to match the expected names
+        hlagyn_df.rename(columns={
+            'VIRUS_HRSV': 'Vírus Sincicial Respiratório A/B',
+            'VIRUS_IA': 'Vírus Influenza A',
+            'VIRUS_B': 'Vírus Influenza B',
+            'VIRUS_COV2': 'Coronavírus SARS-CoV-2'
+        }, inplace=True)
 
     # The columns are not the same for all files, so we need to check the columns
     # and add the missing ones.
@@ -121,7 +180,7 @@ def hlagyn_raw(context):
         if column not in hlagyn_df.columns:
             hlagyn_df[column] = None
     
-    # Save to db
+    # Save to database
     hlagyn_df.to_sql('hlagyn_raw', engine, schema=DB_SCHEMA, if_exists='replace', index=False)
     engine.dispose()
 
@@ -176,6 +235,6 @@ def hlagyn_remove_used_files(context):
             context.log.info(f"Moving file {used_file} to {path_to_move}")
             file_system.move_file_to_folder("", used_file.split("/")[-1], path_to_move)
     
-    # Log the unmoved files
+    # Log the files that were not moved
     files_in_folder = file_system.list_files_in_relative_path("")
     context.log.info(f"Files that were not moved: {files_in_folder}")

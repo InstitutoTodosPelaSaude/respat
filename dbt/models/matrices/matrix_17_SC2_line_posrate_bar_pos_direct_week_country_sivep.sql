@@ -14,7 +14,6 @@ source_data AS (
         test_kit IN ('thermo', 'covid_antigen', 'covid_pcr', 'sc2_antigen', 'test_14', 'test_21', 'test_24', 'test_4') AND
         epiweek_enddate >= '{{ epiweek_start }}'
     GROUP BY epiweek_enddate, pathogen
-    ORDER BY epiweek_enddate, pathogen
 ),
 
 sivep_data AS (
@@ -27,7 +26,6 @@ sivep_data AS (
         "SC2_test_result" IN ('Pos', 'Neg') AND
         epiweek_enddate >= '{{ epiweek_start }}'
     GROUP BY epiweek_enddate, pathogen
-    ORDER BY epiweek_enddate, pathogen
 ),
 
 source_posrate AS (
@@ -36,7 +34,6 @@ source_posrate AS (
         MAX(CASE WHEN sc.pathogen = 'SC2' THEN sc."posrate" * 100 ELSE NULL END) as "Positividade (%, Lab. parceiros)"
     FROM source_data sc
     GROUP BY sc.epiweek_enddate
-    ORDER BY sc.epiweek_enddate
 ),
 
 sivep_posrate AS (
@@ -45,7 +42,6 @@ sivep_posrate AS (
         SUM(CASE WHEN sc.pathogen = 'SC2' THEN sc."Pos" ELSE 0 END)::int AS "Infecções graves por SARS-CoV-2 (SIVEP)"
     FROM sivep_data sc
     GROUP BY sc.epiweek_enddate
-    ORDER BY sc.epiweek_enddate
 )
 
 SELECT 
