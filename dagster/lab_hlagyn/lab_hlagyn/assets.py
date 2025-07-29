@@ -78,12 +78,14 @@ def hlagyn_raw(context):
     # Normalize 'Cidade' and 'UF' columns when they come with another column name
     if 'Cidade' not in hlagyn_df.columns:
         hlagyn_df.rename(columns={
-                'Cidade (Inst Saúde)': 'Cidade'
+                'Cidade (Inst Saúde)': 'Cidade',
+                'Cidade  (Inst Saúde)': 'Cidade'
             }, inplace=True)
-    
+
     if 'UF' not in hlagyn_df.columns:
         hlagyn_df.rename(columns={
-                'UF (Inst Saúde)': 'UF'
+                'UF (Inst Saúde)': 'UF',
+                'UF  (Inst Saúde)': 'UF'
             }, inplace=True)
         
     # Sometimes the result columns like 'CT_I', 'CT_N', 'CT_ORF1AB', etc. appear as 'Resultado' in the files.
