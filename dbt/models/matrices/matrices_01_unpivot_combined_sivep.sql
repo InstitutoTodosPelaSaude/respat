@@ -1,4 +1,12 @@
-{{ config(materialized='view') }}
+{{
+    config(
+        materialized='table',
+        post_hook=[
+            "CREATE INDEX idx_sivep_epiweek_pathogen ON {{ this.schema }}.{{ this.identifier }} (epiweek_enddate, pathogen)",
+            "CREATE INDEX idx_sivep_epiweek_region_pathogen ON {{ this.schema }}.{{ this.identifier }} (epiweek_enddate, region, pathogen)"
+        ]
+    )
+}}
 
 WITH 
 age_groups AS (
