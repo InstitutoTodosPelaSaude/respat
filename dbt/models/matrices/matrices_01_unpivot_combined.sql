@@ -1,10 +1,6 @@
 {{
     config(
-        materialized='table',
-        post_hook=[
-            "CREATE INDEX idx_combined_epiweek_region_pathogen_kit ON {{ this.schema }}.{{ this.identifier }} (epiweek_enddate, region, pathogen, test_kit)",
-            "CREATE INDEX idx_combined_epiweek_pathogen_kit ON {{ this.schema }}.{{ this.identifier }} (epiweek_enddate, pathogen, test_kit)"
-        ]
+        materialized='view'
     )
 }}
 

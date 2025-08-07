@@ -1,10 +1,6 @@
 {{
     config(
-        materialized='table',
-        post_hook=[
-            "CREATE INDEX idx_sivep_epiweek_pathogen ON {{ this.schema }}.{{ this.identifier }} (epiweek_enddate, pathogen)",
-            "CREATE INDEX idx_sivep_epiweek_region_pathogen ON {{ this.schema }}.{{ this.identifier }} (epiweek_enddate, region, pathogen)"
-        ]
+        materialized='view'
     )
 }}
 
@@ -17,6 +13,11 @@ age_groups AS (
 epiweeks AS (
     SELECT *
     FROM {{ ref("epiweeks") }}
+),
+
+macroregions AS (
+    SELECT DISTINCT {{ normalize_text("state_name") }} AS state_name, region
+    FROM {{ ref("macroregions") }}
 ),
 
 source_data_raw AS(
@@ -42,7 +43,7 @@ source_data_regions AS (
         source_data_epiweeks.*,
         r.region AS region
     FROM source_data_epiweeks
-    LEFT JOIN {{ ref("macroregions") }} AS r ON source_data_epiweeks.state = {{ normalize_text("state_name") }}
+    LEFT JOIN macroregions AS r ON source_data_epiweeks.state = r.state_name
 ),
 
 source_data_full AS(

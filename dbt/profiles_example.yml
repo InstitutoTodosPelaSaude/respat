@@ -3,7 +3,7 @@ respiratorios:
   outputs:
     dev:
       type: postgres
-      threads: 1
+      threads: 4
       host: <HOST>
       port: <PORT>
       user: <USER>
@@ -14,7 +14,7 @@ respiratorios:
 
     prod:
       type: postgres
-      threads: 1
+      threads: 4
       host: <HOST>
       port: <PORT>
       user: <USER>
