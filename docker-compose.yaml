@@ -13,9 +13,6 @@ services:
     entrypoint: ["./entrypoint.sh"]
     networks:
       - respatnetwork
-    mem_limit: "6g"
-    mem_reservation: "3g"
-    memswap_limit: -1    
   xlsx2csv:
     build: ./xlsx2csv_converter
     entrypoint: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "2140"]
