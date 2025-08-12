@@ -98,11 +98,11 @@ source_data_fix_values AS (
             THEN
                 CASE
                     WHEN 
-                        result IN ('NAO DETECTADO', 'NEGATIVO', 'NAO DETECTATDO', 'NAO DETACTADO') 
+                        result IN ('NAO DETECTADO', 'NEGATIVO', 'NAO DETECTATDO', 'NAO DETACTADO', 'NAO DETETCTADO') 
                         OR result ILIKE 'INFERIOR A%' 
                     THEN 0
                     WHEN 
-                        result IN ('DETECTADO', 'POSITIVO') 
+                        result IN ('DETECTADO', 'POSITIVO', 'DETETCTADO') 
                         OR result ILIKE 'DETECTADO %' -- Para testes de Infleunza A e B
                     THEN 1
                     ELSE {{NAO_RECONHECIDO}}
