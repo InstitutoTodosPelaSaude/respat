@@ -26,6 +26,12 @@ source_data_raw AS(
     FROM {{ ref("sivep_final") }}
 ),
 
+municipios AS (
+    SELECT 
+        *
+    FROM {{ ref("municipios") }}
+),
+
 source_data_epiweeks AS(
     SELECT 
         source_data_raw.*,
@@ -46,12 +52,20 @@ source_data_regions AS (
     LEFT JOIN macroregions AS r ON source_data_epiweeks.state = r.state_name
 ),
 
+source_data_location AS (
+    SELECT
+        source_data_regions.*,
+        m."NM_UF_NORM" AS location_ibge_code
+    FROM source_data_regions
+    LEFT JOIN municipios m ON m."NM_MUN_NORM" = source_data_regions."location" AND m."NM_UF_NORM" = source_data_regions.state
+),
+
 source_data_full AS(
     SELECT 
-        source_data_regions.*,
+        source_data_location.*,
         ag.age_group
-    FROM source_data_regions
-    LEFT JOIN age_groups AS ag ON source_data_regions.age >= ag." min_age" AND source_data_regions.age <=  ag." max_age"
+    FROM source_data_location
+    LEFT JOIN age_groups AS ag ON source_data_location.age >= ag." min_age" AND source_data_location.age <=  ag." max_age"
 ),
  
 source_data AS (
@@ -61,6 +75,8 @@ source_data AS (
         epiweek_enddate,
         epiweek_number,
         region,
+        CASE WHEN location IS NULL THEN 'NOT REPORTED' ELSE location END AS location,
+        location_ibge_code,
         CASE WHEN age_group IS NULL THEN 'NOT REPORTED' ELSE age_group END AS age_group,
         "SC2_test_result",
         "FLUA_test_result",
