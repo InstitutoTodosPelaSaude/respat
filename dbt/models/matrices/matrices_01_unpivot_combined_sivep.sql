@@ -55,7 +55,7 @@ source_data_regions AS (
 source_data_location AS (
     SELECT
         source_data_regions.*,
-        m."NM_UF_NORM" AS location_ibge_code
+        m."CD_MUN" AS location_ibge_code
     FROM source_data_regions
     LEFT JOIN municipios m ON m."NM_MUN_NORM" = source_data_regions."location" AND m."NM_UF_NORM" = source_data_regions.state
 ),
