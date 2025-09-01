@@ -24,6 +24,7 @@ SELECT
             [
                 "INFLUENZA A E B - TESTE RAPIDO FLU_A_RESULT",
                 "COVIDFLURSVGX - INFLUENZA A",
+                "VIRUS A/H1N1/PANDEMICO 2009",
                 "VIRUS INFLUENZA A (SAZONAL)",
                 "VIRUSMOL, INFLUENZA A",
                 "VIRUSMOL, INFLUENZA A/H1",
