@@ -101,6 +101,7 @@ WHERE
         'ZIKAVPCR',
         'MAYAVPCR',
         'OROVPCR',
-        'AAMAYAV'
+        'AAMAYAV',
+        'AAOROV'
     ) AND 
     test_id not in ('7000800337_1800')
