@@ -103,5 +103,6 @@ WHERE
         'OROVPCR',
         'AAMAYAV',
         'AAOROV'
-    ) AND 
-    test_id not in ('7000800337_1800')
+    ) 
+    AND test_id not in ('7000800337_1800')
+    AND result not in ('KIT SD BIOLINE INFLUENZA A+B') 
