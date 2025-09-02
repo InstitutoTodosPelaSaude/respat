@@ -17,7 +17,8 @@ SELECT
 
         WHEN 'NEGATIVO' THEN 0
         WHEN 'NAO DETECTADO (NEGATIVO)' THEN 0
-
+        WHEN 'INDETECTAVEL' THEN 0
+        
         WHEN 'INCONCLUSIVO' THEN 0
 
         ELSE -2
