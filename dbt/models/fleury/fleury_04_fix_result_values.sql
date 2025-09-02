@@ -14,20 +14,14 @@ SELECT
         WHEN 'POSITIVO' THEN 1
         WHEN 'DETECTADO (POSITIVO)' THEN 1
         WHEN 'P O S I T I V O' THEN 1
-        WHEN 'REAGENTE' THEN 1
 
         WHEN 'NEGATIVO' THEN 0
         WHEN 'NAO DETECTADO (NEGATIVO)' THEN 0
-        WHEN 'NAO REAGENTE' THEN 0
 
         WHEN 'INCONCLUSIVO' THEN 0
 
         ELSE -2
     END AS result
 FROM source_table
-WHERE
-    result NOT IN ('*', 'INDETERMINADA')
-    AND NOT (
-        pathogen IN ('ZIKA VIRUS - IGM', 'ZIKA VIRUS - IGG') 
-        AND result ~ '^[0-9]+,[0-9]+$'
-    )
+
+    
