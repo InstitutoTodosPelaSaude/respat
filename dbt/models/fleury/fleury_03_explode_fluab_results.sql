@@ -9,11 +9,11 @@ others_source_table AS (
 ),
 flu_a_source_table AS (
     SELECT * FROM {{ ref('fleury_02_fix_values') }}
-    WHERE exame = 'AGINFLU' AND pathogen = 'INFLUENZA A E B - TESTE RAPIDO'
+    WHERE exame = 'AGINFLU' AND pathogen = 'INFLUENZA A E B - TESTE RAPIDO' AND result NOT IN ('INCONCLUSIVO')
 ),
 flu_b_source_table AS (
     SELECT * FROM {{ ref('fleury_02_fix_values') }}
-    WHERE exame = 'AGINFLU' AND pathogen = 'INFLUENZA A E B - TESTE RAPIDO'
+    WHERE exame = 'AGINFLU' AND pathogen = 'INFLUENZA A E B - TESTE RAPIDO' AND result NOT IN ('INCONCLUSIVO')
 )
 
 SELECT
