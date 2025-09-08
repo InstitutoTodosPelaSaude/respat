@@ -75,6 +75,7 @@ source_data AS (
         epiweek_enddate,
         epiweek_number,
         region,
+        state,
         CASE WHEN location IS NULL THEN 'NOT REPORTED' ELSE location END AS location,
         location_ibge_code,
         CASE WHEN age_group IS NULL THEN 'NOT REPORTED' ELSE age_group END AS age_group,
