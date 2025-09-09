@@ -17,9 +17,8 @@ models:
       - name: test_id
         tests:
           - not_null
-          - dbt_utils.regex_match:
-              regex: '^[0-9A-F]{10}$'
-              message: "test_id must be exactly 10 characters long and only contain digits (0-9) or letters (A-F)."
+          - dbt_utils.expression_is_true:
+              expression: "REGEXP_CONTAINS(test_id, '^[0-9A-F]{10}$')"
       - name: date_testing
         tests: &not_null_warn_error_if_gt_1000
           - not_null:
