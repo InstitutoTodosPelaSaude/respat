@@ -102,3 +102,4 @@ WHERE 1=1
 AND sample_id NOT IN (SELECT sample_id FROM rows_to_delete)
 AND NOT (date_testing = '2024-05-10' AND age = 124)
 AND NOT (exame ILIKE 'ZZ%')
+AND date_testing >= '2025-08-01' -- Com as mudanças dos IDs do Einstein, consideramos dados a partir de 2025-08-01 para inclusão

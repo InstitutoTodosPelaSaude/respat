@@ -86,7 +86,7 @@ SELECT
     SUM(CASE WHEN svp.region = 'Sudeste' THEN "Infecções graves por Influenza A (SIVEP)" ELSE 0 END) as "Sudeste (SRAG)",
     SUM(CASE WHEN svp.region = 'Sul' THEN "Infecções graves por Influenza A (SIVEP)" ELSE 0 END) as "Sul (SRAG)"
 FROM source_posrate sp
-FULL OUTER JOIN sivep_posrate svp ON sp."Semanas epidemiológicas" = svp."Semanas epidemiológicas"
+FULL OUTER JOIN sivep_posrate svp ON sp."Semanas epidemiológicas" = svp."Semanas epidemiológicas" and sp.region = svp.region
 LEFT JOIN source_total_posrate stp ON sp."Semanas epidemiológicas" = stp."Semanas epidemiológicas"
 GROUP BY COALESCE(sp."Semanas epidemiológicas", svp."Semanas epidemiológicas", stp."Semanas epidemiológicas")
 ORDER BY "Semanas epidemiológicas"
