@@ -18,7 +18,7 @@ models:
         tests:
           - not_null
           - dbt_utils.expression_is_true:
-              expression: "REGEXP_CONTAINS(test_id, '^[0-9A-F]{10}$')"
+              expression: "~ '^[0-9A-F]{10}$'"
       - name: date_testing
         tests: &not_null_warn_error_if_gt_1000
           - not_null:
