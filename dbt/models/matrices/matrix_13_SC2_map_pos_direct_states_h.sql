@@ -78,5 +78,5 @@ SELECT
     "epiweek_cases"::int AS "epiweek_cases",
     "cumulative_cases"::int AS "cumulative_cases"
 FROM source_data_cumulative_sum
-WHERE "cumulative_cases" > 0
+WHERE "cumulative_cases" > 0 AND state <> 'NOT REPORTED'
 ORDER BY "semanas epidemiologicas", "state_code"
