@@ -1,0 +1,73 @@
+version: 2
+
+models:
+  - name: hlagyn_02a_pathogens__fix_values
+    description: Clean data for hlagyn_raw
+    tests:
+      - model_has_more_than_x_rows:
+          n_rows: 0
+    columns:
+      - name: sample_id
+        tests:
+          - unique
+          - not_null
+      - name: test_id
+        tests:
+          - relationships:
+                to: ref('hlagyn_01_convert_types')
+                field: test_id
+      - name: age
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 150
+      - name: sex
+        tests:
+          - accepted_values:
+              values: ["M", "F"]
+      - name: state
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: 'is not null'
+              config:
+                where: state_code is not null
+
+      - name: pathogen_name
+        tests:
+          - dbt_expectations.expect_column_to_exist
+      - name: pathogen_detail
+        tests:
+          - dbt_expectations.expect_column_to_exist
+      - name: pathogen_result
+        tests:
+          - dbt_expectations.expect_column_to_exist
+          - accepted_values:
+              values: [0, 1, -1]
+          - not_null
+      - name: original_test_name
+        tests:
+          - dbt_expectations.expect_column_to_exist
+          - not_null
+      - name: original_test_detail_name
+        tests:
+          - dbt_expectations.expect_column_to_exist
+      - name: is_a_multipathogen_test
+        tests:
+          - dbt_expectations.expect_column_to_exist
+          - accepted_values:
+              values: [true, false]
+          - not_null
+      
+      - name: test_kit
+        tests:
+          - not_null
+          - dbt_utils.not_accepted_values:
+              values: ["UNKNOWN"]
+      - name: test_name
+        tests:
+          - dbt_expectations.expect_column_to_exist
+      - name: test_methodology
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["PCR"]
