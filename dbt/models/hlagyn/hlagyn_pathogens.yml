@@ -83,7 +83,7 @@ models:
           n_rows: 0
       - accepted_pathogen_names
       - dbt_expectations.expect_compound_columns_to_be_unique:
-        column_list: ["test_id", "pathogen_name", "pathogen_detail"]
+          column_list: ["test_id", "pathogen_name", "pathogen_detail"]
     columns:
       - name: sample_id
         tests:
