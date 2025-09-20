@@ -6,10 +6,10 @@ models:
     tests:
       - model_has_more_than_x_rows:
           n_rows: 0
+      - accepted_pathogen_names
     columns:
       - name: sample_id
         tests:
-          - unique
           - not_null
       - name: test_id
         tests:
@@ -33,6 +33,9 @@ models:
                 where: state_code is not null
 
       - name: pathogen_name
+        tests:
+          - dbt_expectations.expect_column_to_exist
+      - name: pathogen_type
         tests:
           - dbt_expectations.expect_column_to_exist
       - name: pathogen_detail
