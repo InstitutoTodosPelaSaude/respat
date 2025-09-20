@@ -1,0 +1,5 @@
+version: 2
+
+models:
+  - name: hlagyn_02c_raw_historical_storage
+    description: Incremental model to store in the database the raw data from the processed files.
