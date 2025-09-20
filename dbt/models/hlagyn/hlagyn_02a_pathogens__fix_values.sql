@@ -80,10 +80,30 @@ fix_values AS (
         NULL AS original_test_detail_name,
 
         -- WIP
-        'TESTE WIP KIT' AS test_kit,
-        'TESTE WIP PAINEL 24 PATÓGENOS' AS test_name,
+        CASE
+            WHEN "filename" ILIKE '%covid' THEN 'WIP_kit_covid'
+            WHEN "filename" ILIKE '%pr3'   THEN 'WIP_kit_pr3'
+            WHEN "filename" ILIKE '%pr4'   THEN 'WIP_kit_pr4'
+            WHEN "filename" ILIKE '%pr24'  THEN 'WIP_kit_pr24'
+            ELSE NULL
+        END AS test_kit,
+
+        CASE
+            WHEN "filename" ILIKE '%covid' THEN 'WIP TESTE COVID'
+            WHEN "filename" ILIKE '%pr3'   THEN 'WIP TESTE PAINEL 3 PATÓGENOS'
+            WHEN "filename" ILIKE '%pr4'   THEN 'WIP TESTE PAINEL 4 PATÓGENOS'
+            WHEN "filename" ILIKE '%pr24'  THEN 'WIP TESTE PAINEL 24 PATÓGENOS'
+            ELSE NULL
+        END AS test_name,
+
+        CASE
+            WHEN "filename" ILIKE '%covid' THEN false
+            WHEN "filename" ILIKE '%pr3'   THEN true
+            WHEN "filename" ILIKE '%pr4'   THEN true
+            WHEN "filename" ILIKE '%pr24'  THEN true
+            ELSE NULL
+        END AS is_a_multipathogen_test,
         'PCR' AS test_methodology,
-        true AS is_a_multipathogen_test,
 
         location,
         state_code,
