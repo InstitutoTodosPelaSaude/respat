@@ -7,48 +7,48 @@
 {%
     set pathogen_names_and_result_columns = [
 
-        ('SARS_COV_2' ,      'VIRUS',    'result_covid',          NULL),
+        ('SARS_COV_2' ,      'VIRUS',    'result_covid',          'NO_DETAIL'),
 
 
-        ('INFLUENZA_A',      'VIRUS',    'result_virus_influenza_a',         NULL),
-        ('INFLUENZA_B',      'VIRUS',    'result_virus_influenza_b',         NULL),
-        ('VSR',              'VIRUS',    'result_virus_sincicial_respiratorio',NULL),
-        ('SARS_COV_2' ,      'VIRUS',    'result_virus_sars_cov_2',          NULL),
+        ('INFLUENZA_A',      'VIRUS',    'result_virus_influenza_a',         'NO_DETAIL'),
+        ('INFLUENZA_B',      'VIRUS',    'result_virus_influenza_b',         'NO_DETAIL'),
+        ('VSR',              'VIRUS',    'result_virus_sincicial_respiratorio','NO_DETAIL'),
+        ('SARS_COV_2' ,      'VIRUS',    'result_virus_sars_cov_2',          'NO_DETAIL'),
 
 
-        ('INFLUENZA_A',      'VIRUS',    'result_virus_ia',      NULL),
+        ('INFLUENZA_A',      'VIRUS',    'result_virus_ia',      'NO_DETAIL'),
         ('INFLUENZA_A',      'VIRUS',    'result_virus_h1n1',    'H1N1'),
         ('INFLUENZA_A',      'VIRUS',    'result_virus_ah3',     'AH3'),
 
-        ('INFLUENZA_B',      'VIRUS',    'result_virus_b',       NULL),
+        ('INFLUENZA_B',      'VIRUS',    'result_virus_b',       'NO_DETAIL'),
 
-        ('METAPNEUMOVIRUS',  'VIRUS',    'result_virus_mh',      NULL),
+        ('METAPNEUMOVIRUS',  'VIRUS',    'result_virus_mh',      'NO_DETAIL'),
 
         ('VSR',              'VIRUS',    'result_virus_sb',      'VSRB'),
         ('VSR',              'VIRUS',    'result_virus_sa',      'VSRA'),
 
-        ('RINOVIRUS',        'VIRUS',    'result_virus_rh',      NULL),
+        ('RINOVIRUS',        'VIRUS',    'result_virus_rh',      'NO_DETAIL'),
 
         ('PARAINFLUENZA',    'VIRUS',    'result_virus_ph',     'PH1'),
         ('PARAINFLUENZA',    'VIRUS',    'result_virus_ph2',    'PH2'),
         ('PARAINFLUENZA',    'VIRUS',    'result_virus_ph3',    'PH3'),
         ('PARAINFLUENZA',    'VIRUS',    'result_virus_ph4',    'PH4'),
 
-        ('CORONAVIRUS_229E', 'VIRUS',    'result_virus_229e',   NULL),
-        ('CORONAVIRUS_HKU',  'VIRUS',    'result_virus_hku',    NULL),
-        ('CORONAVIRUS_NL63', 'VIRUS',    'result_virus_nl63',   NULL),
-        ('CORONAVIRUS_OC43', 'VIRUS',    'result_virus_oc43',   NULL),
+        ('CORONAVIRUS_229E', 'VIRUS',    'result_virus_229e',   'NO_DETAIL'),
+        ('CORONAVIRUS_HKU',  'VIRUS',    'result_virus_hku',    'NO_DETAIL'),
+        ('CORONAVIRUS_NL63', 'VIRUS',    'result_virus_nl63',   'NO_DETAIL'),
+        ('CORONAVIRUS_OC43', 'VIRUS',    'result_virus_oc43',   'NO_DETAIL'),
 
-        ('SARS_COV_2' ,      'VIRUS',    'result_virus_sars',   NULL),
-        ('SARS_COV_2' ,      'VIRUS',    'result_virus_cov2',   NULL),
+        ('SARS_COV_2' ,      'VIRUS',    'result_virus_sars',   'NO_DETAIL'),
+        ('SARS_COV_2' ,      'VIRUS',    'result_virus_cov2',   'NO_DETAIL'),
 
-        ('ADENOVIRUS',       'VIRUS',    'result_virus_ade',    NULL),
-        ('BOCAVIRUS',        'VIRUS',    'result_virus_boc',    NULL),
-        ('ENTEROVIRUS',      'VIRUS',    'result_virus_ev',     NULL),
+        ('ADENOVIRUS',       'VIRUS',    'result_virus_ade',    'NO_DETAIL'),
+        ('BOCAVIRUS',        'VIRUS',    'result_virus_boc',    'NO_DETAIL'),
+        ('ENTEROVIRUS',      'VIRUS',    'result_virus_ev',     'NO_DETAIL'),
 
-        ('B_PERTUSSIS',      'BACTERIA', 'result_bacte_bp',     NULL),
-        ('B_PARAPERTUSIS',   'BACTERIA', 'result_bacte_bpar',   NULL),
-        ('M_PNEUMONIAE',     'BACTERIA', 'result_bacte_mp',     NULL),
+        ('B_PERTUSSIS',      'BACTERIA', 'result_bacte_bp',     'NO_DETAIL'),
+        ('B_PARAPERTUSIS',   'BACTERIA', 'result_bacte_bpar',   'NO_DETAIL'),
+        ('M_PNEUMONIAE',     'BACTERIA', 'result_bacte_mp',     'NO_DETAIL'),
     ]
 %}
 
