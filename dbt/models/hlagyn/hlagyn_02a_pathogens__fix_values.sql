@@ -81,26 +81,26 @@ fix_values AS (
 
         -- WIP
         CASE
-            WHEN "filename" ILIKE '%covid' THEN 'WIP_kit_covid'
-            WHEN "filename" ILIKE '%pr3'   THEN 'WIP_kit_pr3'
-            WHEN "filename" ILIKE '%pr4'   THEN 'WIP_kit_pr4'
-            WHEN "filename" ILIKE '%pr24'  THEN 'WIP_kit_pr24'
+            WHEN "file_name" ILIKE '%covid%' THEN 'WIP_kit_covid'
+            WHEN "file_name" ILIKE '%pr3%'   THEN 'WIP_kit_pr3'
+            WHEN "file_name" ILIKE '%pr4%'   THEN 'WIP_kit_pr4'
+            WHEN "file_name" ILIKE '%pr24%'  THEN 'WIP_kit_pr24'
             ELSE NULL
         END AS test_kit,
 
         CASE
-            WHEN "filename" ILIKE '%covid' THEN 'WIP TESTE COVID'
-            WHEN "filename" ILIKE '%pr3'   THEN 'WIP TESTE PAINEL 3 PATÓGENOS'
-            WHEN "filename" ILIKE '%pr4'   THEN 'WIP TESTE PAINEL 4 PATÓGENOS'
-            WHEN "filename" ILIKE '%pr24'  THEN 'WIP TESTE PAINEL 24 PATÓGENOS'
+            WHEN "file_name" ILIKE '%covid%' THEN 'WIP TESTE COVID'
+            WHEN "file_name" ILIKE '%pr3%'   THEN 'WIP TESTE PAINEL 3 PATÓGENOS'
+            WHEN "file_name" ILIKE '%pr4%'   THEN 'WIP TESTE PAINEL 4 PATÓGENOS'
+            WHEN "file_name" ILIKE '%pr24%'  THEN 'WIP TESTE PAINEL 24 PATÓGENOS'
             ELSE NULL
         END AS test_name,
 
         CASE
-            WHEN "filename" ILIKE '%covid' THEN false
-            WHEN "filename" ILIKE '%pr3'   THEN true
-            WHEN "filename" ILIKE '%pr4'   THEN true
-            WHEN "filename" ILIKE '%pr24'  THEN true
+            WHEN "file_name" ILIKE '%covid%' THEN false
+            WHEN "file_name" ILIKE '%pr3%'   THEN true
+            WHEN "file_name" ILIKE '%pr4%'   THEN true
+            WHEN "file_name" ILIKE '%pr24%'  THEN true
             ELSE NULL
         END AS is_a_multipathogen_test,
         'PCR' AS test_methodology,
