@@ -35,3 +35,4 @@ WITH source_data AS (
 SELECT
     *
 FROM results_grouped_by_pathogen
+WHERE pathogen_result != -1
