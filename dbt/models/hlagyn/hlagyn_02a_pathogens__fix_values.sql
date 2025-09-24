@@ -112,11 +112,21 @@ fix_values AS (
 
         {% for column_name in result_column_names %}
             CASE 
+                
                 WHEN "{{ column_name }}" ILIKE 'NAO DETECTADO%' THEN 0
                 WHEN "{{ column_name }}" ILIKE 'DETECTADO%'     THEN 1
                 WHEN "{{ column_name }}" ILIKE 'INCONCLUSIVO'   THEN -1
-                WHEN "{{ column_name }}" IS NULL                THEN -1
+
+                -- In some cases, the result is writter like VIRUS_IA: Não detectado
+                WHEN "{{ column_name }}" ILIKE '%: NAO DETECTADO%' THEN 0
+                WHEN "{{ column_name }}" ILIKE '%: DETECTADO%'     THEN 1
+                WHEN "{{ column_name }}" ILIKE '%: INCONCLUSIVO'   THEN -1
+
+                WHEN "{{ column_name }}" IS NULL  THEN -1
+                WHEN "{{ column_name }}" = ''     THEN -1
+
                 ELSE -2 --UNKNOWN
+
             END AS "{{ column_name }}",
         {% endfor %}
         file_name
