@@ -42,6 +42,9 @@ def hlagyn_raw(context):
     """
     Read all excel files from data/hlagyn folder and save to db
     """
+
+    logger = context.log
+
     file_system = FileSystem(root_path=HLAGYN_FILES_FOLDER)
     engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
 
@@ -53,7 +56,7 @@ def hlagyn_raw(context):
     file_to_get = hlagyn_files[0].split('/')[-1] # Get the file name
     hlagyn_df = pd.read_excel(file_system.get_file_content_as_io_bytes(file_to_get), dtype = str)
     hlagyn_df['file_name'] = hlagyn_files[0]
-    context.log.info(f"Reading file {hlagyn_files[0]}")
+    logger.info(f"Reading file {hlagyn_files[0]}")
 
     # Change 'Metodologia' column to 'Métodologia'. Seems weird, but the whole pipeline was
     # built with 'Métodologia' and only later HLAGyn fixed the column name to 'Metodologia'.
@@ -96,12 +99,14 @@ def hlagyn_raw(context):
     
     # Select all columns with the name "Resultado", "Resultado.1", etc.
     resultado_cols = [col for col in hlagyn_df.columns if col.startswith("Resultado")]
+    logger.debug(f"resultado_cols {resultado_cols}")
 
     for col in resultado_cols:
         # Consider both NaN and empty or whitespace-only strings as empty
         col_sem_na = hlagyn_df[col].dropna()
         col_sem_na = col_sem_na[col_sem_na.astype(str).str.strip() != ""]
         if col_sem_na.empty:
+            logger.debug(f"Removed col {col} from dataframe. It was empty.")
             hlagyn_df.drop(columns=[col], inplace=True)
             continue  # If the column is empty, skip to the next iteration
 
@@ -110,8 +115,12 @@ def hlagyn_raw(context):
         match = re.match(r'^([\w\d]+):\s*(.*)', first_value)
         if match:
             prefix = match.group(1)  # Example: "CT_I"
-            # 3. Rename the column
-            hlagyn_df.rename(columns={col: prefix}, inplace=True)
+
+            # 3. Rename the column if it does not already exists in the 
+            if not (prefix in hlagyn_df.columns):            
+                logger.debug(f"Found the prefix {prefix}. Renaming the column {col} to {prefix}.")
+                hlagyn_df.rename(columns={col: prefix}, inplace=True)
+            
             # 4. Remove the prefix from the column values
             hlagyn_df[prefix] = (
                 hlagyn_df[prefix]
