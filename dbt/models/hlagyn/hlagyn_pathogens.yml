@@ -85,6 +85,9 @@ models:
       - accepted_pathogen_detail
       - dbt_expectations.expect_compound_columns_to_be_unique:
           column_list: ["test_id", "pathogen_name", "pathogen_detail"]
+      - expected_number_of_repeated_lines_in_column_set_is_exactly:
+          columns: "sample_id"
+          values_list: [1, 29]
     columns:
       - name: sample_id
         tests:
