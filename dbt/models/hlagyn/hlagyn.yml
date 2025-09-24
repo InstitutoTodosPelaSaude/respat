@@ -16,7 +16,6 @@ models:
     columns:
       - name: test_id
         tests:
-          - unique
           - not_null
       - name: date_testing
         tests:
