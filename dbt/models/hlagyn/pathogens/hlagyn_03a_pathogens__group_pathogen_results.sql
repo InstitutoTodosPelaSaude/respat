@@ -6,8 +6,9 @@ WITH source_data AS (
     FROM {{ ref('hlagyn_02a_pathogens__fix_values') }}
 ), results_grouped_by_pathogen AS (
     SELECT
-        MAX(sample_id) AS sample_id,
-        --test_id,
+        sample_id AS sample_id,
+        
+        MAX(test_id) AS test_id,
         MAX(date_testing) AS date_testing,
         MAX(age) AS age,
         MAX(sex) AS sex,
@@ -28,9 +29,9 @@ WITH source_data AS (
         --pathogen_type,
         MAX(pathogen_result) AS pathogen_result,
 
-        test_id, pathogen_name, pathogen_type, pathogen_detail
+        pathogen_name, pathogen_type, pathogen_detail
     FROM source_data
-    GROUP BY test_id, pathogen_name, pathogen_type, pathogen_detail
+    GROUP BY sample_id, pathogen_name, pathogen_type, pathogen_detail
 )
 SELECT
     *
