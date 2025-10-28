@@ -19,6 +19,8 @@ from dagster_slack import (
 import os
 from dotenv import load_dotenv
 from time import sleep
+import json
+from datetime import datetime, timedelta, timezone
 
 from .jobs import (
     create_new_folder_job,
@@ -31,6 +33,8 @@ DAGSTER_SLACK_BOT_TOKEN = os.getenv('DAGSTER_SLACK_BOT_TOKEN')
 DAGSTER_SLACK_BOT_CHANNEL = os.getenv('DAGSTER_SLACK_BOT_CHANNEL')
 DAGSTER_SLACK_BOT_MAIN_CHANNEL = os.getenv('DAGSTER_SLACK_BOT_MAIN_CHANNEL')
 MINIO_UI_URL = os.getenv('MINIO_UI_URL')
+
+SLACK_SUCCESS_MESSAGE_DELAY_MINUTES = 30
 
 @asset_sensor(
     asset_key=AssetKey("zip_exported_file"),
@@ -65,9 +69,32 @@ def run_save_external_reports_files_sensor(context: SensorEvaluationContext, ass
 @run_status_sensor(
     monitored_jobs=[create_new_folder_job],
     run_status=DagsterRunStatus.SUCCESS,
-    default_status=DefaultSensorStatus.RUNNING
+    default_status=DefaultSensorStatus.RUNNING,
+    minimum_interval_seconds=60
 )
 def save_files_slack_success_sensor(context: SensorEvaluationContext):
+    # wait some time to ensure all matrices and reports files are saved
+    state = json.loads(context.cursor) if context.cursor else {}
+    run_id = context.dagster_run.run_id
+
+    target_ts = state.get(run_id)
+    if target_ts is None:
+        end_ts = getattr(context.dagster_run, "end_time", None)
+        seen_time = (
+            datetime.fromtimestamp(end_ts, tz=timezone.utc)
+            if isinstance(end_ts, (int, float))
+            else datetime.now(timezone.utc)
+        )
+        target_time = seen_time + timedelta(minutes=SLACK_SUCCESS_MESSAGE_DELAY_MINUTES)
+        state[run_id] = target_time.timestamp()
+        context.update_cursor(json.dumps(state))
+        return SkipReason(f"The message will be sent in {SLACK_SUCCESS_MESSAGE_DELAY_MINUTES} minutes.")
+    
+    now = datetime.now(timezone.utc).timestamp()
+    if now < target_ts:
+        mins_left = int((target_ts - now) // 60) + 1
+        return SkipReason(f"Waiting {mins_left} more minutes before sending success message.")
+
     # Get the new report folder created by the job
     materialization = context.instance.get_latest_materialization_event(AssetKey(["create_new_folder"])).asset_materialization
     folder_name = materialization.metadata["folder_name"].text
@@ -124,6 +151,10 @@ def save_files_slack_success_sensor(context: SensorEvaluationContext):
                 },
             ]
     )
+
+    # Remove the run from the state
+    state.pop(run_id, None)
+    context.update_cursor(json.dumps(state))
 
 # Failure sensor that sends a message to slack
 save_files_slack_failure_sensor = make_slack_on_run_failure_sensor(
