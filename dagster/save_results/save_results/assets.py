@@ -1,4 +1,3 @@
-from asyncio import sleep
 from dagster import (
     AssetExecutionContext,
     asset,
@@ -22,6 +21,7 @@ from io import StringIO, BytesIO
 import zipfile
 from datetime import datetime, timedelta
 import re
+from time import sleep
 
 sys.path.insert(1, os.getcwd())
 from filesystem.filesystem import FileSystem
@@ -30,7 +30,7 @@ from utils.epiweek import get_epiweek_str
 REPORTS_FILES_FOLDER = "/data/respat/reports/"
 REPORTS_CURRENT_FILES_FOLDER = "/data/respat/reports/current/"
 
-SLACK_SUCCESS_MESSAGE_DELAY_MINUTES = 30
+SLACK_SUCCESS_MESSAGE_DELAY_MINUTES = 1
 
 load_dotenv()
 DAGSTER_SLACK_BOT_TOKEN = os.getenv('DAGSTER_SLACK_BOT_TOKEN')
