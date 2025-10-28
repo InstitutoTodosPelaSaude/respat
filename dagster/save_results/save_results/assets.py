@@ -30,7 +30,7 @@ from utils.epiweek import get_epiweek_str
 REPORTS_FILES_FOLDER = "/data/respat/reports/"
 REPORTS_CURRENT_FILES_FOLDER = "/data/respat/reports/current/"
 
-SLACK_SUCCESS_MESSAGE_DELAY_MINUTES = 1
+SLACK_SUCCESS_MESSAGE_DELAY_MINUTES = 30
 
 load_dotenv()
 DAGSTER_SLACK_BOT_TOKEN = os.getenv('DAGSTER_SLACK_BOT_TOKEN')
