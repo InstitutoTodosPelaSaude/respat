@@ -4,6 +4,7 @@ create_new_folder_job = define_asset_job(
     name="create_new_folder_job",
     selection=[
         'create_new_folder',
+        'send_slack_new_folder_message',
         'save_combined_files'
     ]
 )

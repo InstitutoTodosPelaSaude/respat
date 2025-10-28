@@ -1,9 +1,14 @@
+from asyncio import sleep
 from dagster import (
     AssetExecutionContext,
     asset,
     MaterializeResult, 
     MetadataValue,
     AssetKey
+)
+from dagster_slack import (
+    make_slack_on_run_failure_sensor,
+    SlackResource
 )
 from dagster.core.storage.pipeline_run import RunsFilter
 from textwrap import dedent
@@ -25,9 +30,13 @@ from utils.epiweek import get_epiweek_str
 REPORTS_FILES_FOLDER = "/data/respat/reports/"
 REPORTS_CURRENT_FILES_FOLDER = "/data/respat/reports/current/"
 
+SLACK_SUCCESS_MESSAGE_DELAY_MINUTES = 30
+
 load_dotenv()
 DAGSTER_SLACK_BOT_TOKEN = os.getenv('DAGSTER_SLACK_BOT_TOKEN')
 DAGSTER_SLACK_BOT_CHANNEL = os.getenv('DAGSTER_SLACK_BOT_CHANNEL')
+DAGSTER_SLACK_BOT_MAIN_CHANNEL = os.getenv('DAGSTER_SLACK_BOT_MAIN_CHANNEL')
+MINIO_UI_URL = os.getenv('MINIO_UI_URL')
 
 @asset(
     compute_kind="python",
@@ -199,6 +208,73 @@ def save_external_reports_files(context):
             file_name = report_file.split('/')[-1]
             file_system.copy_file_to_folder(f"data/external_reports/{report_folder}/", file_name, f'reports/current/external_reports/{report_folder}/')
             context.log.info(f"{report_folder}/{file_name} saved successfully")
+
+@asset(compute_kind="python", deps=[create_new_folder])
+def send_slack_new_folder_message(context):
+    # Get the folder name from 'create_new_folder' asset
+    materialization = context.instance.get_latest_materialization_event(AssetKey(["create_new_folder"])).asset_materialization
+    folder_name = materialization.metadata["folder_name"].text
+    context.log.info(f'Sending Slack message for new folder: {folder_name}')
+
+    # Wait for a few seconds to ensure all folders are created
+    context.log.info(f'Waiting {SLACK_SUCCESS_MESSAGE_DELAY_MINUTES} minutes before sending the Slack message')
+    sleep(SLACK_SUCCESS_MESSAGE_DELAY_MINUTES * 60)
+    context.log.info(f'Sending Slack message now')
+
+    # Minio files url
+    minio_url = MINIO_UI_URL if MINIO_UI_URL.endswith('/') else MINIO_UI_URL + '/'
+    minio_url = minio_url + 'browser/data/respat/'
+
+    # Send slack report
+    slack_client = SlackResource(token=DAGSTER_SLACK_BOT_TOKEN).get_client()
+    slack_client.chat_postMessage(
+        channel=DAGSTER_SLACK_BOT_MAIN_CHANNEL,
+        blocks = [
+                {
+                    "type": "header",
+                    "text": {
+                        "type": "plain_text",
+                        "text": f"🎉 Novo processamento de dados do RESPAT gerado com sucesso!",
+                        "emoji": True
+                    }
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"*{folder_name}*",
+                    }
+                },
+                {
+                    "type": "section",
+                    "text": {
+                            "type": "mrkdwn",
+                            "text": "Uma nova corrida foi finalizada e pode ser acessada pelo link abaixo:",
+                    }
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "👉 *Link para os dados mais recentes:*"
+                    },
+                    "accessory": {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Ver dados",
+                            "emoji": True
+                        },
+                        "value": "click_me_report",
+                        "url": f"{minio_url}reports/current/",
+                        "action_id": "button-action"
+                    }
+                },
+            ]
+    )
+
+
+
 
 
 
