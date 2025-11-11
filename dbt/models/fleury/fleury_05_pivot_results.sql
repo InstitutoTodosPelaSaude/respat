@@ -22,6 +22,7 @@ SELECT
     {{ 
         pivot_pathogen_results(
             [
+                "INFLUENZA A - TESTE RAPIDO",
                 "INFLUENZA A E B - TESTE RAPIDO FLU_A_RESULT",
                 "COVIDFLURSVGX - INFLUENZA A",
                 "VIRUS A/H1N1/PANDEMICO 2009",
@@ -41,6 +42,7 @@ SELECT
     {{ 
         pivot_pathogen_results(
             [
+                "INFLUENZA B - TESTE RAPIDO",
                 "INFLUENZA A E B - TESTE RAPIDO FLU_B_RESULT",
                 "COVIDFLURSVGX - INFLUENZA B",
                 "VIRUSMOL, INFLUENZA B",

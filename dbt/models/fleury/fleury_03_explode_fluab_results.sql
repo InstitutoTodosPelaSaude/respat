@@ -5,7 +5,7 @@
 WITH 
 others_source_table AS (
     SELECT * FROM {{ ref('fleury_02_fix_values') }}
-    WHERE exame != 'AGINFLU' AND pathogen != 'INFLUENZA A E B - TESTE RAPIDO'
+    WHERE pathogen != 'INFLUENZA A E B - TESTE RAPIDO'
 ),
 flu_a_source_table AS (
     SELECT * FROM {{ ref('fleury_02_fix_values') }}
