@@ -49,7 +49,7 @@ source_data_sum AS (
     SELECT
         e.epiweek_enddate as "semanas epidemiologicas",
         e.state_name as "state",
-        e.state_code as "state_code"
+        e.state_code as "state_code",
         COALESCE(SUM(CASE WHEN s.pathogen = 'SC2' THEN s."Pos" ELSE 0 END), 0) as "cases"
     FROM epiweeks_states e
     LEFT JOIN source_data s 
