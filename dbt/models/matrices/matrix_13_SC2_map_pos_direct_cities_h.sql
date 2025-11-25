@@ -75,7 +75,7 @@ population AS (
         regexp_replace("ADM2_PCODE", '^BR', '')::int as location_ibge_code,
         "Populacao"::int as population_qty
     FROM {{ ref("macroregions") }}
-    where "ADM2_PCODE" not ilike 'BR%'
+    where "ADM2_PCODE" ilike 'BR%'
 ),
 
 -- CTE que calcula a soma cumulativa dos casos para cada localização
@@ -89,7 +89,7 @@ source_data_cumulative_sum AS (
         "long",
         population."population_qty",
         "cases" AS "epiweek_cases",
-        SUM("cases") OVER (PARTITION BY "location_ibge_code" ORDER BY "semanas epidemiologicas") as "cumulative_cases"
+        SUM("cases") OVER (PARTITION BY source_data_sum."location_ibge_code" ORDER BY "semanas epidemiologicas") as "cumulative_cases"
     FROM source_data_sum
     LEFT JOIN population ON source_data_sum.location_ibge_code = population.location_ibge_code
     ORDER BY "semanas epidemiologicas", "state", "location"
