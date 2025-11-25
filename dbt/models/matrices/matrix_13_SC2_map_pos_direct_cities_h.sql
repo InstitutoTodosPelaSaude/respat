@@ -10,11 +10,12 @@ WITH epiweeks AS (
     WHERE epiweek_enddate >= '{{ epiweek_start }}'
 ),
 
-WITH population AS (
+population AS (
     SELECT
-        regexp_replace("ADM2_PCODE", '^BR', '') as location_ibge_code,
-        "Populacao" as population_qty
+        regexp_replace("ADM2_PCODE", '^BR', '')::int as location_ibge_code,
+        "Populacao"::int as population_qty
     FROM {{ ref("macroregions") }}
+    where "ADM2_PCODE" not ilike 'BR%'
 ),
 
 -- CTE para selecionar os dados de origem relevantes para cada semana epidemiológica
@@ -30,11 +31,11 @@ source_data AS (
         pathogen,
         {{ matrices_metrics('result') }}
     FROM {{ ref("matrices_01_unpivot_combined") }} AS source
-    LEFT JOIN population USING (location_ibge_code) 
+    LEFT JOIN population ON source.location_ibge_code = population.location_ibge_code
     WHERE 
         test_kit IN ('thermo', 'covid_antigen', 'covid_pcr', 'sc2_antigen', 'test_4', 'test_14', 'test_21', 'test_23', 'test_24') AND
         epiweek_enddate >= '{{ epiweek_start }}'
-    GROUP BY epiweek_enddate, state_code, location, location_ibge_code, lat, long, population_qty, pathogen
+    GROUP BY epiweek_enddate, state_code, location, source.location_ibge_code, lat, long, population_qty, pathogen
     ORDER BY epiweek_enddate, state_code
 ),
 

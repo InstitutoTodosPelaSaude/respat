@@ -10,11 +10,12 @@ WITH epiweeks AS (
     WHERE epiweek_enddate >= '{{ epiweek_start }}'
 ),
 
-WITH population AS (
+population AS (
     SELECT
         "DS_UF_SIGLA" as state_code,
-        sum("Populacao") as population_qty
+        sum("Populacao"::int) as population_qty
     FROM {{ ref("macroregions") }}
+    where "ADM2_PCODE" not ilike 'BR%'
     GROUP BY "DS_UF_SIGLA"
 ),
 
