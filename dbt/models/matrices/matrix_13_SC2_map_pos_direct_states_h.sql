@@ -10,12 +10,22 @@ WITH epiweeks AS (
     WHERE epiweek_enddate >= '{{ epiweek_start }}'
 ),
 
+WITH population AS (
+    SELECT
+        "DS_UF_SIGLA" as state_code,
+        sum("Populacao") as population_qty
+    FROM {{ ref("macroregions") }}
+    GROUP BY "DS_UF_SIGLA"
+),
+
 -- CTE para listar todos os estados presentes nos dados
 states AS (
     SELECT DISTINCT
-        state_code,
-        state as "state_name"
-    FROM {{ ref("matrices_01_unpivot_combined") }}
+        source.state_code,
+        state as "state_name",
+        population_qty
+    FROM {{ ref("matrices_01_unpivot_combined") }} AS source
+    LEFT JOIN population USING (state_code)
     WHERE state_code IS NOT NULL
 ),
 
@@ -24,7 +34,8 @@ epiweeks_states AS (
     SELECT
         e.epiweek_enddate,
         s.state_code,
-        s.state_name
+        s.state_name,
+        s.population_qty
     FROM epiweeks e
     CROSS JOIN states s
 ),
@@ -50,12 +61,13 @@ source_data_sum AS (
         e.epiweek_enddate as "semanas epidemiologicas",
         e.state_name as "state",
         e.state_code as "state_code",
+        e.population_qty,
         COALESCE(SUM(CASE WHEN s.pathogen = 'SC2' THEN s."Pos" ELSE 0 END), 0) as "cases"
     FROM epiweeks_states e
     LEFT JOIN source_data s 
     ON e.epiweek_enddate = s.epiweek_enddate 
     AND e.state_code = s.state_code
-    GROUP BY e.epiweek_enddate, e.state_code, e.state_name
+    GROUP BY e.epiweek_enddate, e.state_code, e.state_name, e.population_qty
 ),
 
 -- CTE que calcula a soma cumulativa de casos por estado, ordenando por semana
@@ -65,6 +77,7 @@ source_data_cumulative_sum AS (
         "state",
         "state_code",
         "cases" AS "epiweek_cases",
+        "population_qty",
         SUM("cases") OVER (PARTITION BY "state_code" ORDER BY "semanas epidemiologicas") as "cumulative_cases"
     FROM source_data_sum
     ORDER BY "semanas epidemiologicas", "state_code"
@@ -75,8 +88,10 @@ SELECT
     "semanas epidemiologicas",
     "state_code",
     "state",
-    "epiweek_cases"::int AS "epiweek_cases",
-    "cumulative_cases"::int AS "cumulative_cases"
+    "population_qty" as "População",
+    "epiweek_cases"::int AS "Casos da semana",
+    "cumulative_cases"::int AS "Casos acumulados",
+    "cumulative_cases"::float / NULLIF("population_qty", 0) * 100000 AS "Casos por 100 mil hab."
 FROM source_data_cumulative_sum
 WHERE "cumulative_cases" > 0 AND state <> 'NOT REPORTED'
 ORDER BY "semanas epidemiologicas", "state_code"

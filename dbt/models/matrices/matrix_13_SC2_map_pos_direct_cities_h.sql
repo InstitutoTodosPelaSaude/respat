@@ -10,22 +10,31 @@ WITH epiweeks AS (
     WHERE epiweek_enddate >= '{{ epiweek_start }}'
 ),
 
+WITH population AS (
+    SELECT
+        regexp_replace("ADM2_PCODE", '^BR', '') as location_ibge_code,
+        "Populacao" as population_qty
+    FROM {{ ref("macroregions") }}
+),
+
 -- CTE para selecionar os dados de origem relevantes para cada semana epidemiológica
 source_data AS (
     SELECT
         epiweek_enddate,
         state_code,
         location,
-        location_ibge_code,
+        source.location_ibge_code,
         lat,
         long,
+        population_qty,
         pathogen,
         {{ matrices_metrics('result') }}
-    FROM {{ ref("matrices_01_unpivot_combined") }}
+    FROM {{ ref("matrices_01_unpivot_combined") }} AS source
+    LEFT JOIN population USING (location_ibge_code) 
     WHERE 
         test_kit IN ('thermo', 'covid_antigen', 'covid_pcr', 'sc2_antigen', 'test_4', 'test_14', 'test_21', 'test_23', 'test_24') AND
         epiweek_enddate >= '{{ epiweek_start }}'
-    GROUP BY epiweek_enddate, state_code, location, location_ibge_code, lat, long, pathogen
+    GROUP BY epiweek_enddate, state_code, location, location_ibge_code, lat, long, population_qty, pathogen
     ORDER BY epiweek_enddate, state_code
 ),
 
@@ -36,7 +45,8 @@ location_data AS (
         location,
         state_code,
         lat,
-        long
+        long,
+        population_qty
     FROM source_data
 ),
 
@@ -48,7 +58,8 @@ epiweeks_locations AS (
         l.location,
         l.state_code,
         l.lat,
-        l.long
+        l.long,
+        l.population_qty
     FROM epiweeks e
     CROSS JOIN location_data l
 ),
@@ -63,11 +74,12 @@ source_data_sum AS (
         e.state_code as "state",
         e.lat as "lat",
         e.long as "long",
+        e.population_qty as "population_qty",
         COALESCE(SUM(CASE WHEN pathogen = 'SC2' THEN "Pos" ELSE 0 END), 0) as "cases"
     FROM epiweeks_locations e
     LEFT JOIN source_data s ON e.epiweek_enddate = s.epiweek_enddate 
                              AND e.location_ibge_code = s.location_ibge_code
-    GROUP BY e.epiweek_enddate, e.location_ibge_code, e.location, e.state_code, e.lat, e.long
+    GROUP BY e.epiweek_enddate, e.location_ibge_code, e.location, e.state_code, e.lat, e.long, e.population_qty
 ),
 
 -- CTE que calcula a soma cumulativa dos casos para cada localização
@@ -79,6 +91,7 @@ source_data_cumulative_sum AS (
         "state",
         "lat",
         "long",
+        "population_qty",
         "cases" AS "epiweek_cases",
         SUM("cases") OVER (PARTITION BY "location_ibge_code" ORDER BY "semanas epidemiologicas") as "cumulative_cases"
     FROM source_data_sum
@@ -93,8 +106,10 @@ SELECT
     "state",
     "lat",
     "long",
-    "epiweek_cases"::int AS "epiweek_cases",
-    "cumulative_cases"::int AS "cumulative_cases"
+    "population_qty" as "População",
+    "epiweek_cases"::int AS "Casos da semana",
+    "cumulative_cases"::int AS "Casos acumulados",
+    "cumulative_cases"::float / NULLIF("population_qty", 0) * 100000 AS "Casos por 100 mil hab."
 FROM source_data_cumulative_sum
 WHERE "cumulative_cases" > 0 AND location <> 'NOT REPORTED' AND state <> 'NOT REPORTED'
 ORDER BY "semanas epidemiologicas", "state", "location"
