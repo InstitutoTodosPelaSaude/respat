@@ -10,23 +10,12 @@ WITH epiweeks AS (
     WHERE epiweek_enddate >= '{{ epiweek_start }}'
 ),
 
-population AS (
-    SELECT
-        "DS_UF_SIGLA" as state_code,
-        sum("Populacao"::int) as population_qty
-    FROM {{ ref("macroregions") }}
-    where "ADM2_PCODE" not ilike 'BR%'
-    GROUP BY "DS_UF_SIGLA"
-),
-
 -- CTE para listar todos os estados presentes nos dados
 states AS (
     SELECT DISTINCT
         source.state_code,
-        state as "state_name",
-        population_qty
+        state as "state_name"
     FROM {{ ref("matrices_01_unpivot_combined") }} AS source
-    LEFT JOIN population USING (state_code)
     WHERE state_code IS NOT NULL
 ),
 
@@ -35,8 +24,7 @@ epiweeks_states AS (
     SELECT
         e.epiweek_enddate,
         s.state_code,
-        s.state_name,
-        s.population_qty
+        s.state_name
     FROM epiweeks e
     CROSS JOIN states s
 ),
@@ -61,14 +49,22 @@ source_data_sum AS (
     SELECT
         e.epiweek_enddate as "semanas epidemiologicas",
         e.state_name as "state",
-        e.state_code as "state_code",
-        e.population_qty,
+        e.state_code as "state_code"
         COALESCE(SUM(CASE WHEN s.pathogen = 'SC2' THEN s."Pos" ELSE 0 END), 0) as "cases"
     FROM epiweeks_states e
     LEFT JOIN source_data s 
     ON e.epiweek_enddate = s.epiweek_enddate 
     AND e.state_code = s.state_code
-    GROUP BY e.epiweek_enddate, e.state_code, e.state_name, e.population_qty
+    GROUP BY e.epiweek_enddate, e.state_code, e.state_name
+),
+
+population AS (
+    SELECT
+        "DS_UF_SIGLA" as state_code,
+        sum("Populacao"::int) as population_qty
+    FROM {{ ref("macroregions") }}
+    where "ADM2_PCODE" ilike 'BR%'
+    GROUP BY "DS_UF_SIGLA"
 ),
 
 -- CTE que calcula a soma cumulativa de casos por estado, ordenando por semana
@@ -76,11 +72,12 @@ source_data_cumulative_sum AS (
     SELECT
         "semanas epidemiologicas",
         "state",
-        "state_code",
+        source_data_sum."state_code",
         "cases" AS "epiweek_cases",
-        "population_qty",
-        SUM("cases") OVER (PARTITION BY "state_code" ORDER BY "semanas epidemiologicas") as "cumulative_cases"
+        population."population_qty",
+        SUM("cases") OVER (PARTITION BY source_data_sum."state_code" ORDER BY "semanas epidemiologicas") as "cumulative_cases"
     FROM source_data_sum
+    LEFT JOIN population ON source_data_sum.state_code = population.state_code
     ORDER BY "semanas epidemiologicas", "state_code"
 )
 
