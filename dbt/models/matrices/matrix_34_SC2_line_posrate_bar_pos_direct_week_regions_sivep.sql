@@ -4,7 +4,7 @@
 {% set states = dbt_utils.get_column_values(
     table=ref('matrices_01_unpivot_combined_sivep'),
     column='state',
-    where="'epiweek_enddate >= '" ~ epiweek_start ~ "'"
+    where="epiweek_enddate >= '" ~ epiweek_start ~ "'"
 ) 
    | reject('equalto', None) 
    | list
