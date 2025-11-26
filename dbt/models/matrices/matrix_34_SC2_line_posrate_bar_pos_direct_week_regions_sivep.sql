@@ -95,7 +95,7 @@ SELECT
     SUM(CASE WHEN svp.region = 'Nordeste' THEN "sivep_pos" ELSE 0 END) as "Nordeste (SRAG)",
     SUM(CASE WHEN svp.region = 'Norte' THEN "sivep_pos" ELSE 0 END) as "Norte (SRAG)",
     SUM(CASE WHEN svp.region = 'Sudeste' THEN "sivep_pos" ELSE 0 END) as "Sudeste (SRAG)",
-    SUM(CASE WHEN svp.region = 'Sul' THEN "sivep_pos" ELSE 0 END) as "Sul (SRAG)"
+    SUM(CASE WHEN svp.region = 'Sul' THEN "sivep_pos" ELSE 0 END) as "Sul (SRAG)",
 
     {% for st in states %}
       SUM(CASE WHEN svp.state = '{{ st | replace("'", "''") }}' 
