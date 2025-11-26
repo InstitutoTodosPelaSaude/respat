@@ -1,6 +1,15 @@
 {{ config(materialized='table') }}
 
 {% set epiweek_start = '2022-03-01' %}
+{% set states = dbt_utils.get_column_values(
+    table=ref('matrices_01_unpivot_combined_sivep'),
+    column='state',
+    where="'epiweek_enddate >= '" ~ epiweek_start ~ "'"
+) 
+   | reject('equalto', None) 
+   | list
+   | sort
+%}
 
 WITH 
 source_data AS (
@@ -21,13 +30,14 @@ sivep_data AS (
     SELECT
         epiweek_enddate,
         region,
+        state,
         pathogen,
         {{ matrices_metrics('result') }}
     FROM {{ ref("matrices_01_unpivot_combined_sivep") }}
     WHERE
         "SC2_test_result" IN ('Pos', 'Neg') AND
         epiweek_enddate >= '{{ epiweek_start }}'
-    GROUP BY epiweek_enddate, region, pathogen
+    GROUP BY epiweek_enddate, region, state, pathogen
 ),
 
 source_total AS (
@@ -60,13 +70,14 @@ source_posrate AS (
     GROUP BY sc.epiweek_enddate, sc.region
 ),
 
-sivep_posrate AS (
+sivep_pos AS (
     SELECT
         sc.epiweek_enddate as "Semanas epidemiológicas",
         sc.region,
-        SUM(CASE WHEN sc.pathogen = 'SC2' THEN sc."Pos" ELSE 0 END)::int AS "Infecções graves por SARS-CoV-2 (SIVEP)"
+        sc.state,
+        SUM(CASE WHEN sc.pathogen = 'SC2' THEN sc."Pos" ELSE 0 END)::int AS "sivep_pos"
     FROM sivep_data sc
-    GROUP BY sc.epiweek_enddate, sc.region
+    GROUP BY sc.epiweek_enddate, sc.region, sc.state
 )
 
 SELECT 
@@ -80,13 +91,19 @@ SELECT
     MAX(CASE WHEN sp.region = 'Sudeste' THEN "Positividade (%, Lab. parceiros)" ELSE NULL END) as "Sudeste (Positividade)",
     MAX(CASE WHEN sp.region = 'Sul' THEN "Positividade (%, Lab. parceiros)" ELSE NULL END) as "Sul (Positividade)",
 
-    SUM(CASE WHEN svp.region = 'Centro-Oeste' THEN "Infecções graves por SARS-CoV-2 (SIVEP)" ELSE 0 END) as "Centro-Oeste (SRAG)",
-    SUM(CASE WHEN svp.region = 'Nordeste' THEN "Infecções graves por SARS-CoV-2 (SIVEP)" ELSE 0 END) as "Nordeste (SRAG)",
-    SUM(CASE WHEN svp.region = 'Norte' THEN "Infecções graves por SARS-CoV-2 (SIVEP)" ELSE 0 END) as "Norte (SRAG)",
-    SUM(CASE WHEN svp.region = 'Sudeste' THEN "Infecções graves por SARS-CoV-2 (SIVEP)" ELSE 0 END) as "Sudeste (SRAG)",
-    SUM(CASE WHEN svp.region = 'Sul' THEN "Infecções graves por SARS-CoV-2 (SIVEP)" ELSE 0 END) as "Sul (SRAG)"
+    SUM(CASE WHEN svp.region = 'Centro-Oeste' THEN "sivep_pos" ELSE 0 END) as "Centro-Oeste (SRAG)",
+    SUM(CASE WHEN svp.region = 'Nordeste' THEN "sivep_pos" ELSE 0 END) as "Nordeste (SRAG)",
+    SUM(CASE WHEN svp.region = 'Norte' THEN "sivep_pos" ELSE 0 END) as "Norte (SRAG)",
+    SUM(CASE WHEN svp.region = 'Sudeste' THEN "sivep_pos" ELSE 0 END) as "Sudeste (SRAG)",
+    SUM(CASE WHEN svp.region = 'Sul' THEN "sivep_pos" ELSE 0 END) as "Sul (SRAG)"
+
+    {% for st in states %}
+      SUM(CASE WHEN svp.state = '{{ st | replace("'", "''") }}' 
+               THEN svp."sivep_pos" ELSE 0 END) 
+      AS "{{ st }} (SRAG)"{{ "," if not loop.last }}
+    {% endfor %}
 FROM source_posrate sp
-FULL OUTER JOIN sivep_posrate svp ON sp."Semanas epidemiológicas" = svp."Semanas epidemiológicas" and sp.region = svp.region
+FULL OUTER JOIN sivep_pos svp ON sp."Semanas epidemiológicas" = svp."Semanas epidemiológicas" and sp.region = svp.region
 LEFT JOIN source_total_posrate stp ON sp."Semanas epidemiológicas" = stp."Semanas epidemiológicas"
 GROUP BY COALESCE(sp."Semanas epidemiológicas", svp."Semanas epidemiológicas", stp."Semanas epidemiológicas")
 ORDER BY "Semanas epidemiológicas"
