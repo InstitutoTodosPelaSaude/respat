@@ -4,7 +4,7 @@
 {% set states = dbt_utils.get_column_values(
     table=ref('matrices_01_unpivot_combined_sivep'),
     column='state',
-    where="'epiweek_enddate >= '" ~ epiweek_start ~ "'"
+    where="epiweek_enddate >= '" ~ epiweek_start ~ "'"
 ) 
    | reject('equalto', None) 
    | list
@@ -95,7 +95,7 @@ SELECT
     SUM(CASE WHEN svp.region = 'Nordeste' THEN "sivep_pos" ELSE 0 END) as "Nordeste (SRAG)",
     SUM(CASE WHEN svp.region = 'Norte' THEN "sivep_pos" ELSE 0 END) as "Norte (SRAG)",
     SUM(CASE WHEN svp.region = 'Sudeste' THEN "sivep_pos" ELSE 0 END) as "Sudeste (SRAG)",
-    SUM(CASE WHEN svp.region = 'Sul' THEN "sivep_pos" ELSE 0 END) as "Sul (SRAG)"
+    SUM(CASE WHEN svp.region = 'Sul' THEN "sivep_pos" ELSE 0 END) as "Sul (SRAG)",
 
     {% for st in states %}
       SUM(CASE WHEN svp.state = '{{ st | replace("'", "''") }}' 
