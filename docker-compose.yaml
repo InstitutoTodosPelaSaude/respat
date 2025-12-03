@@ -1,4 +1,3 @@
-version: '2'
 services:
   dagster:
     build: .
@@ -12,6 +11,7 @@ services:
       - .:/usr/app/respiratorios/
     entrypoint: ["./entrypoint.sh"]
     networks:
+      - shared-network
       - respatnetwork
     mem_limit: "3g"
     mem_reservation: "1g"
@@ -26,3 +26,5 @@ services:
 networks:
   respatnetwork:
     driver: bridge
+  shared-network:
+    external: true
