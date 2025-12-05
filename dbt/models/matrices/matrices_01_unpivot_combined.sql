@@ -38,7 +38,7 @@ WITH source_data AS (
     FROM {{ ref("combined_final") }}
     WHERE 
         epiweek_enddate < CURRENT_DATE AND
-        epiweek_enddate >= '2022-01-01'
+        epiweek_enddate > '2022-01-01'
 )
 SELECT
     combined.*,
