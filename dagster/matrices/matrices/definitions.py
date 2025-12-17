@@ -5,7 +5,8 @@ from dagster_dbt import DbtCliResource
 
 from .assets import (
     respiratorios_dbt_assets,
-    export_matrices_to_xlsx
+    export_matrices_to_xlsx,
+    call_report_automation
 )
 from .constants import dbt_project_dir
 from .schedules import schedules
@@ -15,7 +16,8 @@ from .sensors import run_matrices_sensor, matrices_slack_failure_sensor
 defs = Definitions(
     assets=[
         respiratorios_dbt_assets,
-        export_matrices_to_xlsx
+        export_matrices_to_xlsx,
+        call_report_automation
     ],
     schedules=schedules,
     resources={
