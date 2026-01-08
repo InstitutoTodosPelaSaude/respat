@@ -8,7 +8,7 @@ WITH source_data AS (
             ' - ', 
             {{ get_month_name_from_epiweek_number('epiweek_number') }}
         ) as epiweek_month,
-        EXTRACT('Year' FROM epiweek_enddate) as epiweek_year,
+        {{ get_epiweek_year_date('epiweek_enddate') }} as epiweek_year,
         pathogen,
         {{ matrices_metrics('result') }}
     FROM {{ ref("matrices_01_unpivot_combined") }}
