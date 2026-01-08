@@ -75,19 +75,29 @@ source_data_sum AS (
     GROUP BY e.epiweek_enddate, e.location_ibge_code, e.location, e.state_code, e.state, e.lat, e.long
 ),
 
+population AS (
+    SELECT
+        regexp_replace("ADM2_PCODE", '^BR', '')::int as location_ibge_code,
+        "Populacao"::int as population_qty
+    FROM {{ ref("macroregions") }}
+    where "ADM2_PCODE" ilike 'BR%'
+),
+
 -- CTE que calcula a soma cumulativa dos casos para cada localização
 source_data_cumulative_sum AS (
     SELECT
         "semanas epidemiologicas",
-        "location_ibge_code",
+        source_data_sum."location_ibge_code",
         "location",
         "state_code",
         "state",
         "lat",
         "long",
+        population."population_qty",
         "cases" AS "epiweek_cases",
-        SUM("cases") OVER (PARTITION BY "location_ibge_code" ORDER BY "semanas epidemiologicas") as "cumulative_cases"
+        SUM("cases") OVER (PARTITION BY source_data_sum."location_ibge_code" ORDER BY "semanas epidemiologicas") as "cumulative_cases"
     FROM source_data_sum
+    LEFT JOIN population ON source_data_sum."location_ibge_code" = population."location_ibge_code"
     ORDER BY "semanas epidemiologicas", "state_code", "location"
 )
 
@@ -100,11 +110,14 @@ SELECT
     "state" as "State",
     "lat" as "Lat",
     "long" as "Long",
+    "population_qty" as "População",
     "epiweek_cases"::INTEGER as "Casos na última semana",
-    "cumulative_cases"::INTEGER as "Casos cumulativos"
+    "cumulative_cases"::INTEGER as "Casos cumulativos",
+    "cumulative_cases"::float / NULLIF("population_qty", 0) * 100000 AS "Casos por 100 mil hab."
 FROM source_data_cumulative_sum
 WHERE 
     "cumulative_cases" > 0 AND
-    location not in ('NOT REPORTED')
-ORDER BY "location", "semanas epidemiologicas"
+    location not in ('NOT REPORTED') AND
+    state <> 'NOT REPORTED'
+ORDER BY "semanas epidemiologicas", "state_code", "location"
     
