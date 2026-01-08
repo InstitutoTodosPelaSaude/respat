@@ -66,7 +66,7 @@ def create_new_folder(context):
     date = datetime.now().strftime('%Y-%m-%d_%Hh%M')
     epiweek_number = get_epiweek_str(
         datetime_ = datetime.now() - timedelta(days=6), # Get the number from the last epiweek
-        format = 'SE{EPINUM}.%Y',
+        format = 'SE{EPINUM}.{EPIYEAR}',
         zfill = 2
     )
     version = 1
