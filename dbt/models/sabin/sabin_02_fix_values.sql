@@ -283,7 +283,41 @@ AND NOT detalhe_exame IN (
     'ZIKAIGG2',
     'ZIKAM2',
     'ISOF1',
-    'OBSC1'
+    'OBSC1',
+    'VITAKPDF',
+    'GIARIGMRES',
+    'GIARIGMINTE',
+    'INTERSYNLAB',
+    'RESULSYNLAB',
+    'GIARIGMRES',
+    'GIARIGMINTE',
+    'INTERSYNLAB',
+    'RESULSYNLAB',
+    'HBSAGPDF',
+    'LEGIOG',
+    'LEGIOM',
+    'COVIDIgGPDF',
+    'LEGIPCR072024',
+    'FEBREGLC',
+    'CMVMHP',
+    'EBVPCRQL'
 )
 -- TODO: Add novos exames na pipeline
 AND NOT detalhe_exame IN ('BACBOPARA', 'RINOVIRUS', 'VIAH3N2', 'COROOC43', 'VIINFH1N1', 'VP2', 'BACSTREPN', 'METAPNEUMOVIRUS', 'BOCAVIRUS', 'VSRB', 'CORONL63', 'ADENORESP', 'VIAH1PDM09', 'VIB', 'BACHAEINF', 'BACMYPN', 'VP4', 'VP3', 'CORO229E', 'VSRA', 'BACCHPN', 'VP1', 'VIA', 'BACBOPE', 'ENTEROVIRUS', 'BACLEPN')
+AND detalhe_exame IN (
+    'RDRPALVO', 'NALVOSSA', 'NALVO', 'PCRSALIV', 'TMR19RES1',
+    'COVIDECO',
+    'PARA1','PARA2', 'PARA3','PARA4',
+            'BORDETELLAP','VSINCICIAL','CPNEUMONIAE',
+            'ADEN','CORON','CORHKU','CORNL','CORC',
+            'HUMANMET','HUMANRH','INFLUEH','INFLUEN','INFLUENZ','INFLUEB',
+            'MYCOPAIN','PAINSARS','RSPAIN',
+    'HPIV1', 'HPIV2', 'HPIV3', 'HPIV4',
+            'RSVA', 'RSVB', 'MPVR', 'HRV', 
+            'HBOV', 'HEVR', 'ADEV', 'BPP', 
+            'BP', 'CP', 'MP', 'HI',
+            'LP', 'SP', 'NL63', 'OC43', 'COR229E', 
+            'H1N1R', 'H1PDM09', 'H3', 'INFLUA', 'INFLUB',
+    'PCRVRESPBM', 'PCRVRESPBM2', 
+            'PCRVRESPBM3', 'PCRVRESPBM4'
+)
