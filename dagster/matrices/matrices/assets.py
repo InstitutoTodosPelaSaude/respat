@@ -48,6 +48,21 @@ REPORT_AUTOMATION_API_KEY = os.getenv('REPORT_AUTOMATION_API_KEY')
 ROOT_PATH = pathlib.Path(__file__).parent.parent.parent.parent.absolute()
 SAVE_PATH = ROOT_PATH / "data" / "matrices"
 
+PATHOGEN_NAME_EXCEPTIONS = {
+    "influenza a": "influenza A",
+    "influenza b": "influenza B",
+    "sars-cov-2": "SARS-CoV-2",
+    "vsr": "VSR",
+}
+
+
+def format_pathogen_name(name):
+    if pd.isna(name):
+        return ""
+    name_lower = str(name).strip().lower()
+    return PATHOGEN_NAME_EXCEPTIONS.get(name_lower, name_lower)
+
+
 @dbt_assets(
     manifest=dbt_manifest_path,
     select='matrices',
@@ -272,6 +287,7 @@ def call_report_automation(context):
     ).fillna(0)
     shares = (row / row.sum() * 100) if row.sum() else (row * 0)
     top = shares.sort_values(ascending=False).head(4)
+    top.index = top.index.map(format_pathogen_name)
     (results['{{top_pathogen_1_name}}'], results['{{top_pathogen_2_name}}'], results['{{top_pathogen_3_name}}'], results['{{top_pathogen_4_name}}']) = top.index.tolist()
     (results['{{top_pathogen_1_positive_share}}'], results['{{top_pathogen_2_positive_share}}'], results['{{top_pathogen_3_positive_share}}'], results['{{top_pathogen_4_positive_share}}']) = np.floor(top.to_numpy() + 0.5).astype(int).tolist()
 
@@ -287,7 +303,9 @@ def call_report_automation(context):
         errors="coerce"
     ).dropna()
     s = s[s > 0].sort_values(ascending=False)
-    results['{{others_top_positivities}}'] = ", ".join(f"{k} ({int(np.floor(v + 0.5))}%)" for k, v in s.items())
+    results['{{others_top_positivities}}'] = ", ".join(
+        f"{format_pathogen_name(k)} ({int(np.floor(v + 0.5))}%)" for k, v in s.items()
+    )
 
     #### top_other_pathogen_name, top_other_pathogen_positive_share, other_pathogens_positive_shares
     temp_df = pd.read_sql_query(f'SELECT * FROM {DB_SCHEMA}."matrix_07_Resp_bar_pos_panel20PLUS_week_country_r"', engine, dtype='str')
@@ -297,8 +315,8 @@ def call_report_automation(context):
     ).fillna(0)
     shares = ((s / s.sum() * 100) if s.sum() else (s * 0)).sort_values(ascending=False)
     shares_i = np.floor(shares.to_numpy() + 0.5).astype(int)
-    results['{{top_other_pathogen_name}}'], results['{{top_other_pathogen_positive_share}}'] = shares.index[0], int(shares_i[0])
-    rest = [f"{k} ({v}%)" for k, v in zip(shares.index[1:], shares_i[1:]) if v > 0]
+    results['{{top_other_pathogen_name}}'], results['{{top_other_pathogen_positive_share}}'] = format_pathogen_name(shares.index[0]), int(shares_i[0])
+    rest = [f"{format_pathogen_name(k)} ({v}%)" for k, v in zip(shares.index[1:], shares_i[1:]) if v > 0]
     results['{{other_pathogens_positive_shares}}'] = ", ".join(rest[:-1]) + (" e " + rest[-1] if len(rest) > 1 else (rest[0] if rest else ""))
 
     # Send request
