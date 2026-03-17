@@ -71,6 +71,8 @@ SELECT
         WHEN result ILIKE 'DETECTAD%' THEN 1
         WHEN result IN {{ pathogen_list_that_indicates_positive_result }} THEN 1
         WHEN result = '0' THEN 0
+        WHEN result ILIKE 'NAO REAGENTE' THEN 0
+        WHEN result ILIKE 'REAGENTE' THEN 1
         ELSE -2
     END AS result,
     
