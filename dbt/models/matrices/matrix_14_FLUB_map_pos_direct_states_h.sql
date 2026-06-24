@@ -1,6 +1,6 @@
 {{ config(materialized='table') }}
 
-{% set epiweek_start = '2025-09-13' %}
+{% set epiweek_start = '2026-03-01' %}
 
 -- CTE para listar todas as semanas epidemiológicas a partir de uma data inicial
 WITH epiweeks AS (
