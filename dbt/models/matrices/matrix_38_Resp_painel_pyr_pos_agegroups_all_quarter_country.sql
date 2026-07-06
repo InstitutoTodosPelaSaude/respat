@@ -7,7 +7,6 @@ WITH source_data AS (
         TO_CHAR("date_testing", 'YYYY - Q"º Trimestre"') AS trimestre,
         age_group,
         pathogen,
-        test_kit,
         {{ matrices_metrics('result') }}
     FROM {{ ref("matrices_01_unpivot_combined") }}
     WHERE
