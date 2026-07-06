@@ -15,7 +15,7 @@ WITH source_data AS (
         age_group != 'NOT REPORTED' AND
         date_testing >= '{{ date_testing_start }}' AND
         date_testing < DATE_TRUNC('quarter', CURRENT_DATE)
-    GROUP BY trimestre, age_group, pathogen, test_kit
+    GROUP BY trimestre, age_group, pathogen
 ),
 faixas_etarias AS (
     SELECT DISTINCT age_group FROM source_data
@@ -38,7 +38,7 @@ aggregated_data AS (
         SUM(CASE WHEN pathogen = 'VSR' THEN "Pos" ELSE 0 END)::int      AS "Vírus Sincicial Respiratório",
         SUM(CASE WHEN pathogen = 'COVS' THEN "Pos" ELSE 0 END)::int     AS "Coronavírus sazonais",
         SUM(CASE WHEN pathogen = 'ADENO' THEN "Pos" ELSE 0 END)::int    AS "Adenovírus",
-        SUM(CASE WHEN pathogen = 'BOCA' AND test_kit IN ('test_23', 'test_24') THEN "Pos" ELSE 0 END)::int AS "Bocavírus",
+        SUM(CASE WHEN pathogen = 'BOCA' THEN "Pos" ELSE 0 END)::int     AS "Bocavírus",
         SUM(CASE WHEN pathogen = 'RINO' THEN "Pos" ELSE 0 END)::int     AS "Rinovírus",
         SUM(CASE WHEN pathogen = 'PARA' THEN "Pos" ELSE 0 END)::int     AS "Vírus Parainfluenza",
         SUM(CASE WHEN pathogen = 'ENTERO' THEN "Pos" ELSE 0 END)::int   AS "Enterovírus",
