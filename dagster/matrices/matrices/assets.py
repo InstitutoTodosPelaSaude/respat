@@ -53,6 +53,8 @@ PATHOGEN_NAME_EXCEPTIONS = {
     "influenza b": "influenza B",
     "sars-cov-2": "SARS-CoV-2",
     "vsr": "VSR",
+    "vírus sincicial respiratório": "Vírus Sincicial Respiratório",
+    "virus sincicial respiratorio": "Vírus Sincicial Respiratório",
 }
 
 
