@@ -2,14 +2,10 @@
 
 {% set epiweek_start = '2022-03-01' %}
 {% set states = dbt_utils.get_column_values(
-    table=ref('matrices_01_unpivot_combined_sivep'),
-    column='state',
-    where="epiweek_enddate >= '" ~ epiweek_start ~ "'"
-) 
-   | reject('equalto', None) 
-   | list
-   | sort
-%}
+    table=ref('municipios'),
+    column='"NM_UF"',
+    order_by='MIN("NM_UF_NORM")'
+) %}
 
 WITH 
 source_data AS (
@@ -98,7 +94,7 @@ SELECT
     SUM(CASE WHEN svp.region = 'Sul' THEN "sivep_pos" ELSE 0 END) as "Sul (SRAG)",
 
     {% for st in states %}
-      SUM(CASE WHEN svp.state = '{{ st | replace("'", "''") }}' 
+      SUM(CASE WHEN svp.state = UPPER(UNACCENT('{{ st | replace("'", "''") }}'))
                THEN svp."sivep_pos" ELSE 0 END) 
       AS "{{ st }} (SRAG)"{{ "," if not loop.last }}
     {% endfor %}
