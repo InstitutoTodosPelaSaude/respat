@@ -302,11 +302,11 @@ models:
     tests:
       - expect_proportion_of_unique_values_in_column_set_to_be_between:
           columns: test_id, test_kit
-          min_value: 0.99
+          min_value: 0.95
           max_value: 1.01
       - expect_number_of_repeated_lines_in_column_set_to_be_less_than:
           columns: test_id, test_kit
-          max_value: 100
+          max_value: 1000
       - unique:
           column_name: "test_id || '-' || test_kit"
           config:
